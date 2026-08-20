@@ -14,6 +14,7 @@ from routers import (
     etudiants,
     experiences,
     import_export,
+    newsletter,
     otp,
     promotions,
     questionnaires,
@@ -48,6 +49,7 @@ app.include_router(questionnaires.router)
 app.include_router(questionnaires.admin_router)
 app.include_router(otp.router)
 app.include_router(admin_auth.router)
+app.include_router(newsletter.router)
 
 
 @app.on_event("startup")

@@ -6,6 +6,21 @@ import ErrorMessage from '../shared/ErrorMessage';
 
 const CONTRACT_TYPES = ['CDI', 'CDD', 'Freelance', 'Alternance', 'Stage', 'Intérim', 'Autre'];
 
+const SALARY_RANGES = [
+  { label: 'Non renseigné', value: '' },
+  { label: '< 20 000 €', value: '15000' },
+  { label: '20 000 - 25 000 €', value: '22500' },
+  { label: '25 000 - 30 000 €', value: '27500' },
+  { label: '30 000 - 35 000 €', value: '32500' },
+  { label: '35 000 - 40 000 €', value: '37500' },
+  { label: '40 000 - 45 000 €', value: '42500' },
+  { label: '45 000 - 50 000 €', value: '47500' },
+  { label: '50 000 - 60 000 €', value: '55000' },
+  { label: '60 000 - 70 000 €', value: '65000' },
+  { label: '70 000 - 80 000 €', value: '75000' },
+  { label: '> 80 000 €', value: '85000' },
+];
+
 const EMPTY_CAREER = {
   company: '',
   position: '',
@@ -115,14 +130,16 @@ function CareerForm({ career, index, onChange, onRemove }) {
           </div>
         )}
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-slate-400">Tranche salariale</label>
-          <input
-            type="text"
+          <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-slate-400">Tranche salariale annuelle (brut)</label>
+          <select
             value={career.salary_range}
             onChange={(e) => handleChange('salary_range', e.target.value)}
-            placeholder="Ex: 35k-45k EUR"
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-          />
+          >
+            {SALARY_RANGES.map((r) => (
+              <option key={r.value} value={r.value}>{r.label}</option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-slate-400">Ville de l'entreprise</label>

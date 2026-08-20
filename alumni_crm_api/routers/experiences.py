@@ -111,12 +111,12 @@ def create_experience(exp: schemas.ExperienceProCreate, db=Depends(get_db)):
         refuser_compte_anonymise(cursor, exp.id_etudiant)
         query = """
             INSERT INTO EXPERIENCE_PRO (intitule_poste, type_contrat, date_debut, date_fin,
-                                         salaire, poste_actuel, id_entreprise, id_etudiant)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id_experience;
+                                         salaire, salary_annuel, poste_actuel, id_entreprise, id_etudiant)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id_experience;
         """
         cursor.execute(query, (
             exp.intitule_poste, exp.type_contrat, exp.date_debut, exp.date_fin, exp.salaire,
-            exp.poste_actuel, exp.id_entreprise, exp.id_etudiant,
+            exp.salary_annuel, exp.poste_actuel, exp.id_entreprise, exp.id_etudiant,
         ))
         id_generated = cursor.fetchone()[0]
         db.commit()
@@ -213,9 +213,9 @@ def ajouter_experience(
 
         query = """
             INSERT INTO EXPERIENCE_PRO
-                (intitule_poste, type_contrat, date_debut, date_fin, salaire,
+                (intitule_poste, type_contrat, date_debut, date_fin, salaire, salary_annuel,
                  poste_actuel, id_entreprise, id_etudiant)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
         """
         cursor.execute(query, (
             experience.intitule_poste,
@@ -223,6 +223,7 @@ def ajouter_experience(
             experience.date_debut,
             experience.date_fin,
             experience.salaire,
+            experience.salary_annuel,
             experience.poste_actuel,
             id_entreprise,
             id_etudiant,

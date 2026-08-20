@@ -439,3 +439,95 @@ def repondre_questionnaire(
         raise HTTPException(status_code=400, detail="Impossible d'enregistrer la reponse.")
     finally:
         cursor.close()
+
+
+# ─────────────────────────────────────────────
+# NOTIFICATION : relance alumni pour questionnaire
+# ─────────────────────────────────────────────
+from pydantic import BaseModel as _BaseModel
+from typing import Optional as _Optional
+
+
+class NotificationQuestionnaireRequest(_BaseModel):
+    id_questionnaire: int
+    id_promotion: _Optional[int] = None
+
+
+@admin_router.post("/notififier")
+def notifier_questionnaire(body: NotificationQuestionnaireRequest, db=Depends(get_db)):
+    """
+    Envoie une notification email aux alumni n'ayant pas encore répondu
+    au questionnaire spécifié. Filtre optionnel par promotion.
+    """
+    cursor = db.cursor()
+    try:
+        cursor.execute(
+            "SELECT id_questionnaire, titre FROM QUESTIONNAIRE WHERE id_questionnaire = %s AND actif = TRUE;",
+            (body.id_questionnaire,),
+        )
+        q = cursor.fetchone()
+        if not q:
+            raise HTTPException(status_code=404, detail="Questionnaire introuvable ou inactif.")
+
+        query = """
+            SELECT e.id_etudiant, e.nom, e.prenom, e.email
+            FROM ETUDIANT e
+            WHERE e.date_anonymisation IS NULL
+              AND e.email IS NOT NULL
+              AND e.email != ''
+              AND NOT EXISTS (
+                  SELECT 1 FROM REPONSE_QUESTIONNAIRE r
+                  WHERE r.id_etudiant = e.id_etudiant
+                    AND r.id_questionnaire = %s
+              )
+        """
+        params: list = [body.id_questionnaire]
+
+        if body.id_promotion is not None:
+            query += " AND e.id_promotion = %s"
+            params.append(body.id_promotion)
+
+        query += " ORDER BY e.nom, e.prenom"
+        cursor.execute(query, tuple(params))
+        alumni_list = rows_to_dicts(cursor, cursor.fetchall())
+
+        if not alumni_list:
+            return {"message": "Tous les alumni ont déjà répondu ou aucun alumni éligible.", "notifies": 0, "cibles": 0}
+
+        from routers.newsletter import _send_newsletter_email
+
+        notifies = 0
+        for alumni in alumni_list:
+            email = alumni.get("email", "")
+            prenom = alumni.get("prenom", "")
+            if not email:
+                continue
+
+            sujet = f"Questionnaire Alumni CRM : {q[1]}"
+            corps = (
+                f"<p>Vous n'avez pas encore répondu au questionnaire "
+                f"<strong>« {q[1]} »</strong>.</p>"
+                f"<p>Ce questionnaire nous aide à suivre l'insertion professionnelle "
+                f"des diplômés. Vos réponses sont anonymisées dans les statistiques.</p>"
+                f"<p>Prenez 5 minutes pour le compléter depuis votre espace Alumni CRM.</p>"
+            )
+            sent = _send_newsletter_email(email, prenom, sujet, corps)
+            if sent:
+                notifies += 1
+
+        logger.info("Relance questionnaire %d : %d/%d notifications envoyées",
+                     body.id_questionnaire, notifies, len(alumni_list))
+
+        return {
+            "message": f"Relance envoyée à {notifies}/{len(alumni_list)} alumni.",
+            "notifies": notifies,
+            "cibles": len(alumni_list),
+        }
+
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Erreur lors de la notification questionnaire")
+        raise HTTPException(status_code=500, detail="Erreur lors de l'envoi des notifications.")
+    finally:
+        cursor.close()

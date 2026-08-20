@@ -214,6 +214,7 @@ class ExperienceProBase(BaseModel):
     date_debut: date
     date_fin: Optional[date] = None
     salaire: float = Field(ge=0)
+    salary_annuel: Optional[float] = Field(default=0, ge=0)
     poste_actuel: bool
     id_entreprise: int
     id_etudiant: int
@@ -242,6 +243,7 @@ class NouvelleExperience(BaseModel):
     date_debut: date
     date_fin: Optional[date] = None
     salaire: float = Field(ge=0)
+    salary_annuel: Optional[float] = Field(default=0, ge=0)
     nom_entreprise: str
     secteur_activite: Optional[str] = ""
     poste_actuel: bool = True

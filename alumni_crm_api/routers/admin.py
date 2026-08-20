@@ -336,14 +336,14 @@ def calculer_indicateurs(db=Depends(get_db)):
         # conformement a l'exigence du sujet de stage : tous les indicateurs
         # d'insertion sont calcules a partir des donnees collectees par le CRM.
         salaire_query = f"""
-            SELECT ROUND(AVG(exp.salaire), 2) AS salaire_moyen,
+            SELECT ROUND(AVG(CASE WHEN exp.salary_annuel > 0 THEN exp.salary_annuel ELSE exp.salaire END), 2) AS salaire_moyen,
                    COUNT(*) AS salaires_renseignes,
-                   MIN(exp.salaire) AS salaire_min,
-                   MAX(exp.salaire) AS salaire_max
+                   MIN(CASE WHEN exp.salary_annuel > 0 THEN exp.salary_annuel ELSE exp.salaire END) AS salaire_min,
+                   MAX(CASE WHEN exp.salary_annuel > 0 THEN exp.salary_annuel ELSE exp.salaire END) AS salaire_max
             FROM EXPERIENCE_PRO exp
             JOIN ETUDIANT e ON exp.id_etudiant = e.id_etudiant
                 AND e.date_anonymisation IS NULL
-            WHERE {emploi_en_cours} AND exp.salaire > 0;
+            WHERE {emploi_en_cours} AND (exp.salary_annuel > 0 OR exp.salaire > 0);
         """
         cursor.execute(salaire_query)
         sal_row = cursor.fetchone()

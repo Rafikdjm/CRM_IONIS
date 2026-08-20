@@ -273,6 +273,19 @@ export default function AlumniConsent() {
             Droit de retrait du consentement à tout moment
           </li>
         </ul>
+        <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+          <p className="font-medium">Durée de conservation</p>
+          <p className="mt-1">
+            Vos données personnelles sont conservées tant que votre compte est actif. En cas de demande d'anonymisation,
+            vos données sont rendues irréversiblement anonymes et conservées 6 mois avant purge définitive.
+            Les données de consentement sont conservées à des fins de traçabilité même après anonymisation.
+          </p>
+          <p className="mt-2 font-medium">Délégué à la Protection des Données (DPO)</p>
+          <p className="mt-1">
+            Pour toute question relative à vos données personnelles, contactez le DPO :
+            <a href="mailto:dpo@ionis-stm.com" className="ml-1 font-medium underline">dpo@ionis-stm.com</a>
+          </p>
+        </div>
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">

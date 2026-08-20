@@ -1,1 +1,2 @@
-USE [alumni_crm];
+SELECT count(*) FROM information_schema.tables 
+WHERE table_schema = 'public';

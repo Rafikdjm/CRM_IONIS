@@ -333,12 +333,14 @@ export const careerAPI = {
   },
 
   add: (alumniId, data) => {
+    const salaryVal = parseFloat(data.salary_range) || 0;
     const payload = {
       intitule_poste: data.position || data.intitule_poste || '',
       type_contrat: data.type_contrat || 'CDI',
       date_debut: toFullDate(data.start_date || data.date_debut) || '2024-01-01',
       date_fin: toFullDate(data.end_date || data.date_fin) || null,
-      salaire: parseFloat(data.salary_range) || data.salaire || 0,
+      salaire: salaryVal,
+      salary_annuel: salaryVal,
       nom_entreprise: data.company || data.nom_entreprise || '',
       secteur_activite: data.sector || data.secteur_activite || '',
       poste_actuel: data.is_current || data.poste_actuel || false,
