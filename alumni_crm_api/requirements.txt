@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pg8000
+pandas
+openpyxl
+pydantic[email]
+python-dotenv
+PyJWT
+resend

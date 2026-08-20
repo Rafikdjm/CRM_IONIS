@@ -1,0 +1,248 @@
+/* ── Admin Dashboard : animations bento ──────────────────────────────────
+   Purement visuel, aucune dépendance. Les animations s'appuient sur des
+   keyframes CSS et des variables custom (--seg-len / --spark-len) injectées
+   en inline par les composants SVG correspondants. En environnement de test
+   (vitest, css: false) le CSS n'est pas chargé : le rendu reste stable. */
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.dash-card-in {
+  animation: card-in 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Le donut se « dessine » segment par segment (staggered via animation-delay). */
+@keyframes donut-seg {
+  from { stroke-dashoffset: var(--seg-len, 999); }
+  to { stroke-dashoffset: 0; }
+}
+
+/* Les barres verticales poussent depuis le bas. */
+@keyframes grow-y {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+/* Les barres horizontales des types de contrat poussent de gauche à droite. */
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* La sparkline se trace de gauche à droite. */
+@keyframes spark-draw {
+  from { stroke-dashoffset: var(--spark-len, 500); }
+  to { stroke-dashoffset: 0; }
+}
+
+/* ── Micro-interactions (hover + continu) ───────────────────────────────── */
+
+/* 1. Survol des cartes : léger soulevé + ombre renforcée (~200ms).
+      NB : doit vivre sur l'élément carte lui-même, jamais sur le wrapper
+      .dash-card-in (son animation-fill-mode "both" figerait le transform). */
+.dash-lift {
+  transition:
+    transform 0.2s ease-out,
+    box-shadow 0.2s ease-out,
+    border-color 0.2s ease-out;
+}
+.dash-lift:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 2px 6px rgba(15, 23, 42, 0.08),
+    0 18px 44px -12px rgba(15, 23, 42, 0.28);
+}
+
+/* 3. Barres de progression : léger shimmer qui traverse la barre quand
+      on survole la carte qui la contient (via le groupe .dash-lift). */
+@keyframes bar-shimmer {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(260%); }
+}
+.dash-bar-fill {
+  position: relative;
+  overflow: hidden;
+}
+.dash-bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 45%;
+  border-radius: inherit;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-110%);
+  opacity: 0;
+  pointer-events: none;
+}
+.dash-lift:hover .dash-bar-fill::after {
+  opacity: 1;
+  animation: bar-shimmer 1.3s ease-in-out infinite;
+}
+
+/* ── Donut des secteurs : chaque segment est dans son propre <svg> empilé,
+      enveloppé d'un <div> HTML qui porte l'info-bulle (les pseudo-éléments
+      CSS ne sont pas fiables sur les éléments SVG). Le segment survolé
+      s'épaissit légèrement, les autres s'estompent. */
+.donut-seg {
+  transition: opacity 0.2s ease-out, stroke-width 0.2s ease-out;
+  pointer-events: visibleStroke;
+  cursor: pointer;
+}
+.dash-donut:has(.dash-donut-seg:hover) .donut-seg {
+  opacity: 0.45;
+}
+.dash-donut-seg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+/* Le <svg> racine de chaque segment ne capte rien (sinon il bloquerait les
+   segments empilés dessous) ; seul le tracé de l'arc réagit, via le path. */
+.dash-donut-seg svg {
+  pointer-events: none;
+}
+.dash-donut-seg:hover {
+  z-index: 10;
+}
+.dash-donut-seg:hover .donut-seg {
+  opacity: 1;
+  stroke-width: 32;
+}
+.dash-donut-tip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 10px));
+  white-space: nowrap;
+  background: rgba(15, 23, 42, 0.92);
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 5px 9px;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease-out;
+  z-index: 30;
+}
+.dash-donut-tip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(15, 23, 42, 0.92);
+}
+.dash-donut-seg:hover .dash-donut-tip {
+  opacity: 1;
+}
+
+/* ── Info-bulle CSS (sans lib) : contenu porté par ::before/@attr(tip).
+      Attribut `tip` injecté côté JSX ; le sélecteur [tip] évite de cibler
+      d'anciens éléments `title` hérités du passé. */
+[tip] {
+  position: relative;
+}
+[tip]::before {
+  content: attr(tip);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: rgba(15, 23, 42, 0.92);
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 5px 9px;
+  border-radius: 6px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease-out;
+  z-index: 30;
+}
+[tip]::after {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(15, 23, 42, 0.92);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease-out;
+}
+[tip]:hover::before,
+[tip]:hover::after {
+  opacity: 1;
+}
+
+/* ── Barres de promotion ────────────────────────────────────────────────── */
+/* L'animation d'entrée (grow-y, fill both) reste sur le conteneur : si elle
+   était sur la barre même, son "transform figé" bloquerait le survol. */
+.dash-vbar {
+  transform-origin: bottom;
+  transition: filter 0.2s ease-out, transform 0.2s ease-out;
+  cursor: pointer;
+}
+.dash-vbar:hover {
+  filter: brightness(1.08);
+  transform: scaleX(1.06) scaleY(1.02);
+}
+.dash-hbar-row {
+  position: relative;
+}
+.dash-hbar-fill {
+  transition: filter 0.2s ease-out;
+}
+.dash-hbar-row:hover .dash-hbar-fill {
+  filter: brightness(1.1);
+}
+
+/* Barres des types de contrat : leger éclaircissement au survol. */
+.dash-typebar {
+  transition: filter 0.2s ease-out;
+  cursor: default;
+}
+.dash-typebar:hover {
+  filter: brightness(1.08);
+}
+
+/* ── Accessibilité : on calme tout pour prefers-reduced-motion ──────────── */
+@media (prefers-reduced-motion: reduce) {
+  .dash-card-in { animation: none; }
+
+  .dash-lift,
+  .donut-seg,
+  .dash-donut-tip,
+  .dash-vbar,
+  .dash-hbar-fill,
+  .dash-typebar {
+    transition: none;
+  }
+  [tip],
+  [tip]::before,
+  [tip]::after {
+    transition: none;
+  }
+  .dash-lift:hover,
+  .dash-vbar:hover {
+    transform: none;
+  }
+  .dash-lift:hover .dash-bar-fill::after {
+    animation: none;
+    opacity: 0;
+    transform: none;
+  }
+}

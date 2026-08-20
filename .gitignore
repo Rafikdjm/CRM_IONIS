@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+venv/
+env/
+
+# Build outputs
+dist/
+dist-ssr/
+
+# Environment variables (secrets)
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.db
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.bak
+__pycache__/

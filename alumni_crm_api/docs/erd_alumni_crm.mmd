@@ -1,0 +1,148 @@
+%% ============================================================================
+%% MCD / MLD — CRM Alumni
+%% Base de données PostgreSQL : alumni_crm (schéma public)
+%% 14 tables : 12 tables métier + otp_codes + schema_migrations
+%% Généré le 10/08/2026 depuis l'introspection de la base réelle
+%% Vérifié et corrigé le 15/08/2026 (schéma réel, migrations jusqu'à
+%% 011_email_academique_unique.sql) : DEMANDE_RGPD complétée (010) et
+%% CONSENTEMENT_RGPD enrichi (007).
+%%
+%% Convention : le MLD est la traduction directe du MCD. Chaque entité du MCD
+%% devient une table, chaque relation 1-N devient une colonne FK, et la relation
+%% N-N entre ETUDIANT et CERTIFICATION est décomposée par la table de jonction
+%% OBTIENT (PK composite).
+%% ============================================================================
+
+erDiagram
+    PROMOTION ||--o{ ETUDIANT : "regroupe"
+    ETUDIANT ||--o{ EXPERIENCE_PRO : "a"
+    ENTREPRISE ||--o{ EXPERIENCE_PRO : "est le lieu de"
+    ETUDIANT ||--o{ OBTIENT : "obtient"
+    CERTIFICATION ||--o{ OBTIENT : "est obtenue par"
+    ETUDIANT ||--o{ CONSENTEMENT_RGPD : "donne"
+    QUESTIONNAIRE ||--o{ QUESTION : "contient"
+    QUESTIONNAIRE ||--o{ REPONSE_QUESTIONNAIRE : "recoit"
+    ETUDIANT ||--o{ REPONSE_QUESTIONNAIRE : "remplit"
+    ETUDIANT o|--o{ DEMANDE_RGPD : "emet"
+
+    PROMOTION {
+        int id_promotion PK "SERIAL"
+        string nom_promotion "NOT NULL"
+        int annee_diplome "NOT NULL"
+        string filiere "NOT NULL"
+    }
+    ETUDIANT {
+        int id_etudiant PK "SERIAL"
+        string nom "NOT NULL"
+        string prenom "NOT NULL"
+        string email "NOT NULL, UNIQUE"
+        string email_academique "UNIQUE (etudiant_email_academique_key)"
+        string telephone "NOT NULL"
+        date date_naissance "NOT NULL"
+        text parcours_anterieur "NOT NULL"
+        date date_inscription "NOT NULL"
+        int id_promotion FK "NOT NULL, ON DELETE CASCADE"
+        string address "DEFAULT ''"
+        string city "DEFAULT ''"
+        string country "DEFAULT ''"
+        string linkedin "DEFAULT ''"
+        string availability_status "en_poste | a_lecoute | en_recherche"
+        jsonb skills "DEFAULT '[]'"
+        timestamp date_anonymisation "RGPD, NULL si actif"
+    }
+    ENTREPRISE {
+        int id_entreprise PK "SERIAL"
+        string nom_entreprise "NOT NULL"
+        string secteur_activite "NOT NULL"
+        string pays "NOT NULL"
+        string ville "NOT NULL"
+    }
+    EXPERIENCE_PRO {
+        int id_experience PK "SERIAL"
+        int id_etudiant FK "NOT NULL, ON DELETE CASCADE"
+        int id_entreprise FK "NOT NULL, ON DELETE CASCADE"
+        string intitule_poste "NOT NULL"
+        string type_contrat "NOT NULL"
+        date date_debut "NOT NULL"
+        date date_fin "NULL si poste actuel"
+        numeric salaire "NOT NULL"
+        boolean poste_actuel "DEFAULT true"
+    }
+    CERTIFICATION {
+        int id_certification PK "SERIAL"
+        string nom_certification "NOT NULL"
+        string organisme "NOT NULL"
+    }
+    OBTIENT {
+        int id_etudiant PK, FK "table de jonction N-N"
+        int id_certification PK, FK "table de jonction N-N"
+        date date_obtention "NOT NULL"
+    }
+    CONSENTEMENT_RGPD {
+        int id_consentement PK "SERIAL"
+        int id_etudiant FK "NOT NULL, ON DELETE CASCADE"
+        date date_consentement "NOT NULL"
+        string type_consentement "NOT NULL, ex: PROFIL_ALUMNI; UNIQUE (id_etudiant, type_consentement)"
+        string statut "NOT NULL, ACCORD | REFUS"
+        string canal "NOT NULL"
+    }
+    QUESTIONNAIRE {
+        int id_questionnaire PK "SERIAL"
+        string titre "NOT NULL"
+        text description "DEFAULT ''"
+        date date_creation "DEFAULT CURRENT_DATE"
+        boolean actif "DEFAULT true"
+    }
+    QUESTION {
+        int id_question PK "SERIAL"
+        int id_questionnaire FK "NOT NULL, ON DELETE CASCADE"
+        text texte "NOT NULL"
+        string type "NOT NULL, DEFAULT 'text'"
+        jsonb options "DEFAULT '[]'"
+        int ordre "NOT NULL, DEFAULT 0"
+        string tag "identifie les KPI"
+        boolean conditionnee_statut_emploi "NOT NULL, DEFAULT false"
+    }
+    REPONSE_QUESTIONNAIRE {
+        int id_reponse PK "SERIAL"
+        int id_etudiant FK "NOT NULL, ON DELETE CASCADE"
+        int id_questionnaire FK "NOT NULL, NO ACTION"
+        jsonb reponses "NOT NULL, DEFAULT '{}'"
+        timestamp date_reponse "DEFAULT NOW()"
+    }
+    AUDIT_LOG {
+        int id_log PK "SERIAL"
+        string action "NOT NULL"
+        text details "NULL"
+        int rows_affected "DEFAULT 0"
+        timestamp executed_at "DEFAULT NOW()"
+        string acteur "admin:nom | alumni:id | system"
+    }
+    DEMANDE_RGPD {
+        int id_demande PK "SERIAL"
+        int id_etudiant FK "ON DELETE SET NULL (snapshot conserve)"
+        string type_demande "NOT NULL, export | suppression"
+        string statut "NOT NULL, DEFAULT 'envoyee'; cycle : envoyee / en_traitement / traitee / rejetee"
+        timestamp date_demande "NOT NULL, DEFAULT NOW()"
+        timestamp date_traitement "NULL"
+        string traitee_par "NULL"
+        text motif_refus "NULL"
+        string nom_complet "snapshot au moment de la demande"
+        string email "snapshot au moment de la demande"
+        string prise_en_charge_par "NULL, admin ayant verrouillé la demande"
+        timestamp date_prise_en_charge "NULL, date/heure de prise en charge admin"
+    }
+    OTP_CODES {
+        int id PK "SERIAL, stockage auth OTP"
+        text email "NOT NULL"
+        text code_hash "NOT NULL"
+        int attempts "DEFAULT 0"
+        timestamp created_at "DEFAULT NOW()"
+        timestamp expires_at "NOT NULL, TTL 10 min"
+        boolean used "DEFAULT false"
+        text ip_address "DEFAULT ''"
+    }
+    SCHEMA_MIGRATIONS {
+        string nom_fichier PK "tracking des migrations"
+        timestamp date_execution "NOT NULL, DEFAULT NOW()"
+    }
