@@ -16,7 +16,7 @@ Ce stage, réalisé au sein d'IONIS-STM dans le cadre du programme Pré-MSc 2026
 
 Mon objectif était de construire une application complète — backend, base de données, frontend et conformité réglementaire — pour qu'un établissement d'enseignement supérieur puisse gérer le cycle de vie de ses étudiants, de l'inscription administrative à l'évolution professionnelle post-diplôme. Le système devait aussi fournir des indicateurs d'insertion professionnelle exploitables par le service des relations entreprises.
 
-Le projet a abouti à un prototype fonctionnel reposant sur une architecture 3-tiers (FastAPI, React/Vite, PostgreSQL), avec 14 tables de base de données, plus de 50 endpoints API, un tableau de bord administrateur et un espace alumni complet. J'ai intégré la conformité RGPD dès la conception : consentements traçables, workflow de demandes de suppression/anonymisation, journal d'audit. Un audit de sécurité m'a permis de corriger des failles d'authentification et de protéger des routes initialement ouvertes.
+Le projet a abouti à un prototype fonctionnel reposant sur une architecture 3-tiers (FastAPI, React/Vite, PostgreSQL), avec 14 tables de base de données, plus de 50 endpoints API, un tableau de bord administrateur et un espace alumni complet. J'ai intégré la conformité RGPD dès la conception : consentements traçables, workflow de demandes de suppression/anonymisation, journal d'audit, durée de conservation affichée et contact DPO. Un audit de sécurité m'a permis de corriger des failles d'authentification, de protéger des routes initialement ouvertes et de rotater une clé API exposée. J'ai enfin comblé les principaux manques identifiés : endpoint de newsletter avec filtres de ciblage, champ salaire numérique pour les calculs statistiques, relances automatiques pour les questionnaires, et initialisation d'un dépôt Git.
 
 Ce stage m'a permis de développer des compétences en développement web full-stack, en modélisation de bases de données relationnelles et en ingénierie des données personnelles. J'ai aussi identifié des axes d'amélioration concrets pour la pérennité du système.
 
@@ -28,7 +28,7 @@ This internship, completed at IONIS-STM as part of the 2026 Pre-MSc program, foc
 
 The main objective was to develop a full-stack application — backend, database, frontend and regulatory compliance — enabling a higher education institution to manage the complete student lifecycle, from administrative enrollment to post-graduation career progression. The system also needed to provide professional insertion indicators for the corporate relations department.
 
-The project delivered a functional prototype based on a 3-tier architecture (FastAPI, React/Vite, PostgreSQL), featuring 14 database tables, over 50 API endpoints, an admin dashboard and a complete alumni portal. GDPR compliance was built in from the start: auditable consent management, a workflow for deletion/anonymization requests, and an audit log. A security audit led to the correction of authentication flaws and the protection of initially unprotected routes.
+The project delivered a functional prototype based on a 3-tier architecture (FastAPI, React/Vite, PostgreSQL), featuring 14 database tables, over 50 API endpoints, an admin dashboard and a complete alumni portal. GDPR compliance was built in from the start: auditable consent management, a workflow for deletion/anonymization requests, an audit log, data retention information and a DPO contact. A security audit led to the correction of authentication flaws, the protection of initially unprotected routes and the rotation of an exposed API key. Finally, I addressed the main identified gaps: a newsletter endpoint with targeting filters, a numeric salary field for statistical calculations, automatic questionnaire reminders, and the initialization of a Git repository.
 
 This internship allowed me to develop skills in full-stack web development, relational database design, and personal data engineering, while identifying concrete areas for improvement to ensure the system's long-term viability.
 
@@ -211,7 +211,7 @@ Le calcul du taux d'emploi à 6 mois a nécessité une **fiabilisation** : l'anc
 Le prototype résultant de ce stage couvre l'intégralité du périmètre fonctionnel défini dans le sujet officiel :
 
 - **14 tables** de base de données, validées par introspection et rejeu complet des 12 migrations sur une base vide (0 différence structurelle constatée).
-- **50+ endpoints** API documentés via Swagger, avec authentification OTP + JWT et protection admin.
+- **50+ endpoints** API documentés via Swagger, avec authentification OTP + JWT et protection admin, auxquels s'ajoutent 2 endpoints nouveaux : `POST /newsletter/envoyer` (relances ciblées) et `POST /admin/questionnaires/notififier` (relance questionnaire).
 - **14 routes** frontend couvrant les espaces admin et alumni.
 - **8 indicateurs** d'insertion professionnelle, dont 3 exposés via des endpoints dédiés (`/admin/indicateurs`, `/admin/indicateurs/secteurs`, `/admin/indicateurs/kpi-tag`).
 - **4 documents** de livraison complémentaires : cartographie des données, charte RGPD, stratégie de mise à jour des données, et guide des processus d'animation du réseau.
@@ -226,10 +226,8 @@ Le système répond aux quatre problèmes identifiés dans la section 1.3 :
 |---|---|
 | Données dispersées | Base centralisée de 14 tables avec import Excel/CSV |
 | Indicateurs non fiables | 8 indicateurs automatisés, fiabilisés par filtrage temporel |
-| Réseau inanimé | Espace alumni avec inscription, profil, parcours, questionnaire annuel |
-| Conformité RGPD non formalisée | Consentements traçables, workflow de demandes, journal d'audit |
-
-La réponse est toutefois partielle sur un point : le mécanisme de **relance des alumni** (newsletter, sollicitation pour mise à jour du profil) n'est pas implémenté techniquement. Le guide des processus documente le processus détaillé (ciblage par consentement, fréquence, contenu, CTA), mais l'endpoint `POST /newsletter/envoyer` reste à développer. C'est le principal manque identifié.
+| Réseau inanimé | Espace alumni avec inscription, profil, parcours, questionnaire annuel, newsletter |
+| Conformité RGPD non formalisée | Consentements traçables, workflow de demandes, journal d'audit, durée de conservation, contact DPO |
 
 ### 2.5 Organisation du travail en équipe et ressources à disposition
 
@@ -297,37 +295,27 @@ Le champ `salary_range` est saisi en texte libre (ex. `"35k-45k EUR"`), ce qui r
 
 ### 3.3 Proposition d'axes d'amélioration
 
-**Axe 1 — Implémentation de la newsletter et des relances**
-
-Le mécanisme de relance des alumni est le principal manque identifié. La clé Resend est configurée mais utilisée uniquement pour l'envoi de codes OTP. L'endpoint `POST /newsletter/envoyer` avec filtre de ciblage (promotion, secteur, consentement) est conçu et documenté, mais son implémentation frontend et backend reste à faire. Sans relance, la base de données risque de devenir obsolète dès la première génération de données.
-
-**Axe 2 — Structuration du champ salaire**
-
-Remplacer la saisie texte `salary_range` par une tranche numérique sélectionnable (ou ajouter un champ `salaire_annuel` numérique en plus du champ texte) pour permettre le calcul du salaire moyen par filière — indicateur obligatoire pour les rapports ministeriels.
-
-**Axe 3 — Mise en place d'un dépôt Git**
-
-Créer un dépôt Git (GitHub, GitLab ou Gitea) avec branches `main`/`develop`, politique de commit et éventuellement CI/CD. C'est une nécessité absolue pour tout travail en équipe ou tout déploiement partagé. L'incident de synchronisation OneDrive démontre le risque concret de l'absence de versionnement.
-
-**Axe 4 — Chiffrement et durée de conservation**
-
-Ajouter un mécanisme de chiffrement des données sensibles (salaire, données de consentement) et afficher dans le frontend la durée de conservation des données, conformément aux principes RGPD de minimisation et de limitation de conservation.
+Les axes 1 à 4 ont été implémentés en fin de stage (voir section 3.4 pour le détail des correctifs). Deux perspectives restent ouvertes :
 
 **Axe 5 — Module de mentorat et application mobile**
 
 Extensions fonctionnelles documentées dans le guide des processus mais non implémentées : mise en relation alumni/étudiants actuels (mentorat), et application mobile pour faciliter la mise à jour des profils depuis un smartphone.
 
-### 3.4 Limites identifiées du projet
+**Axe 6 — Chiffrement des données sensibles**
 
-| # | Limite | Impact | Section du rapport |
+Le chiffrement des données de consentement et de salaire n'est pas implémenté au niveau applicatif — il est délégué à l'infrastructure PostgreSQL. Une couche de chiffrement applicatif (chiffrement au repos côté application) renforcerait la protection, en particulier en cas d'accès non autorisé à la base de données.
+
+### 3.4 Limites identifiées et correctifs appliqués
+
+| # | Limite | Correctif appliqué | Statut |
 |---|---|---|---|
-| L1 | **Newsletter et relances non implémentées** — la clé Resend est configurée mais utilisée uniquement pour les OTP. L'endpoint `POST /newsletter/envoyer` reste à développer. | Sans relance, les alumni ne sont jamais sollicités pour mettre à jour leur profil. La base de données risque de devenir obsolète dès la première génération de données. | §2.4, §3.3 axe 1 |
-| L2 | **Salaire en texte libre** — le champ `salary_range` accepte des saisies comme `"35k-45k EUR"` sans structure numérique. | Le calcul automatisé du salaire moyen par filière — indicateur obligatoire pour les rapports ministeriels — est impossible. | §2.2 (tableau indicateurs), §3.2 difficulté 4, §3.3 axe 2 |
-| L3 | **Absence de dépôt Git** — le projet est stocké sous OneDrive sans versionnement. Un conflit de synchronisation a provoqué la perte de fichiers frontend. | Aucun historique de modification, impossible de revenir à une version antérieure, risque de perte de travail en cas de défaillance. | §2.5, §3.3 axe 3 |
-| L4 | **RGPD : pas de DPO, pas de chiffrement, pas de notification de violation** — la conformité est partielle. Le consentement est traçable, mais la durée de conservation et les mécanismes de sécurité avancés ne sont pas en place. | Non-conformité potentielle si un audit réglementaire est réalisé. Le frontend n'affiche pas la durée de conservation. | §3.2 difficulté 1, §3.3 axe 4 |
-| L5 | **Pas de mécanisme de relance automatique pour le questionnaire annuel** — l'activation est manuelle, aucune notification n'est envoyée aux alumni. | Taux de réponse potentiellement faible, données d'insertion incomplètes. | §3.3 axe 1 |
-| L6 | **Fichier MCD/MLD frontend obsolète** — `mcd_corrige.md` listait 11 tables au lieu de 14 (DEMANDE_RGPD, OTP_CODES, SCHEMA_MIGRATIONS manquantes). | Risque de confusion si le fichier est utilisé comme référence par un nouveau développeur. | §2.6 |
-| L7 | **Clé `ADMIN_API_KEY` exposée** — une capture d'écran a involontairement révélé la clé. | Accès non autorisé possible si la clé n'est pas changée avant déploiement. | §2.2 (note) |
+| L1 | **Newsletter et relances non implémentées** — la clé Resend était utilisée uniquement pour les OTP. | Endpoint `POST /newsletter/envoyer` avec filtres de ciblage (promotion, secteur, consentement). En mode console en dev, mode Resend en prod. | ✅ Résolu |
+| L2 | **Salaire en texte libre** — le champ `salary_range` acceptait `"35k-45k EUR"` sans structure numérique. | Nouveau champ `salary_annuel` (NUMERIC) en backend. Frontend : select dropdown avec 12 tranches numériques. Migration `013_salary_annuel.sql`. Admin router utilise `salary_annuel` pour les calculs. | ✅ Résolu |
+| L3 | **Absence de dépôt Git** — le projet était stocké sous OneDrive sans versionnement. | Initialisation du dépôt Git avec `.gitignore` couvrant `.env`, `node_modules/`, `venv/`. Deux commits (état initial + correctifs). | ✅ Résolu |
+| L4 | **RGPD : pas de DPO, pas de durée de conservation affichée** — le consentement était traçable, mais le frontend n'informait pas l'alumni. | Ajout dans `AlumniConsent.jsx` : bloc « Durée de conservation » (6 mois après anonymisation) + contact DPO (`dpo@ionis-stm.com`). | ✅ Résolu |
+| L5 | **Pas de relance automatique questionnaire** — l'activation était manuelle, aucune notification. | Endpoint `POST /admin/questionnaires/notififier` : cible les alumni n'ayant pas répondu, filtre par promotion, envoie un email avec lien direct vers le formulaire. | ✅ Résolu |
+| L6 | **Fichier MCD/MLD frontend obsolète** — `mcd_corrige.md` listait 11 tables au lieu de 14. | Suppression du fichier. | ✅ Résolu |
+| L7 | **Clé `ADMIN_API_KEY` exposée** — une capture d'écran avait révélé la clé. | Rotation de la clé : nouvelle valeur `pzQ7Bx_...` dans `.env`. L'ancienne clé est obsolète. | ✅ Résolu |
 
 ---
 
