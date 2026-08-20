@@ -242,7 +242,7 @@ def generate_cartographie():
     pdf.section_title("5.5 Limites et Ameliorations")
     pdf.bullet("Le statut 'revoque' mentionne dans le PDF initial n'existe pas dans le code. Seuls 'actif' et 'refuse' sont implementes.")
     pdf.bullet("Aucun mecanisme de chiffrement specifique des donnees de consentement n'est mentionne dans le code.")
-    pdf.bullet("Pas de reference a un DPO (Data Protection Officer) dans l'interface.")
+    pdf.bullet("Une duree de conservation et un contact DPO ont ete ajoutes dans l'interface AlumniConsent.jsx.")
     pdf.bullet("Pas de mecanisme de notification de violation de donnees dans le frontend.")
 
     pdf.ln(4)
@@ -349,14 +349,14 @@ def generate_rgpd():
     pdf.ln(4)
 
     # 6. Manque / ameliorations
-    pdf.chapter_title("6", "Manques et Ameliorations Proposees")
+    pdf.chapter_title("6", "Manques identifies et correctifs appliques")
     pdf.body_text("Comparaison entre le PDF initial et l'implementation reelle :")
-    pdf.bullet("Le statut 'revoque' mentionne dans le PDF initial n'existe pas dans le code. Seuls 'actif' et 'refuse' sont implementes. Il est recommande d'ajouter le statut 'revoque' pour une conformite complete.")
+    pdf.bullet("Le statut 'revoque' mentionne dans le PDF initial n'existe pas dans le code. Seuls 'actif' et 'refuse' sont implementes.")
     pdf.bullet("Aucun mecanisme de chiffrement specifique des donnees de consentement n'est mentionne dans le code (confie au backend/infrastructure).")
-    pdf.bullet("Aucune information sur la duree de conservation des donnees n'est implementee dans le frontend.")
-    pdf.bullet("Pas de reference a un DPO (Data Protection Officer) dans l'interface.")
+    pdf.bullet("CORRIGE : La duree de conservation des donnees est maintenant affichee dans AlumniConsent.jsx (6 mois apres anonymisation).")
+    pdf.bullet("CORRIGE : Un contact DPO (dpo@ionis-stm.com) est maintenant affiche dans AlumniConsent.jsx.")
     pdf.bullet("Pas de mecanisme de notification de violation de donnees dans le frontend.")
-    pdf.bullet("Le consentement ne peut pas etre supprime physiquement (seul le statut change), ce qui est conforme au principe de traçabilite.")
+    pdf.bullet("Le consentement ne peut pas etre supprime physiquement (seul le statut change), ce qui est conforme au principe de tracabilite.")
 
     pdf.output(os.path.join(OUTPUT_DIR, "Charte de Conformite RGPD - Alumni CRM.pdf"))
     print("Charte RGPD generee.")
@@ -446,11 +446,10 @@ def generate_strategie():
 
     # 5. Ameliorations
     pdf.chapter_title("5", "Manques et Ameliorations Proposees")
-    pdf.bullet("L'envoi automatique de la newsletter n'est pas implemente (pas de composant email/frontend).")
-    pdf.bullet("Pas de systeme de relance automatique pour les alumni n'ayant pas repondu au questionnaire.")
+    pdf.bullet("CORRIGE : L'endpoint POST /newsletter/envoyer est maintenant implemente avec filtres de ciblage (promotion, secteur, consentement). Le mode console logge les envois en dev ; le mode Resend les envoie en prod.")
+    pdf.bullet("CORRIGE : Un endpoint POST /admin/questionnaires/notififier envoie des relances email aux alumni n'ayant pas repondu au questionnaire actif.")
     pdf.bullet("Pas de calendrier automatique d'envoi du questionnaire annuel (activation manuelle).")
-    pdf.bullet("Pas de notifications push ou email pour informer les alumni d'un nouveau questionnaire disponible.")
-    pdf.bullet("Le systeme de pre-remplissage est limité au dernier questionnaire ; pas d'historique complet dans l'interface.")
+    pdf.bullet("Le systeme de pre-remplissage est limite au dernier questionnaire ; pas d'historique complet dans l'interface.")
 
     pdf.output(os.path.join(OUTPUT_DIR, "Strategie de Mise a Jour des Donnees - Alumni CRM.pdf"))
     print("Strategie generee.")
@@ -607,12 +606,12 @@ def generate_indicateurs():
 
     pdf.section_title("6.2 Point critique : Salaire moyen par filiere")
     pdf.body_text(
-        "Le PDF initial mentionnait le calcul du 'salaire moyen par filiere'. Cependant, dans "
-        "l'implementation reelle, le salaire est saisi sous forme de texte libre (champ 'salary_range', "
-        "ex: '35k-45k EUR'). Cette saisie non structuree rend impossible l'automatisation du calcul "
-        "du salaire moyen. Il est recommande de : (1) remplacer le champ texte par une tranche "
-        "selectionnable (fourchette numerique), ou (2) ajouter un champ numerique 'salaire_annuel' "
-        "en plus du champ texte, pour permettre les agregations statistiques."
+        "Le PDF initial mentionnait le calcul du 'salaire moyen par filiere'. Le probleme etait que "
+        "le salaire etait saisi sous forme de texte libre (champ 'salary_range', ex: '35k-45k EUR'). "
+        "CORRIGE : un champ numerique 'salary_annuel' (NUMERIC) a ete ajoute en backend via la "
+        "migration 013_salary_annuel.sql. Le frontend utilise maintenant un select dropdown avec "
+        "12 tranches numeriques. Le backend utilise salary_annuel pour les calculs de salaire moyen, "
+        "min et max, avec fallback sur le champ salaire texte pour les anciennes donnees."
     )
 
     pdf.section_title("6.3 Systeme de Tags KPI (non mentionne dans le PDF initial)")
@@ -784,12 +783,13 @@ def generate_rapport_stage():
     pdf.bullet("Import Excel : valider chaque ligne du fichier source tout en gerant les erreurs de maniere granulaire.")
     pdf.bullet("Authentification OTP : integrer l'envoi d'email via l'API Resend avec gestion des tentatives ratees.")
     pdf.section_title("6.3 Perspectives d'amelioration")
-    pdf.bullet("Envoi automatique de la newsletter via un service email (SendGrid/Mailgun).")
-    pdf.bullet("Systeme de relance automatique pour les alumni n'ayant pas repondu au questionnaire.")
-    pdf.bullet("Ajout d'un champ numerique 'salaire_annuel' pour permettre le calcul du salaire moyen par filiere.")
+    pdf.bullet("CORRIGE : L'envoi de la newsletter est desormais implemente via l'endpoint POST /newsletter/envoyer avec filtres de ciblage.")
+    pdf.bullet("CORRIGE : Les relances automatiques pour le questionnaire sont implementees via POST /admin/questionnaires/notififier.")
+    pdf.bullet("CORRIGE : Le champ numerique 'salary_annuel' est desormais en place (migration 013, dropdown frontend).")
     pdf.bullet("Calendrier automatique d'envoi du questionnaire annuel (cron job).")
     pdf.bullet("Integration d'un module de mentorat (mise en relation alumni/etudiants actuels).")
     pdf.bullet("Application mobile pour faciliter la mise a jour des profils depuis un smartphone.")
+    pdf.bullet("Chiffrement applicatif des donnees sensibles (salaire, consentement).")
 
     pdf.output(os.path.join(OUTPUT_DIR, "Rapport de Stage - Alumni CRM.pdf"))
     print("Rapport de stage genere.")
