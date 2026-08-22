@@ -75,8 +75,6 @@ Variables d'environnement attendues (fichier `.env`) :
 | `RESEND_API_KEY` / `EMAIL_FROM` | Envoi réel des emails |
 | `PURGE_DELAY_MONTHS` | Délai de purge des comptes anonymisés (défaut 6) |
 
-Documentation interactive : http://127.0.0.1:8000/docs
-
 ### 3. Frontend
 
 ```bash
