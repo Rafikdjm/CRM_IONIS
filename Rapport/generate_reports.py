@@ -162,7 +162,7 @@ def generate_cartographie():
         ["Suivi des Postes", "is_current (poste_actuel)", "Booleen indiquant si le poste est actuellement occupe. En l'absence de coche, le systeme affiche automatiquement l'experience la plus recente."],
         ["Suivi des Postes", "description", "Description des missions et responsabilites du poste."],
         ["Informations Salariales", "salary_range (salaire)", "Champ historique en saisie libre (ex: '35k-45k EUR'), conserve pour retrocompatibilite."],
-        ["Informations Salariales", "salary_annuel (NUMERIC)", "Salaire annuel brut en euros saisi via un select de tranches chiffrees (migration 013). Sert aux calculs statistiques (moyenne, min, max) avec repli sur l'ancien champ texte."],
+        ["Informations Salariales", "salary_annuel (NUMERIC)", "Salaire annuel brut en euros saisi via un select de tranches chiffrees (migration 012). Sert aux calculs statistiques (moyenne, min, max) avec repli sur l'ancien champ texte."],
         ["Geographie", "pays, ville", "Localisation geographique de l'entreprise (pays et ville)."],
         ["Secteur d'activite", "sector (secteur_activite)", "Secteur d'activite choisi parmi 37 categories standardisees + 'Autre' avec saisie libre."],
         ["Certifications", "name (nom_certification)", "Nom de la certification obtenue post-diplome."],
@@ -260,7 +260,7 @@ def generate_cartographie():
     pdf.bullet("Les champs linkedin, address, city, pays etait sous-estimés dans le PDF initial (present dans le code mais incompletement documentes).")
     pdf.bullet("Le champ 'description' des experiences professionnelles n'etait pas mentionne.")
     pdf.bullet("Le champ 'previous_school' (etablissement precedent) est collecte a l'inscription mais n'apparait pas dans l'entree du PDF initial.")
-    pdf.bullet("CORRIGE : le champ 'salary_range' (texte libre) est complete par un champ numerique 'salary_annuel' (NUMERIC, migration 013) ; l'agregation en salaire moyen/min/max est desormais automatisee cote backend.")
+    pdf.bullet("CORRIGE : le champ 'salary_range' (texte libre) est complete par un champ numerique 'salary_annuel' (NUMERIC, migration 012) ; l'agregation en salaire moyen/min/max est desormais automatisee cote backend.")
     pdf.bullet("Les donnees de reponse aux questionnaires (table REPONSE, format JSON) n'etaient pas mentionnees dans la cartographie.")
     pdf.bullet("La mention des entites CONSENTEMENT_RGPD, QUESTIONNAIRE et REPONSE est ajoutee car elles font partie du modele de donnees.")
 
@@ -371,7 +371,7 @@ def generate_rgpd():
         "d'acces, d'effacement et de portabilite, base sur la table DEMANDE_RGPD :"
     )
     pdf.bullet("Depot auto-service : POST /rgpd/demandes (types 'export' ou 'suppression') ; suivi et annulation par l'alumni via GET /rgpd/demandes/moi et DELETE /rgpd/demandes/{id}.")
-    pdf.bullet("Cycle de statuts : envoyee -> en_traitement -> traitee/rejetee (contrainte SQL, migration 010), avec verrou anti-traitement parallele (prise_en_charge_par, date_prise_en_charge).")
+    pdf.bullet("Cycle de statuts : envoyee -> en_traitement -> traitee/rejetee (contrainte SQL, migration 009), avec verrou anti-traitement parallele (prise_en_charge_par, date_prise_en_charge).")
     pdf.bullet("Traitement d'une demande de suppression = anonymisation irreversible (email remplace par ANONYMISE_<id>@anonymise.io, donnees personnelles effacees), puis purge physique differee apres PURGE_DELAY_MONTHS mois (defaut 6) via purge.py (--dry-run disponible) ou POST /admin/demandes-rgpd/purge-anonymises.")
     pdf.bullet("Portabilite : export Excel auto-service via GET /rgpd/export ; exports admin unitaires et en masse.")
     pdf.bullet("Operations tracees dans AUDIT_LOG (acteur, action, details).")
@@ -633,7 +633,7 @@ def generate_indicateurs():
         "Le PDF initial mentionnait le calcul du 'salaire moyen par filiere'. Le probleme etait que "
         "le salaire etait saisi sous forme de texte libre (champ 'salary_range', ex: '35k-45k EUR'). "
         "CORRIGE : un champ numerique 'salary_annuel' (NUMERIC) a ete ajoute en backend via la "
-        "migration 013_salary_annuel.sql. Le frontend utilise maintenant un select dropdown avec "
+        "migration 012_salary_annuel.sql. Le frontend utilise maintenant un select dropdown avec "
         "11 tranches chiffrees et une option 'Non renseigne'. Le backend utilise salary_annuel pour les calculs de salaire moyen, "
         "min et max, avec fallback sur le champ salaire texte pour les anciennes donnees."
     )
@@ -718,7 +718,7 @@ def generate_rapport_stage():
     pdf.bullet("Mise en place des regles d'integrite (cles etrangeres, cascade, contraintes UNIQUE).")
     pdf.bullet("Prototype du schema API (endpoints REST, authentification OTP + JWT).")
     pdf.section_title("3.3 Phase de developpement (Semaines 5-10)")
-    pdf.bullet("Developpement iteratif du backend (API REST complete, plus de 50 endpoints).")
+    pdf.bullet("Developpement iteratif du backend (API REST complete, 80 endpoints).")
     pdf.bullet("Developpement du frontend React (14 pages, composants partages).")
     pdf.bullet("Integration de la conformite RGPD (consentement, export, suppression, audit).")
     pdf.bullet("Tests unitaires et d'integration (Vitest + Testing Library).")
@@ -751,7 +751,7 @@ def generate_rapport_stage():
     )
 
     pdf.section_title("4.3 Backend API (FastAPI)")
-    pdf.body_text("L'API expose plus de 50 endpoints REST organises en 14 modules :")
+    pdf.body_text("L'API expose 80 endpoints REST organises en 15 modules :")
     pdf.bullet("Authentification : OTP send/verify, admin login, API key validation.")
     pdf.bullet("Gestion des promotions : CRUD complet.")
     pdf.bullet("Gestion des etudiants/alumni : CRUD + profil enrichi (jointures promotion, entreprise, experiences, certifications).")
@@ -761,6 +761,8 @@ def generate_rapport_stage():
     pdf.bullet("Questionnaires : CRUD admin + soumission alumni avec validation des cles.")
     pdf.bullet("Dashboard admin : indicateurs, stats, filtrage alumni, evolution temporelle.")
     pdf.bullet("Import/Export : template Excel, import alumni, export complet.")
+    pdf.bullet("Automatisation : upload Excel/CSV d'etudiants en masse, protege par cle API admin.")
+    pdf.bullet("Newsletter et relances : envoi cible (promotion, secteur, consentement) et rappels de questionnaire.")
     pdf.bullet("Nettoyage : orphelins, doublons, archivage, purge differee.")
 
     pdf.section_title("4.4 Frontend React")
@@ -807,19 +809,19 @@ def generate_rapport_stage():
     )
     pdf.section_title("6.2 Difficultes rencontrees et solutions")
     pdf.bullet("Authentification croisee admin/alumni (token partage) -> cles de stockage distinctes, controle du role dans le JWT, intercepteur purgent les sessions orphelines sur les 401 ; corrige et couvert par tests.")
-    pdf.bullet("Derive entre le modele et la base reelle : drift de la migration 004 (ON DELETE CASCADE), route DELETE entreprises cassee, doublons de consentements -> migration corrective idempotente 012, migration 007 avec contrainte UNIQUE et upsert propre, rejeu complet des migrations sur base vide comme test de reference.")
-    pdf.bullet("Deux administrateurs pouvaient traiter la meme demande RGPD -> cycle 'envoyee / en traitement / traitee-rejetee' (migration 010 avec CHECK) et verrou prise_en_charge_par.")
+    pdf.bullet("Derive entre le modele et la base reelle : drift de la migration 003 (ON DELETE CASCADE), route DELETE entreprises cassee, doublons de consentements -> migration corrective idempotente 011, migration 006 avec contrainte UNIQUE et upsert propre, rejeu complet des migrations sur base vide comme test de reference.")
+    pdf.bullet("Deux administrateurs pouvaient traiter la meme demande RGPD -> cycle 'envoyee / en traitement / traitee-rejetee' (migration 009 avec CHECK) et verrou prise_en_charge_par.")
     pdf.bullet("Indicateur d'insertion trompeur (taux a 6 mois comptant des experiences deja terminees) -> filtrage sur les experiences actives a la date de reference, hypothese exposee dans l'API (champ 'hypothese'), cohortes immatures renvoyees en null/en_attente.")
     pdf.bullet("Conformite RGPD en contexte educatif (outils centres entreprise) -> workflow de consentement a 4 niveaux tracable, limites assumees documentees (pas de DPO identifie, pas de chiffrement specifique).")
     pdf.bullet("Absence de versionning Git et incident OneDrive (retour arriere de fichiers frontend) -> recuperation manuelle puis depot Git avec .gitignore racine ; lecon : versionner avant la premiere ligne de code. Le script de test E2E documente dans le README n'est d'ailleurs plus present dans le depot.")
     pdf.bullet("Cle ADMIN_API_KEY apparue dans une capture d'ecran -> rotation immediate de la cle.")
-    pdf.bullet("Salaire saisi en texte libre, salaire moyen non automatisable -> champ numerique salary_annuel (migration 013, select de 11 tranches cote frontend), moyennes calculees sur les experiences en cours.")
+    pdf.bullet("Salaire saisi en texte libre, salaire moyen non automatisable -> champ numerique salary_annuel (migration 012, select de 11 tranches cote frontend), moyennes calculees sur les experiences en cours.")
     pdf.section_title("6.3 Perspectives d'amelioration")
     pdf.bullet("CORRIGE : L'envoi de la newsletter est desormais implemente via l'endpoint POST /newsletter/envoyer avec filtres de ciblage.")
     pdf.bullet("CORRIGE : Les relances automatiques pour le questionnaire sont implementees via POST /admin/questionnaires/notififier.")
-    pdf.bullet("CORRIGE : Le champ numerique 'salary_annuel' est desormais en place (migration 013, dropdown frontend).")
+    pdf.bullet("CORRIGE : Le champ numerique 'salary_annuel' est desormais en place (migration 012, dropdown frontend).")
     pdf.bullet("Versionner des la premiere ligne : commits reguliers, rien d'important qui n'existe qu'en un seul exemplaire sur disque.")
-    pdf.bullet("Rejouer systematiquement les migrations sur base vide a chaque evolution du schema (le drift 004 est reste quatre semaines indetecte).")
+    pdf.bullet("Rejouer systematiquement les migrations sur base vide a chaque evolution du schema (le drift 003 est reste quatre semaines indetecte).")
     pdf.bullet("Introduire des tests backend automatises : principal chantier avant mise en production (ils auraient intercepte la route DELETE cassee et les endpoints 200 OK avec corps d'erreur) ; reconstituer aussi le script de test E2E documente dans le README mais absent du depot.")
     pdf.bullet("Poser les contraintes de validation a la source : type contraint (Literal) cote API et CHECK cote base des la creation des colonnes enumerables (statut des consentements encore libre).")
     pdf.bullet("Hygiene des secrets : jamais de fichier d'environnement ouvert pendant un partage, rotation immediate au moindre doute.")

@@ -9,9 +9,13 @@ from pydantic import ValidationError
 import schemas
 from config import settings
 from database import get_db
+from security import require_admin_api_key
 
 logger = logging.getLogger(__name__)
-router = APIRouter(tags=["Automatisation"])
+router = APIRouter(
+    tags=["Automatisation"],
+    dependencies=[Depends(require_admin_api_key)],
+)
 
 ALLOWED_EXTENSIONS = (".csv", ".xlsx")
 MAX_UPLOAD_SIZE = settings.max_upload_size_mb * 1024 * 1024
