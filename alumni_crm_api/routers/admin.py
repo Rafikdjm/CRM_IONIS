@@ -43,23 +43,24 @@ def _formater_libelle_tag(tag: str) -> str:
 def _condition_emploi_en_cours(alias: str = "exp") -> str:
     """Condition SQL définissant un alumni "en emploi" aujourd'hui.
 
-    Un poste compte comme emploi en cours si :
-      - il est explicitement marqué actuel (EXPERIENCE_PRO.poste_actuel = TRUE),
-        OU
-      - il est structurellement en cours aujourd'hui : début passé ou en cours
-        (date_debut <= CURRENT_DATE) et pas de date de fin, ou une date de fin
-        pas encore atteinte (date_fin >= CURRENT_DATE).
+    Une expérience compte comme emploi en cours si elle N'EST PAS TERMINÉE :
+      - pas de date de fin, ou date de fin pas encore atteinte
+        (date_fin >= CURRENT_DATE) ;
+      - ET elle a commencé (date_debut <= CURRENT_DATE) ou est explicitement
+        marquée actuelle (EXPERIENCE_PRO.poste_actuel = TRUE).
 
-    La clause de dates rend le calcul robuste quand le flag poste_actuel n'a
-    pas été renseigné (ex. expérience saisie sans cocher "Poste actuel" ou
-    importée sans la colonne) alors que l'expérience est manifestement le
-    poste actuel de l'alumni. Elle reste cohérente avec la logique du taux à
-    6 mois, qui compte une expérience "active" à la date de référence.
+    Point clé : une date de fin DÉJÀ PASSÉE exclut TOUJOURS l'expérience,
+    même si le flag poste_actuel est resté à TRUE (saisie obsolète). Les
+    dates structurelles priment sur le flag déclaratif : sans cette règle,
+    les salaires des anciens postes pollueraient le salaire moyen "postes
+    en cours" et gonfleraient artificiellement le taux d'emploi. Le flag
+    poste_actuel reste utile en repli quand les dates sont absentes ou
+    incomplètes (ex. expérience importée sans colonne de dates).
     """
     return (
-        f"({alias}.poste_actuel = TRUE "
-        f"OR ({alias}.date_debut <= CURRENT_DATE "
-        f"AND ({alias}.date_fin IS NULL OR {alias}.date_fin >= CURRENT_DATE)))"
+        f"(({alias}.date_fin IS NULL OR {alias}.date_fin >= CURRENT_DATE) "
+        f"AND ({alias}.poste_actuel = TRUE "
+        f"OR {alias}.date_debut <= CURRENT_DATE))"
     )
 
 
@@ -147,9 +148,9 @@ def calculer_indicateurs(db=Depends(get_db)):
     try:
         # ── 1. Indicateurs par promotion ────────────────────────────────
         # Source de verite du taux d'emploi : EXPERIENCE_PRO. Un alumni est
-        # compté en emploi si une de ses expériences est son poste actuel
-        # (flag poste_actuel) OU une expérience en cours aujourd'hui (dates) ;
-        # voir _condition_emploi_en_cours. Le champ declaratif
+        # compté en emploi si une de ses expériences n'est pas terminée
+        # (pas de date de fin passée) et est son poste actuel (flag) ou a
+        # commencé ; voir _condition_emploi_en_cours. Le champ declaratif
         # ETUDIANT.availability_status n'entre PAS dans le calcul (il peut
         # etre obsolet) ; l'ecart eventuel est mesure et expose en point 3
         # plutot qu'ignore silencieusement.
@@ -358,9 +359,10 @@ def calculer_indicateurs(db=Depends(get_db)):
                 "annee_diplome-12-01 (+6 mois), faute d'une date de diplome en base"
             ),
             "source_de_verite": (
-                "EXPERIENCE_PRO : poste_actuel = TRUE OU experience en cours "
-                "(date_debut <= aujourd'hui et pas de date de fin passee) ; "
-                "availability_status est declaratif et n'entre pas dans les taux"
+                "EXPERIENCE_PRO : experience non terminee (pas de date de fin "
+                "passee, meme si poste_actuel = TRUE) ET (poste_actuel = TRUE "
+                "OU date_debut <= aujourd'hui) ; availability_status est "
+                "declaratif et n'entre pas dans les taux"
             ),
             "indicateurs_par_promotion": promo_results,
             "taux_emploi_6mois_par_promotion": par_promotion_6m,
