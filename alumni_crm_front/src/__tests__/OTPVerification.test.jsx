@@ -100,13 +100,30 @@ describe('OTPVerification - success UI', () => {
 })
 
 describe('OTPVerification - aperçu e-mail « Code de connexion »', () => {
+  beforeEach(() => {
+    vi.resetModules()
+  })
+
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.resetModules()
   })
 
-  it('affiche l’aperçu de l’e-mail reçu uniquement en développement (OTP_MODE console)', () => {
-    renderOTP({})
+  it('affiche l’aperçu de l’e-mail reçu uniquement en développement (OTP_MODE console)', async () => {
+    vi.stubEnv('DEV', true)
+    vi.stubEnv('VITE_OTP_MODE', 'console')
+    vi.stubEnv('VITE_SHOW_DEV_PREVIEW', '')
+
+    const [{ default: DevOTP }, { ThemeProvider: DevThemeProvider }] = await Promise.all([
+      import('../components/OTPVerification'),
+      import('../contexts/ThemeContext'),
+    ])
+
+    render(
+      <DevThemeProvider>
+        <DevOTP />
+      </DevThemeProvider>,
+    )
 
     expect(document.querySelector('.otp-source')).toBeInTheDocument()
     expect(screen.getByText('Code de connexion')).toBeInTheDocument()
@@ -114,6 +131,28 @@ describe('OTPVerification - aperçu e-mail « Code de connexion »', () => {
 
     const inputs = screen.getAllByRole('textbox')
     expect(inputs).toHaveLength(6)
+  })
+
+  it('masque complètement l’aperçu en développement quand VITE_SHOW_DEV_PREVIEW=false', async () => {
+    vi.stubEnv('DEV', true)
+    vi.stubEnv('VITE_OTP_MODE', 'console')
+    vi.stubEnv('VITE_SHOW_DEV_PREVIEW', 'false')
+
+    const [{ default: HiddenOTP }, { ThemeProvider: HiddenThemeProvider }] = await Promise.all([
+      import('../components/OTPVerification'),
+      import('../contexts/ThemeContext'),
+    ])
+
+    render(
+      <HiddenThemeProvider>
+        <HiddenOTP />
+      </HiddenThemeProvider>,
+    )
+
+    expect(document.querySelector('.otp-source')).not.toBeInTheDocument()
+    expect(screen.queryByText('Code de connexion')).not.toBeInTheDocument()
+    expect(screen.queryByText("Aperçu de l'e-mail reçu")).not.toBeInTheDocument()
+    expect(screen.getAllByRole('textbox')).toHaveLength(6)
   })
 
   it('retire complètement l’aperçu hors développement (build production)', async () => {

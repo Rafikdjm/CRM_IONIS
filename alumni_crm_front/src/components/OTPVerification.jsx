@@ -8,7 +8,9 @@ const ERROR_FLASH_MS = 900;
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
 const SHOW_DEV_PREVIEW =
-  import.meta.env.DEV && (import.meta.env.VITE_OTP_MODE || 'console') === 'console';
+  import.meta.env.DEV &&
+  (import.meta.env.VITE_OTP_MODE || 'console') === 'console' &&
+  import.meta.env.VITE_SHOW_DEV_PREVIEW !== 'false';
 
 const PARTICLE_COLORS = {
   light: ['#06b6d4', '#0d9488', '#2563eb', '#14b8a6', '#047857'],
