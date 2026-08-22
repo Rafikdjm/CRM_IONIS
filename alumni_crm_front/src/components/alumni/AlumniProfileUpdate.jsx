@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { alumniAPI, careerAPI } from '../../services/api';
 import { SECTORS } from '../../constants';
 import LoadingSpinner from '../shared/LoadingSpinner';
@@ -185,7 +184,6 @@ function CareerForm({ career, index, onChange, onRemove, canRemove }) {
 }
 
 export default function AlumniProfileUpdate() {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -279,7 +277,6 @@ export default function AlumniProfileUpdate() {
     setError(null);
     try {
       const existingRes = await careerAPI.getByAlumni(alumniId);
-      const existingCareers = existingRes.data || [];
 
       for (const career of existingRes.data || []) {
         await careerAPI.delete(alumniId, career.id);

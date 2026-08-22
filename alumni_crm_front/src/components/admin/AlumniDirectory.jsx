@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { alumniAPI, promotionsAPI, adminIdentityAPI, apiErrorMessage } from '../../services/api';
 import { SECTORS } from '../../constants';
 import LoadingSpinner from '../shared/LoadingSpinner';
@@ -35,7 +35,7 @@ export default function AlumniDirectory() {
 
   const adminName = () => adminIdentityAPI.getName().trim() || 'admin';
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -55,11 +55,11 @@ export default function AlumniDirectory() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterPromotion, searchQuery, filterContact]);
 
   useEffect(() => {
     fetchData();
-  }, [filterPromotion, searchQuery, filterContact]);
+  }, [fetchData]);
 
   useEffect(() => {
     const skillsSet = new Set();
