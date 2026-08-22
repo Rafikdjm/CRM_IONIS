@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from routers import (
     admin,
     admin_auth,
+    automatisation,
     certifications,
     cleanup,
     demandes_rgpd,
@@ -45,6 +46,7 @@ app.include_router(demandes_rgpd.admin_router)
 app.include_router(admin.router)
 app.include_router(cleanup.router)
 app.include_router(import_export.router)
+app.include_router(automatisation.router)
 app.include_router(questionnaires.router)
 app.include_router(questionnaires.admin_router)
 app.include_router(otp.router)
