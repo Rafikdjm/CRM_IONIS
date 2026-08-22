@@ -91,4 +91,3 @@ npm test         # suite Vitest
 - [`alumni_crm_api/README.md`](alumni_crm_api/README.md) — architecture backend, liste des routers, test E2E, limites connues.
 - [`AUDIT_COHERENCE_TABLES.txt`](alumni_crm_api/AUDIT_COHERENCE_TABLES.txt) — audit base/API par introspection SQL.
 - [`Rapport/`](Rapport/) — livrables PDF du sujet de stage.
-- Swagger : `/docs` sur le backend lancé ; schéma machine : `/openapi.json`.
