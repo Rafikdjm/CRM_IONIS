@@ -1,8 +1,13 @@
 import { useState, useRef } from 'react';
-import { read, utils, write } from 'xlsx';
 import { importAPI, alumniAPI, careerAPI } from '../../services/api';
 import ErrorMessage from '../shared/ErrorMessage';
 import { downloadBlob, prepareIOSWindow } from '../../utils/downloadBlob';
+
+let xlsxModulePromise = null;
+const loadXlsx = () => {
+  if (!xlsxModulePromise) xlsxModulePromise = import('xlsx');
+  return xlsxModulePromise;
+};
 
 const EXPECTED_COLUMNS = [
   'prenom', 'nom', 'email', 'telephone', 'promotion', 'annee_diplome',
@@ -36,8 +41,9 @@ export default function ExcelImport() {
     setFile(selectedFile);
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
+        const { read, utils } = await loadXlsx();
         const workbook = read(e.target.result, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
@@ -117,6 +123,7 @@ export default function ExcelImport() {
   };
 
   const generateClientSideExport = async (win) => {
+    const { utils, write } = await loadXlsx();
     const res = await alumniAPI.getAll({});
     const alumniList = res.data || [];
 
@@ -164,6 +171,7 @@ export default function ExcelImport() {
       });
       downloadBlob(blob, 'modele_import_alumni.xlsx', win);
     } catch {
+      const { utils, write } = await loadXlsx();
       const ws = utils.aoa_to_sheet([TEMPLATE_COLUMNS]);
       const wb = utils.book_new();
       utils.book_append_sheet(wb, ws, 'Modèle');

@@ -707,6 +707,16 @@ function SalaryGauge({ value, fourchette }) {
           {Math.round(bas / 1000)}K €
         </text>
       </svg>
+      {fourchette && (
+        <p
+          className={`mt-1 text-center text-xs font-medium ${echantillonLimite ? 'text-amber-600 dark:text-amber-400' : 'text-gray-500 dark:text-slate-400'}`}
+          data-testid="jauge-salaire-mention"
+        >
+          {echantillonLimite
+            ? `Fourchette indicative — échantillon limité (${nbSalaires} salaire${nbSalaires > 1 ? 's' : ''} renseigné${nbSalaires > 1 ? 's' : ''})`
+            : 'Fourchette issue du min/max des salaires renseignés'}
+        </p>
+      )}
 
     </div>
   );
