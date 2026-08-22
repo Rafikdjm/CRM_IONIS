@@ -168,7 +168,7 @@ J'ai développé une interface utilisateur complète avec React + Vite, structur
 - *Espace administrateur* : tableau de bord avec KPI et graphiques, annuaire filtrable, gestion des promotions, import/export Excel, gestion des questionnaires, traitement des demandes RGPD.
 - *Espace alumni* : inscription multi-étapes, vérification OTP, édition de profil, parcours professionnel (expériences + certifications), consentement RGPD, questionnaire annuel.
 
-Le frontend comprend **14 routes principales** et des composants partagés (thème clair/sombre, indicateurs, protection de routes par rôle).
+Le frontend comprend **14 routes principales** et des composants partagés (thème clair/sombre, indicateurs, protection de routes par rôle). La couche de tests compte 13 fichiers (Vitest + Testing Library, dossier `src/__tests__`).
 
 **Mission 4 — Conformité RGPD et audit de sécurité**
 
@@ -182,9 +182,9 @@ J'ai intégré la conformité RGPD à toutes les étapes du système :
 Un audit de sécurité m'a permis de corriger des failles critiques :
 
 - Ajout de `require_admin_api_key` sur les routes POST/DELETE de promotions et entreprises initialement non protégées.
-- Retrait d'un router mort (`automatisation.py`) avec upload pandas non protégé.
+- Mise à l'écart d'un router mort (`automatisation.py`) avec upload pandas non protégé : le fichier est conservé sur disque mais n'est plus monté dans `main.py` (aucune route exposée).
 - Correction d'une faille d'ownership : un alumni pouvait lire/modifier les réponses d'un autre alumni en modifiant un ID dans la requête → corrigé via `require_owner_or_admin`.
-- Protection des 9 routes permettant la modification de comptes déjà anonymisés.
+- Protection des routes permettant la modification de comptes déjà anonymisés via le garde `refuser_compte_anonymise` (12 points d'appel : PUT/PATCH étudiant, expériences, certifications, consentements, réponses questionnaire).
 - `DELETE /promotions/{id}` renvoie désormais 409 si des étudiants sont rattachés (sauf `?force=true`).
 
 > **Note :** La clé `ADMIN_API_KEY` a été exposée par erreur dans une capture d'écran pendant une session de travail. Elle doit être changée avant tout déploiement en production.
@@ -198,9 +198,9 @@ J'ai défini et implémenté **8 indicateurs d'insertion professionnelle** avec 
 | Taux d'emploi à 6 mois | Expériences actives à la date de référence ÷ total alumni |
 | Taux d'emploi global brut | (Alumni avec expérience ÷ total alumni) × 100 |
 | Adéquation formation/emploi | Réponses à la question taguée `adequation_formation` |
-| Salaire moyen | *Point critique* : saisie texte libre, non automatisable |
+| Salaire moyen | Calculé sur `salary_annuel` (NUMERIC) avec repli sur le champ texte historique ; moyennes par promotion exposées |
 | Alumni actifs | Alumni avec ≥ 1 expérience enregistrée |
-| Taux de complétion | Alumni ayant completé profil + parcours |
+| Taux de complétion | Alumni ayant complété profil + parcours |
 | Alumni par promotion | Comptage par id_promotion |
 | Répartition par secteur | Agrégation du champ secteur_activite |
 
@@ -211,10 +211,10 @@ Le calcul du taux d'emploi à 6 mois a nécessité une **fiabilisation** : l'anc
 Le prototype résultant de ce stage couvre l'intégralité du périmètre fonctionnel défini dans le sujet officiel :
 
 - **14 tables** de base de données, validées par introspection et rejeu complet des 12 migrations sur une base vide (0 différence structurelle constatée).
-- **50+ endpoints** API documentés via Swagger, avec authentification OTP + JWT et protection admin, auxquels s'ajoutent 2 endpoints nouveaux : `POST /newsletter/envoyer` (relances ciblées) et `POST /admin/questionnaires/notififier` (relance questionnaire).
+- **50+ endpoints** API documentés via Swagger, avec authentification OTP + JWT et protection admin, auxquels s'ajoutent 2 endpoints nouveaux : `POST /newsletter/envoyer` (envoi de newsletter avec filtres de ciblage) et `POST /admin/questionnaires/notififier` (relance questionnaire).
 - **14 routes** frontend couvrant les espaces admin et alumni.
-- **8 indicateurs** d'insertion professionnelle, dont 3 exposés via des endpoints dédiés (`/admin/indicateurs`, `/admin/indicateurs/secteurs`, `/admin/indicateurs/kpi-tag`).
-- **4 documents** de livraison complémentaires : cartographie des données, charte RGPD, stratégie de mise à jour des données, et guide des processus d'animation du réseau.
+- **8 indicateurs** d'insertion professionnelle, dont 6 exposés via des endpoints dédiés (`/admin/indicateurs`, `/admin/indicateurs/secteurs`, `/admin/indicateurs/types-contrat`, `/admin/indicateurs/kpi-tag`, `/admin/indicateurs/kpi-tags`, `/admin/indicateurs/kpi-tags-actifs`).
+- **5 documents** de livraison complémentaires, couvrant les exigences « Management » du sujet : cartographie des données (exigence M1), charte RGPD (M2), analyse des indicateurs d'insertion (M4), stratégie de mise à jour des données — porteuse de l'exigence M3 (questionnaire annuel automatisé et newsletter) —, et guide des processus d'animation du réseau (livrable attendu du sujet).
 
 Un élément que je souligne est le **système de tags KPI** : chaque question de questionnaire peut être étiquetée (ex. `adequation_formation`) pour alimenter automatiquement un indicateur de pilotage. Ce mécanisme est extensible — ajouter un tag à une question fait apparaître l'indicateur correspondant dans le tableau de bord administrateur sans modification du code backend. C'est une innovation par rapport à la conception initiale.
 
@@ -233,7 +233,7 @@ Le système répond aux quatre problèmes identifiés dans la section 1.3 :
 
 J'ai réalisé ce stage **en solo** : il n'y avait pas d'équipe technique dédiée au projet. Le suivi régulier avec le tuteur pédagogique m'a fourni un cadre de validation des choix d'architecture et des priorités fonctionnelles.
 
-Le projet était stocké en local sous OneDrive avec synchronisation active, **sans dépôt Git**. Cette organisation a provoqué un incident : un conflit de synchronisation concurrente a entraîné le retour à une version antérieure de plusieurs fichiers frontend en cours de développement, et j'ai dû reprendre le travail concerné. Cet incident est un axe d'amélioration prioritaire (voir section 4.3).
+Le projet était stocké en local sous OneDrive avec synchronisation active, **sans dépôt Git**. Cette organisation a provoqué un incident : un conflit de synchronisation concurrente a entraîné le retour à une version antérieure de plusieurs fichiers frontend en cours de développement, et j'ai dû reprendre le travail concerné. Cet incident est un axe d'amélioration prioritaire (voir section 3.3, axe 5).
 
 Les ressources techniques à disposition comprenaient : un poste de développement local, l'accès aux APIs (Resend pour l'envoi d'OTP email), et les polices/se fontes système pour la mise en forme des documents.
 
@@ -255,67 +255,100 @@ Les ressources techniques à disposition comprenaient : un poste de développeme
 
 **Compétences techniques.**
 
-- *Développement web full-stack* : conception et implémentation d'une application complète avec FastAPI (Python) côté backend et React/Vite côté frontend, communication via API REST JSON. Maîtrise des patterns CRUD, de l'authentification OTP + JWT, et de la gestion d'état côté client.
-- *Modélisation de bases de données relationnelles* : passage du MCD au MLD, conception de 14 tables avec règles d'intégrité referentielle (clés étrangères, CASCADE, SET NULL, contraintes UNIQUE). Application des migrations versionnées et détection de drift entre le modèle théorique et la base réelle.
-- *Sécurité applicative* : audit de routes non protégées, correction de failles d'ownership (IDOR), protection de comptes anonymisés, gestion de clés API. Compréhension concrète des risques liés à l'exposition accidentelle de secrets.
-- *Conformité RGPD* : implémentation opérationnelle des principes de consentement, de traçabilité, de minimisation des données et de droit à l'effacement. Distinction entre anonymisation et suppression, workflow de demandes avec verrou anti-double-traitement.
-- *Indicateurs et pilotage* : définition formelle d'indicateurs d'insertion professionnelle (formule, source, périmètre), implémentation côté backend et visualisation côté frontend. Fiabilisation d'un calcul erroné (surestimation du taux d'emploi).
+- *Développement web full-stack* : conception et implémentation d'une application complète avec FastAPI (Python) côté backend et React/Vite côté frontend, communication via API REST JSON. Patterns CRUD, pagination, validation Pydantic et gestion d'état côté client appliqués sur l'ensemble des modules métier.
+- *Migrations de base de données* : mise en place d'un système maison de migrations versionnées (`run_migrations.py`, table `schema_migrations`). La principale leçon tient en une règle : une migration déjà appliquée ne se modifie jamais, on corrige par une nouvelle migration. C'est ainsi qu'a été traité le drift de la migration 004, par une migration corrective idempotente (012) qui interroge `pg_constraint` avant d'agir.
+- *Sécurité applicative* : correction de failles d'ownership (IDOR), remplacement des vérifications « SELECT puis INSERT » par la gestion des `IntegrityError` (fin des race conditions TOCTOU), sanitisation des messages d'erreur renvoyés aux clients, protection des routes admin par clé API. Mise en place d'un garde centralisé (`refuser_compte_anonymise`) branché sur les 12 points d'écriture capables de réécrire un compte anonymisé, avec une doctrine explicite des routes où il ne doit pas s'appliquer.
+- *Gestion des sessions et des rôles* : séparation stricte des sessions admin et alumni côté navigateur (clés distinctes `admin_role` / `alumni_id`), vérification du rôle contenu dans le JWT avant chaque appel sensible, purge d'un token orphelin à la réception d'un 401. Ce dispositif fait suite à un bug concret (section 3.2) et est couvert par les tests.
+- *Conception de workflows concurrents* : statut intermédiaire `en_traitement` et verrou `prise_en_charge_par` dans le traitement des demandes RGPD, pour empêcher deux administrateurs de travailler en même temps sur la même demande.
+- *Indicateurs statistiques honnêtes* : exposition des hypothèses de calcul dans l'API elle-même (champ `hypothese`) et refus d'afficher un chiffre trompeur — les cohortes dont la fenêtre de six mois n'est pas écoulée renvoient `null` avec un statut `en_attente`.
+- *Tests automatisés* : suite Vitest côté frontend (13 fichiers : authentification OTP, consentements, import Excel, routes protégées). Une démarche de test E2E sans mocks (parcours alumni et parcours admin contre le vrai backend) a été conçue et documentée dans le README ; son script n'est en revanche plus présent dans le dépôt — le reconstituer fait partie des suites à donner au projet.
 
 **Compétences transversales.**
 
 - *Autonomie et prise de décision* : travail en solo sans équipe technique, choix d'architecture assumés et documentés.
-- *Documentation technique* : production de livrables structurés (cartographie des données, charte RGPD, guide des processus) en parallèle du développement.
-- *Rigueur methodologique* : audit de conformité entre le modèle de conception et l'implémentation réelle, détection et correction de drifts de migration.
+- *Documentation traitée comme du code* : livrables PDF et DOCX générés par des scripts (fpdf2, python-docx), donc régénérables et maintenables au même titre que l'application.
+- *Rigueur méthodologique* : audit de cohérence entre le modèle et l'implémentation réelle mené par introspection SQL (`information_schema`, `pg_constraint`), écrit et daté avant tout correctif (`AUDIT_COHERENCE_TABLES.txt`).
 
 ### 3.2 Difficultés rencontrées et solutions apportées
 
-**Difficulté 1 — Gestion de la conformité RGPD en contexte éducatif**
+**Difficulté 1 — Bug d'authentification croisée entre les espaces admin et alumni**
+
+Le token admin et le token alumni partageaient la même clé de stockage dans le navigateur : un JWT administrateur pouvait partir sur les routes `/rgpd/*` réservées aux alumni, avec des erreurs 403 difficiles à comprendre.
+
+*Solution* : clés de stockage distinctes (`admin_role` / `alumni_id` avec nettoyage mutuel), vérification du rôle présent dans le payload du JWT avant chaque appel sensible (`ensureAlumniToken`), purge automatique du token en cas de session orpheline (intercepteur sur les réponses 401). Le correctif est couvert par des tests unitaires.
+
+**Difficulté 2 — Le modèle de données et la base réelle avaient divergé**
+
+Un audit d'introspection mené le 16 août a révélé plusieurs écarts. La clé étrangère `reponse_questionnaire.id_etudiant` était en `ON DELETE CASCADE` en base live mais pas dans le fichier de migration 004 : une base reconstruite aurait échoué au premier hard-delete d'un étudiant ayant répondu à un questionnaire. La route `DELETE /entreprises/{id}` renvoyait systématiquement une erreur dès qu'une expérience référençait l'entreprise (mise à jour vers NULL sur une colonne NOT NULL, alors que la clé étrangère est déjà en cascade). Des doublons de consentements s'étaient enfin accumulés faute de contrainte d'unicité.
+
+*Solution* : migration corrective idempotente dédiée au drift (012), suppression directe pour les entreprises (la cascade fait le reste), migration 007 qui dédoublonne puis pose `UNIQUE (id_etudiant, type_consentement)` pour permettre un upsert propre côté API. Le script de rejeu complet des 12 migrations sur base vide est devenu mon test de validation de référence — cette démarche aurait évité un échec de déploiement basé sur un rejeu des migrations.
+
+**Difficulté 3 — Deux administrateurs pouvaient traiter la même demande RGPD**
+
+Le cycle initial (`en_attente → traitée/rejetée`) ne laissait aucune trace d'une prise en charge en cours : deux admins pouvaient décider simultanément de la même demande.
+
+*Solution* : refonte du cycle en `envoyée → en traitement → traitée/rejetée` (migration 010, avec contrainte CHECK) et verrou applicatif `prise_en_charge_par` : toute décision sur une demande déjà prise en charge par un autre administrateur est refusée.
+
+**Difficulté 4 — Un indicateur d'insertion trompeur**
+
+Le calcul initial du taux d'emploi à 6 mois comptait des expériences déjà terminées, et produisait pour les promotions récentes un instantané sans valeur.
+
+*Solution* : filtrage sur les expériences actives à la date de référence (1er décembre de l'année de diplôme, hypothèse explicitée dans la réponse API via le champ `hypothese`), exclusion explicite des cohortes immatures (`null` + statut `en_attente`).
+
+**Difficulté 5 — Gestion de la conformité RGPD en contexte éducatif**
 
 Le RGPD impose des contraintes fortes sur la collecte et le traitement des données personnelles, mais les outils disponibles (tutoriels, documentation) traitent majoritairement le cas des entreprises commerciales. Le contexte éducatif pose des questions spécifiques : durée de conservation des données d'anciens élèves, base légale du traitement (intérêt légitime vs consentement), distinction entre anonymisation et suppression.
 
 *Solution* : j'ai modélisé un workflow de consentement à 4 niveaux avec traçabilité native (table CONSENTEMENT_RGPD), et documenté explicitement les limites assumées (pas de DPO identifié, pas de mécanisme de chiffrement spécifique, pas de notification de violation de données).
 
-**Difficulté 2 — Fiabilisation de la base de données**
+**Difficulté 6 — Absence de versionning Git et incident de synchronisation**
 
-L'audit a révélé plusieurs incohérences entre le modèle de conception et l'implémentation réelle : des champs acceptés en écriture mais jamais persistés, un endpoint `DELETE` cassé, et un drift de migration critique (`reponse_questionnaire.id_etudiant` avec `ON DELETE CASCADE` en base mais pas dans le fichier de migration).
+Le projet était stocké sous OneDrive sans dépôt Git. Un conflit de synchronisation concurrente a entraîné le retour à une version antérieure de plusieurs fichiers frontend en cours de développement ; j'ai repris ce travail à la main. Faute d'historique, je ne peux d'ailleurs pas dire précisément quand le script de test E2E documenté dans le README a disparu du dépôt.
 
-*Solution* : j'ai écrit un script de rejeu complet des 12 migrations sur une base vide, comparé structurellement chaque table, et créé une migration corrective dédiée pour le drift identifié. Cette démarche aurait évité un échec de déploiement basé sur un rejeu des migrations.
+*Solution* : récupération manuelle des fichiers perdus, puis initialisation d'un dépôt Git avec `.gitignore` racine consolidé (couvrant `.env`, `node_modules/`, `venv/`). La leçon tient en une phrase : le versionnement doit précéder la première ligne de code, pas suivre le premier incident.
 
-**Difficulté 3 — Absence de versionning Git**
+**Difficulté 7 — Exposition d'une clé d'accès administrateur**
 
-Le projet était stocké sous OneDrive sans dépôt Git. Un conflit de synchronisation concurrente a entraîné la perte de travail frontend (retour à une version antérieure de plusieurs fichiers).
+La valeur de `ADMIN_API_KEY` est apparue dans une capture d'écran pendant une session de travail.
 
-*Solution* : récupération manuelle des fichiers perdus, puis prise de conscience de la nécessité critique d'un système de versionnement. J'ai documenté l'incident comme axe d'amélioration prioritaire.
+*Solution* : rotation immédiate de la clé (l'ancienne valeur est obsolète) et note persistante dans ce rapport tant que l'environnement n'a pas été redéployé proprement. Depuis, règle personnelle : jamais de fichier de secrets ouvert à l'écran pendant un partage.
 
-**Difficulté 4 — Salaire moyen : un indicateur non automatisable**
+**Difficulté 8 — Salaire moyen : un indicateur d'abord non automatisable**
 
-Le champ `salary_range` est saisi en texte libre (ex. `"35k-45k EUR"`), ce qui rend impossible le calcul automatisé du salaire moyen par filière — indicateur pourtant demandé par les organismes de tutelle.
+Le champ `salary_range` était saisi en texte libre (ex. `"35k-45k EUR"`), ce qui rendait impossible le calcul automatisé du salaire moyen par filière — indicateur pourtant demandé par les organismes de tutelle.
 
-*Solution* : j'ai documenté le problème et recommandé de remplacer la saisie par une tranche sélectionnable ou d'ajouter un champ numérique dédié. Le problème est signalé dans le guide des processus comme prioritaire pour la phase de mise en production.
+*Solution* : ajout du champ numérique `salary_annuel` (NUMERIC, migration `013_salary_annuel.sql`), alimenté côté frontend par un select de 11 tranches chiffrées (+ option « Non renseigné »). Le backend calcule désormais moyenne, minimum et maximum sur les expériences en cours (`salary_annuel > 0`), avec repli sur l'ancien champ texte pour les données historiques et des moyennes exposées par promotion. Le calcul du salaire moyen par secteur d'activité reste ouvert.
 
 ### 3.3 Proposition d'axes d'amélioration
 
-Les axes 1 à 4 ont été implémentés en fin de stage (voir section 3.4 pour le détail des correctifs). Deux perspectives restent ouvertes :
+Quatre axes repérés en cours de stage ont été traités en fin de stage (détail en section 3.4). Les cinq suivants découlent chacun d'un épisode vécu ci-dessus ; les extensions purement fonctionnelles viennent ensuite.
 
-**Axe 5 — Module de mentorat et application mobile**
+**Axe 5 — Versionner dès la première ligne de code.** L'incident de synchronisation (difficulté 6) aurait été anodin avec un dépôt Git ; celui-ci n'a été créé que le dernier jour. Pratique retenue : commit initial avant toute modification, commits réguliers ensuite, et rien d'important qui n'existe qu'en un seul exemplaire sur disque.
 
-Extensions fonctionnelles documentées dans le guide des processus mais non implémentées : mise en relation alumni/étudiants actuels (mentorat), et application mobile pour faciliter la mise à jour des profils depuis un smartphone.
+**Axe 6 — Rejouer les migrations automatiquement.** Le drift de la migration 004 datait de quatre semaines quand l'audit l'a détecté. Un rejeu sur base vide lancé à chaque évolution du schéma l'aurait signalé le jour même. C'est mécanique, quasi gratuit, et cela évite le pire scénario : un déploiement qui échoue parce que la base reconstruite diffère de la base de développement.
 
-**Axe 6 — Chiffrement des données sensibles**
+**Axe 7 — Introduire des tests backend automatisés.** Le backend n'a jamais eu de framework de tests (constat toujours valable). Quelques tests d'intégration auraient intercepté la route DELETE entreprises cassée comme les endpoints renvoyant 200 OK avec un corps d'erreur. C'est le principal chantier technique restant avant une mise en production.
 
-Le chiffrement des données de consentement et de salaire n'est pas implémenté au niveau applicatif — il est délégué à l'infrastructure PostgreSQL. Une couche de chiffrement applicatif (chiffrement au repos côté application) renforcerait la protection, en particulier en cas d'accès non autorisé à la base de données.
+**Axe 8 — Poser les contraintes de validation à la source.** Plusieurs correctifs ont consisté à ajouter a posteriori ce qui aurait dû exister dès la création des tables : unicité des consentements (007), cycle de statuts avec CHECK (010), unicité de l'email académique (011). Certaines valeurs restent libres aujourd'hui, comme le statut des consentements. Règle retenue : toute colonne énumérable reçoit un type contraint côté API (`Literal`) et un CHECK côté base, dès sa création.
+
+**Axe 9 — Hygiène des secrets.** Jamais de capture d'écran avec un fichier d'environnement ouvert, rotation immédiate au moindre doute — règle appliquée lors de l'épisode de la difficulté 7.
+
+Viennent enfin des perspectives fonctionnelles, documentées dans le guide des processus mais non issues d'un dysfonctionnement : module de mentorat (mise en relation alumni/étudiants actuels), application mobile pour mettre à jour son profil depuis un smartphone, calendrier automatique d'envoi du questionnaire annuel, et chiffrement applicatif au repos des données sensibles — ce dernier restant délégué à l'infrastructure PostgreSQL.
 
 ### 3.4 Limites identifiées et correctifs appliqués
 
 | # | Limite | Correctif appliqué | Statut |
 |---|---|---|---|
 | L1 | **Newsletter et relances non implémentées** — la clé Resend était utilisée uniquement pour les OTP. | Endpoint `POST /newsletter/envoyer` avec filtres de ciblage (promotion, secteur, consentement). En mode console en dev, mode Resend en prod. | ✅ Résolu |
-| L2 | **Salaire en texte libre** — le champ `salary_range` acceptait `"35k-45k EUR"` sans structure numérique. | Nouveau champ `salary_annuel` (NUMERIC) en backend. Frontend : select dropdown avec 12 tranches numériques. Migration `013_salary_annuel.sql`. Admin router utilise `salary_annuel` pour les calculs. | ✅ Résolu |
+| L2 | **Salaire en texte libre** — le champ `salary_range` acceptait `"35k-45k EUR"` sans structure numérique. | Nouveau champ `salary_annuel` (NUMERIC) en backend. Frontend : select dropdown avec 11 tranches chiffrées et une option « Non renseigné ». Migration `013_salary_annuel.sql`. Admin router utilise `salary_annuel` pour les calculs. | ✅ Résolu |
 | L3 | **Absence de dépôt Git** — le projet était stocké sous OneDrive sans versionnement. | Initialisation du dépôt Git avec `.gitignore` couvrant `.env`, `node_modules/`, `venv/`. Deux commits (état initial + correctifs). | ✅ Résolu |
 | L4 | **RGPD : pas de DPO, pas de durée de conservation affichée** — le consentement était traçable, mais le frontend n'informait pas l'alumni. | Ajout dans `AlumniConsent.jsx` : bloc « Durée de conservation » (6 mois après anonymisation) + contact DPO (`dpo@ionis-stm.com`). | ✅ Résolu |
-| L5 | **Pas de relance automatique questionnaire** — l'activation était manuelle, aucune notification. | Endpoint `POST /admin/questionnaires/notififier` : cible les alumni n'ayant pas répondu, filtre par promotion, envoie un email avec lien direct vers le formulaire. | ✅ Résolu |
+| L5 | **Pas de relance automatique questionnaire** — l'activation était manuelle, aucune notification. | Endpoint `POST /admin/questionnaires/notififier` : cible les alumni n'ayant pas répondu, filtre par promotion, envoie un email de relance générique invitant à compléter le questionnaire depuis l'espace alumni (sans lien direct vers le formulaire à ce jour). | ✅ Résolu |
 | L6 | **Fichier MCD/MLD frontend obsolète** — `mcd_corrige.md` listait 11 tables au lieu de 14. | Suppression du fichier. | ✅ Résolu |
 | L7 | **Clé `ADMIN_API_KEY` exposée** — une capture d'écran avait révélé la clé. | Rotation de la clé : nouvelle valeur `pzQ7Bx_...` dans `.env`. L'ancienne clé est obsolète. | ✅ Résolu |
+| L8 | **Modification directe d'une expérience impossible** — aucune route PUT/PATCH sur les expériences ; l'interface ne permet que l'ajout et la suppression (corriger une saisie oblige à supprimer puis recréer la ligne, opération non atomique). | Non corrigé à ce jour : documenté comme limite assumée du prototype dans le guide des processus et la stratégie de mise à jour. Une route de mise à jour est identifiée comme évolution prioritaire. | ⚠️ Manque encore ouvert |
+
+Au-delà de ce tableau, l'audit de cohérence du 16 août relève quelques points secondaires laissés ouverts et assumés comme tels : statut des consentements libre (ni `Literal` ni CHECK), date d'obtention des certifications non validée (une date future passe), messages trompeurs sur les associations étudiant/certification, filtres invalides ignorés silencieusement dans la liste admin des demandes RGPD, réponses de questionnaire stockées en JSONB sans vérification des clés, absence de purge des tables `otp_codes` et `AUDIT_LOG`. Tout est consigné dans le fichier d'audit (`AUDIT_COHERENCE_TABLES.txt`) pour guider la reprise du projet.
 
 ---
 
@@ -337,7 +370,25 @@ Le chiffrement des données de consentement et de salaire n'est pas implémenté
 
 ### Annexe A — Schéma MCD/MLD complet
 
-[À COMPLÉTER : insérer le schéma MCD/MLD régénéré par introspection de la base de données]
+Le schéma ci-dessous a été **régénéré par introspection directe de la base PostgreSQL** (14 tables), et non à partir des fichiers de conception initiaux. Les fichiers sources figurent dans le dépôt :
+
+- `alumni_crm_api/docs/erd_alumni_crm.mmd` — définition Mermaid du schéma relationnel (MLD) ;
+- `alumni_crm_api/docs/erd_alumni_crm.docx` — version documentée du MLD ;
+- `docs/MCD_MLD V2.loo` — modèle Looping (MCD + MLD) issu de la phase de conception.
+
+**Vue d'ensemble des 14 tables et de leurs relations :**
+
+| Domaine | Tables | Relations principales |
+|---|---|---|
+| Données étudiantes | ETUDIANT, PROMOTION | ETUDIANT.id_promotion → PROMOTION (N:1) |
+| Parcours professionnel | ENTREPRISE, EXPERIENCE_PRO, CERTIFICATION, OBTIENT | EXPERIENCE_PRO → ETUDIANT et ENTREPRISE (N:1, avec `salary_annuel NUMERIC`) ; OBTIENT = association N:M ETUDIANT ↔ CERTIFICATION |
+| RGPD | CONSENTEMENT_RGPD, DEMANDE_RGPD, AUDIT_LOG | CONSENTEMENT_RGPD → ETUDIANT ; DEMANDE_RGPD → ETUDIANT en SET NULL pour préserver l'historique après anonymisation ; AUDIT_LOG journalise anonymisations, purges et nettoyages |
+| Questionnaires | QUESTIONNAIRE, QUESTION, REPONSE_QUESTIONNAIRE | QUESTION → QUESTIONNAIRE (N:1, avec tags KPI) ; REPONSE_QUESTIONNAIRE → ETUDIANT + QUESTIONNAIRE (réponses stockées en JSON) |
+| Infrastructure | otp_codes, schema_migrations | otp_codes : codes OTP hachés identifiés par l'email ; schema_migrations : suivi des 12 migrations versionnées |
+
+**Règles d'intégrité** : clés étrangères avec CASCADE sur les données dépendant d'un étudiant (expériences, certifications obtenues, consentements, réponses), SET NULL sur les demandes RGPD, contraintes d'unicité (ex. email étudiant), contraintes CHECK sur les énumérations (statuts de demande RGPD, types de consentement).
+
+[Insérer ici le rendu graphique du schéma Mermaid (`erd_alumni_crm.mmd`) ou l'export du fichier Looping.]
 
 ### Annexe B — Dashboard administrateur (captures d'écran)
 
