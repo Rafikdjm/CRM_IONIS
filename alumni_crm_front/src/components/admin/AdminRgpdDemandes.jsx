@@ -4,6 +4,79 @@ import LoadingSpinner from '../shared/LoadingSpinner';
 import ErrorMessage from '../shared/ErrorMessage';
 import downloadBlob from '../../utils/downloadBlob';
 
+const MAX_BULK_LIGNES = 5;
+
+const avecS = (n) => (n > 1 ? 's' : '');
+
+function nomAlumni(demande) {
+  const qui = demande?.nom_complet || 'alumni';
+  return demande?.email ? `${qui} (${demande.email})` : qui;
+}
+
+function buildBulkSummary(action, result, demandesById) {
+  if (!result) return null;
+  const lignes = [];
+  const erreurs = [];
+
+  if (action === 'bulk-traitee' || action === 'bulk-rejetee') {
+    const resultats = result.resultats || [];
+    for (const r of resultats) {
+      const demande = demandesById.get(r.id_demande);
+      if (r.ok) {
+        lignes.push(
+          action === 'bulk-traitee'
+            ? `${demande?.type_demande === 'suppression' ? 'Suppression effectuée pour' : 'Export effectué pour'} ${nomAlumni(demande)}`
+            : `Demande rejetée pour ${nomAlumni(demande)}`,
+        );
+      } else {
+        erreurs.push(`Demande #${r.id_demande} : ${r.erreur || 'erreur inconnue'}`);
+      }
+    }
+    const n = resultats.filter((r) => r.ok).length;
+    return {
+      titre:
+        action === 'bulk-traitee'
+          ? `✓ ${n} demande${avecS(n)} traitée${avecS(n)} avec succès`
+          : `✓ ${n} demande${avecS(n)} rejetée${avecS(n)}`,
+      lignes: n > MAX_BULK_LIGNES ? [] : lignes,
+      erreurs,
+    };
+  }
+
+  if (action === 'bulk-export') {
+    const nExports = Object.keys(result.exports || {}).length;
+    for (const id of Object.keys(result.exports || {})) {
+      lignes.push(`Export effectué pour ${nomAlumni(demandesById.get(Number(id)))}`);
+    }
+    for (const [id, message] of Object.entries(result.erreurs || {})) {
+      erreurs.push(`Demande #${id} : ${message}`);
+    }
+    return {
+      titre: nExports > 0 ? `✓ Export effectué pour ${nExports} demande${avecS(nExports)}` : '✓ Export groupé terminé',
+      lignes,
+      erreurs,
+    };
+  }
+
+  if (action === 'bulk-delete') {
+    return {
+      titre: `✓ ${result.supprimees ?? 0} demande${avecS(result.supprimees ?? 0)} supprimée${avecS(result.supprimees ?? 0)} définitivement`,
+      lignes: [],
+      erreurs: [],
+    };
+  }
+
+  if (action === 'purge') {
+    return {
+      titre: `✓ Purge terminée : ${result.supprimees ?? 0} demande${avecS(result.supprimees ?? 0)} clôturée${avecS(result.supprimees ?? 0)} supprimée${avecS(result.supprimees ?? 0)}`,
+      lignes: [],
+      erreurs: [],
+    };
+  }
+
+  return null;
+}
+
 export default function AdminRgpdDemandes() {
   const [demandes, setDemandes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -57,6 +130,11 @@ export default function AdminRgpdDemandes() {
     }
     return result;
   }, [demandes, searchQuery]);
+
+  const demandesById = useMemo(
+    () => new Map(demandes.map((d) => [d.id_demande, d])),
+    [demandes],
+  );
 
   const pendingCount = demandes.filter(
     (d) => d.statut === 'envoyee' || d.statut === 'en_traitement',
@@ -228,7 +306,7 @@ export default function AdminRgpdDemandes() {
           return;
       }
       adminIdentityAPI.setName(adminName.trim());
-      setBulkResult(result);
+      setBulkResult(buildBulkSummary(confirmModal.type, result, demandesById));
       setConfirmModal(null);
       await loadDemandes();
     } catch (err) {
@@ -261,9 +339,40 @@ export default function AdminRgpdDemandes() {
 
       {error && <ErrorMessage message={error} onRetry={() => setError(null)} />}
       {bulkResult && (
-        <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-200">
-          Action groupée terminée : {JSON.stringify(bulkResult)}
-        </div>
+        <>
+          <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-200">
+            <p className="font-medium">{bulkResult.titre}</p>
+            {bulkResult.lignes.length > 0 && (
+              <ul className="mt-1 space-y-0.5">
+                {bulkResult.lignes.map((ligne, i) => (
+                  <li key={`${ligne}-${i}`} className="pl-4">
+                    {ligne}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {bulkResult.erreurs.length > 0 && (
+              <p className="mt-1 pl-4">
+                {bulkResult.erreurs.length} demande{avecS(bulkResult.erreurs.length)} n'a pas pu être
+                traitée{avecS(bulkResult.erreurs.length)} (voir détails ci-dessous).
+              </p>
+            )}
+          </div>
+          {bulkResult.erreurs.length > 0 && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
+              <p className="font-medium">
+                {bulkResult.erreurs.length} erreur{avecS(bulkResult.erreurs.length)} rencontrée{avecS(bulkResult.erreurs.length)} :
+              </p>
+              <ul className="mt-1 space-y-0.5">
+                {bulkResult.erreurs.map((err, i) => (
+                  <li key={`${err}-${i}`} className="pl-4">
+                    {err}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
       )}
 
       <div className="flex flex-wrap items-center gap-3">

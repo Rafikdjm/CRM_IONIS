@@ -98,3 +98,41 @@ describe('OTPVerification - success UI', () => {
     expect(screen.getByText('E-mail vérifié')).toBeInTheDocument()
   })
 })
+
+describe('OTPVerification - aperçu e-mail « Code de connexion »', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.resetModules()
+  })
+
+  it('affiche l’aperçu de l’e-mail reçu uniquement en développement (OTP_MODE console)', () => {
+    renderOTP({})
+
+    expect(document.querySelector('.otp-source')).toBeInTheDocument()
+    expect(screen.getByText('Code de connexion')).toBeInTheDocument()
+    expect(screen.getByText("Aperçu de l'e-mail reçu")).toBeInTheDocument()
+
+    const inputs = screen.getAllByRole('textbox')
+    expect(inputs).toHaveLength(6)
+  })
+
+  it('retire complètement l’aperçu hors développement (build production)', async () => {
+    vi.stubEnv('DEV', false)
+
+    const [{ default: ProdOTP }, { ThemeProvider: ProdThemeProvider }] = await Promise.all([
+      import('../components/OTPVerification'),
+      import('../contexts/ThemeContext'),
+    ])
+
+    render(
+      <ProdThemeProvider>
+        <ProdOTP />
+      </ProdThemeProvider>,
+    )
+
+    expect(document.querySelector('.otp-source')).not.toBeInTheDocument()
+    expect(screen.queryByText('Code de connexion')).not.toBeInTheDocument()
+    expect(screen.getByRole('group', { name: /code à 6 chiffres/i })).toBeInTheDocument()
+    expect(screen.getAllByRole('textbox')).toHaveLength(6)
+  })
+})

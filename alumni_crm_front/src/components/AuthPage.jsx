@@ -1,8 +1,9 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { loginAPI } from '../services/api';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '../contexts/theme';
 import OTPVerification from './OTPVerification';
+import ionisStmLogo from '../assets/ionis-stm-logo.png';
 
 const OTP_LENGTH = 6;
 // Doit rester aligné sur le rate-limit serveur (60 s entre deux demandes OTP)
@@ -249,17 +250,19 @@ export default function AuthPage() {
       <div className="relative z-10 w-full max-w-[420px]">
         <div className={`rounded-3xl p-8 backdrop-blur-xl sm:p-10 ${isDark ? 'border border-white/[0.08] bg-[#0d1f3c]/80 shadow-[0_25px_60px_-12px_rgba(0,0,0,0.5)]' : 'border border-gray-200 bg-white/80 shadow-xl'}`}>
           <div className="mb-8 flex flex-col items-center text-center">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg shadow-blue-500/20">
-              {adminMode ? (
+            {adminMode ? (
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg shadow-blue-500/20">
                 <svg className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
                 </svg>
-              ) : (
-                <svg className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342" />
-                </svg>
-              )}
-            </div>
+              </div>
+            ) : (
+              <img
+                src={ionisStmLogo}
+                alt="Logo IONIS STM"
+                className="mb-4 h-14 w-auto max-w-[220px] object-contain"
+              />
+            )}
             <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Alumni CRM</h1>
             <p className={`mt-1 text-sm ${isDark ? 'text-blue-200/60' : 'text-gray-500'}`}>
               {adminMode ? 'Espace administrateur' : 'Réseau des anciens'}

@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '../contexts/theme';
 import './otpEffects.css';
 
 const FLIGHT_STEP_MS = 90;
 const FLIGHT_DURATION_MS = 520;
 const ERROR_FLASH_MS = 900;
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+
+const SHOW_DEV_PREVIEW =
+  import.meta.env.DEV && (import.meta.env.VITE_OTP_MODE || 'console') === 'console';
 
 const PARTICLE_COLORS = {
   light: ['#06b6d4', '#0d9488', '#2563eb', '#14b8a6', '#047857'],
@@ -179,13 +182,15 @@ export default function OTPVerification({
           const targets = slotRefs.current.map((el) => el?.getBoundingClientRect());
 
           const next = normalized.split('').map((digit, i) => {
-            const s = sources[i] || { left: 0, top: 0, width: 0, height: 0 };
-            const t = targets[i] || { left: 0, top: 0, width: 0, height: 0 };
+            const fallback = { left: 0, top: 0, width: 0, height: 0 };
+            const t = targets[i] || fallback;
+            const s = sources[i];
+            const origin = s && s.width > 0 && s.height > 0 ? s : t;
             return {
               id: `${Date.now()}-${i}`,
               digit,
-              fx: s.left + s.width / 2,
-              fy: s.top + s.height / 2,
+              fx: origin.left + origin.width / 2,
+              fy: origin.top + origin.height / 2,
               tx: t.left + t.width / 2,
               ty: t.top + t.height / 2,
               delay: i * FLIGHT_STEP_MS,
@@ -302,28 +307,30 @@ export default function OTPVerification({
 
   return (
     <div className="otp-verification" data-status={status}>
-      <div className="otp-source mb-5 flex items-center gap-3 rounded-xl border p-3" aria-hidden="true">
-        <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg ${isDark ? 'bg-cyan-400/10 text-cyan-300' : 'bg-blue-100 text-blue-600'}`}>
-          <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
-          </svg>
-        </div>
-        <div className="min-w-0 flex-1 text-left">
-          <p className={`truncate text-xs font-semibold ${isDark ? 'text-white/90' : 'text-gray-700'}`}>Code de connexion</p>
-          <p className={`text-[11px] ${isDark ? 'text-blue-200/40' : 'text-gray-400'}`}>Aperçu de l'e-mail reçu</p>
-          <div className="mt-1.5 flex gap-1">
-            {sourceDigits.map((d, i) => (
-              <span
-                key={i}
-                ref={(el) => { sourceSlotRefs.current[i] = el; }}
-                className={`flex h-6 w-5 items-center justify-center rounded text-[11px] font-bold ${isDark ? 'bg-white/[0.06] text-cyan-300' : 'border border-gray-200 bg-white text-blue-700'}`}
-              >
-                {d || '•'}
-              </span>
-            ))}
+      {SHOW_DEV_PREVIEW && (
+        <div className="otp-source mb-5 flex items-center gap-3 rounded-xl border p-3" aria-hidden="true">
+          <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg ${isDark ? 'bg-cyan-400/10 text-cyan-300' : 'bg-blue-100 text-blue-600'}`}>
+            <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+            </svg>
+          </div>
+          <div className="min-w-0 flex-1 text-left">
+            <p className={`truncate text-xs font-semibold ${isDark ? 'text-white/90' : 'text-gray-700'}`}>Code de connexion</p>
+            <p className={`text-[11px] ${isDark ? 'text-blue-200/40' : 'text-gray-400'}`}>Aperçu de l'e-mail reçu</p>
+            <div className="mt-1.5 flex gap-1">
+              {sourceDigits.map((d, i) => (
+                <span
+                  key={i}
+                  ref={(el) => { sourceSlotRefs.current[i] = el; }}
+                  className={`flex h-6 w-5 items-center justify-center rounded text-[11px] font-bold ${isDark ? 'bg-white/[0.06] text-cyan-300' : 'border border-gray-200 bg-white text-blue-700'}`}
+                >
+                  {d || '•'}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="otp-boxes flex justify-center gap-2.5 sm:gap-3" role="group" aria-label={`Code à ${length} chiffres`}>
         {digits.map((d, i) => (
