@@ -70,8 +70,8 @@ est faite par des scripts de contrôle ad hoc qui exercent les routes réelles
 via l'API HTTP (voir « Test fonctionnel de bout en bout » ci-dessous).
 
 **Frontend** : la suite Vitest se lance avec `npm test` dans `alumni_crm_front`
-(7 fichiers de tests, 66 assertions — auth OTP, consentements RGPD, import
-Excel, export JSON, routes protégées).
+(14 fichiers de tests, 117 tests — auth OTP, consentements RGPD, import
+Excel, indicateurs complémentaires, routes protégées).
 
 ### Test fonctionnel de bout en bout (E2E)
 
@@ -105,6 +105,10 @@ le compte est anonymisé (`nom`/`prenom` = `ANONYMISE`, email
 Le script utilise un étudiant jetable (email unique, promotion existante) et
 le supprime à la fin (demandes RGPD + compte) pour ne pas polluer les données
 de démonstration.
+
+> **Note :** le script E2E lui-même n'est plus présent dans le dépôt ;
+> le reconstituer à partir du déroulé ci-dessus fait partie des suites à
+> donner au projet.
 
 **Prérequis** : backend lancé (`uvicorn main:app`), `.env` renseigné
 (`ADMIN_API_KEY`, `ADMIN_ACCESS_CODE`, accès PostgreSQL), `requests` et
