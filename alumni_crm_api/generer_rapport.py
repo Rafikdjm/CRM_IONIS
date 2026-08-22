@@ -113,8 +113,8 @@ def generer_document():
         "Le projet a été développé dans le cadre d'un stage de formation, "
         "réalisé au sein de l'établissement scolaire. La durée du stage n'est pas "
         "explicitement renseignée dans le code source, mais l'évolution progressive "
-        "du projet — visible à travers les 5 migrations SQL numérotées (001 à 006, "
-        "avec un numéro 003 absent), la refactorisation de l'architecture en modules, "
+        "du projet — visible à travers les 12 migrations SQL numérotées (001 à 012, "
+        "numérotation continue), la refactorisation de l'architecture en modules, "
         "et la structuration du README en « 4 axes de la revue » — témoigne d'un "
         "travail mené sur plusieurs semaines avec des livrables itératifs."
     )
@@ -161,8 +161,10 @@ def generer_document():
     doc.add_heading("Modélisation des données", level=3)
     doc.add_paragraph(
         "Conception du modèle relationnel complet de la base de données, "
-        "depuis le MCD jusqu'au SQL PostgreSQL. Le schéma comprend 11 tables "
-        "(voir section 3 pour le détail). Les migrations sont numérotées et "
+        "depuis le MCD jusqu'au SQL PostgreSQL. Le schéma comprend 14 tables — "
+        "12 tables métier complétées par les tables techniques otp_codes et "
+        "schema_migrations (voir section 6 pour le détail). Les migrations sont "
+        "numérotées et "
         "traquées via une table schema_migrations, démontrant une démarche "
         "structurée d'évolution de la base."
     )
@@ -173,6 +175,7 @@ def generer_document():
     )
     rgpd_features = [
         "Table CONSENTEMENT_RGPD avec champs : date, type (ex: PROFIL_ALUMNI), statut (ACCORD/REFUS), canal de collecte",
+        "Workflow de demandes RGPD : les alumni créent des demandes d'export ou de suppression ; l'admin les prend en charge (verrou anti-traitement parallèle), les traite (décision traitee/rejetee), avec actions groupées (bulk) et export",
         "Fonctionnalité d'anonymisation logique : les données personnelles sont masquées (nom → « ANONYMISE », email → « ANONYMISE_{id}@anonymise.io ») sans suppression physique, préservant l'intégrité référentielle",
         "Anonymisation des expériences professionnelles liées (intitulé → « ANONYMISE », salaire → 0)",
         "Journal d'audit (AUDIT_LOG) pour tracer toutes les opérations de nettoyage et d'archivage",
@@ -186,7 +189,7 @@ def generer_document():
         "Développement complet de l'API avec FastAPI, comprenant :"
     )
     api_features = [
-        "30+ endpoints RESTful couvrant toutes les entités métier",
+        "80 endpoints RESTful couvrant toutes les entités métier",
         "Authentification double : API Key pour l'admin + OTP par email pour les alumni (JWT)",
         "Rate limiting en mémoire sur les endpoints d'authentification",
         "Pagination systématique sur tous les endpoints de listing",
@@ -196,6 +199,7 @@ def generer_document():
         "Système de questionnaires annuels avec réponses stockées en JSONB",
         "Indicateurs d'insertion professionnelle (taux d'emploi, salaire moyen, taux à 6 mois)",
         "Nettoyage de la base : détection des orphelins et doublons avec mode dry-run",
+        "Newsletter ciblée : envoi uniquement aux alumni ayant un consentement newsletter actif",
     ]
     for feat in api_features:
         doc.add_paragraph(feat, style="List Bullet")
@@ -222,9 +226,16 @@ def generer_document():
     deliverables = [
         "Migration 001 : Table AUDIT_LOG + indexes → Mise en place de la traçabilité",
         "Migration 002 : Champs profil alumni étendus (adresse, ville, pays, LinkedIn, compétences JSONB, statut disponibilité)",
-        "Migration 004 : Tables QUESTIONNAIRE, QUESTION, REPONSE_QUESTIONNAIRE → Système de questionnaires annuels",
-        "Migration 005 : Colonne tag sur QUESTION → Identification des KPI",
-        "Migration 006 : Colonne conditionnee_statut_emploi → Questions conditionnelles",
+        "Migration 003 : Tables QUESTIONNAIRE, QUESTION, REPONSE_QUESTIONNAIRE → Système de questionnaires annuels",
+        "Migration 004 : Colonne tag sur QUESTION → Identification des KPI",
+        "Migration 005 : Colonne conditionnee_statut_emploi → Questions conditionnelles",
+        "Migration 006 : Contrainte UNIQUE (id_etudiant, type_consentement) + upsert ON CONFLICT → Fiabilisation des consentements",
+        "Migration 007 : Table DEMANDE_RGPD (+ colonne acteur sur AUDIT_LOG) → Demandes d'export/suppression des alumni",
+        "Migration 008 : Colonne date_anonymisation sur ETUDIANT → Purge RGPD différée des comptes anonymisés",
+        "Migration 009 : Statuts étendus de DEMANDE_RGPD (en_traitement) + prise en charge par un admin",
+        "Migration 010 : Contrainte UNIQUE sur email_academique → Anti-doublons de comptes",
+        "Migration 011 : Harmonisation du ON DELETE CASCADE sur REPONSE_QUESTIONNAIRE.id_etudiant → Fix du drift migration 003 / base live",
+        "Migration 012 : Colonne salary_annuel sur EXPERIENCE_PRO → Distinction salaire mensuel / annuel",
         "README structuré en 4 axes de la revue = documentation de suivi des améliorations",
     ]
     for d in deliverables:
@@ -240,9 +251,10 @@ def generer_document():
         "Le projet est à un stade de prototype fonctionnel complet :"
     )
     status_items = [
-        "Schéma de BDD terminé : 11 tables, toutes les relations et contraintes en place",
-        "API fonctionnelle : 30+ endpoints testables via Swagger UI (/docs)",
+        "Schéma de BDD terminé : 14 tables (12 métier + 2 techniques), toutes les relations et contraintes en place",
+        "API fonctionnelle : 80 endpoints testables via Swagger UI (/docs)",
         "Authentification opérationnelle : OTP par email (mode console en dev, mode Resend en production) + auth admin par code",
+        "Workflow RGPD opérationnel : demandes d'export/suppression avec prise en charge admin, anonymisation, purge différée (script purge.py)",
         "Import/Export Excel fonctionnel avec template personnalisé",
         "Système de questionnaires annuels complet (CRUD + réponses + KPI)",
         "Frontend React/Vite développé et fonctionnel (dossier alumni_crm_front) : authentification OTP (AuthPage), espace alumni (profil, carrière, consentement RGPD, questionnaires) et espace admin (dashboard, annuaire avec filtres, import/export, gestion des questionnaires, demandes RGPD avec actions groupées)",
@@ -255,11 +267,11 @@ def generer_document():
     add_styled_table(doc,
         ["Indicateur", "Valeur", "Détail"],
         [
-            ["Tables BDD", "11", "PROMOTION, ETUDIANT, ENTREPRISE, EXPERIENCE_PRO, CERTIFICATION, OBTIENT, CONSENTEMENT_RGPD, QUESTIONNAIRE, QUESTION, REPONSE_QUESTIONNAIRE, AUDIT_LOG"],
-            ["Tables supplémentaires", "2", "otp_codes (auth), schema_migrations (tracking)"],
-            ["Endpoints API", "30+", "Répartis dans 12 routers"],
-            ["Champs profil étudiant", "15", "nom, prenom, email, email_academique, telephone, date_naissance, parcours_anterieur, date_inscription, id_promotion, address, city, country, linkedin, availability_status, skills (JSONB)"],
-            ["Fichiers migrations SQL", "5", "001_audit_log, 002_alumni_profile_fields, 004_questionnaire_annuel, 005_question_tag, 006_question_statut_emploi"],
+            ["Tables métier", "12", "PROMOTION, ETUDIANT, ENTREPRISE, EXPERIENCE_PRO, CERTIFICATION, OBTIENT, CONSENTEMENT_RGPD, QUESTIONNAIRE, QUESTION, REPONSE_QUESTIONNAIRE, DEMANDE_RGPD, AUDIT_LOG"],
+            ["Tables techniques", "2", "otp_codes (auth), schema_migrations (tracking)"],
+            ["Endpoints API", "80", "Répartis dans 15 routers (+ route racine)"],
+            ["Champs profil étudiant", "16", "nom, prenom, email, email_academique, telephone, date_naissance, parcours_anterieur, date_inscription, id_promotion, address, city, country, linkedin, availability_status, skills (JSONB), date_anonymisation (RGPD)"],
+            ["Fichiers migrations SQL", "12", "001_audit_log, 002_alumni_profile_fields, 003_questionnaire_annuel, 004_question_tag, 005_question_statut_emploi, 006_consentement_upsert, 007_demande_rgpd, 008_purge_anonymises, 009_demande_rgpd_statuts, 010_email_academique_unique, 011_fix_reponse_questionnaire_cascade, 012_salary_annuel"],
             ["Pool de connexions", "5", "Configurable via DB_POOL_SIZE"],
             ["Taille max upload", "5 Mo", "Configurable via MAX_UPLOAD_SIZE_MB"],
             ["TTL code OTP", "10 minutes", "5 tentatives max"],
@@ -274,11 +286,13 @@ def generer_document():
     )
     indicators = [
         "Taux d'emploi par promotion : (étudiants en poste / total étudiants) × 100",
-        "Salaire moyen par promotion",
+        "Salaire moyen par promotion, calculé sur le salaire annuel si renseigné, sinon sur le salaire saisi",
+        "Salaire minimum / maximum (fourchette dynamique du dashboard), sur le même périmètre que le salaire moyen",
         "Taux d'emploi à 6 mois : diplômés ayant au moins une expérience avant décembre de l'année d'obtention",
         "Nombre d'alumni actifs (ayant au moins une expérience enregistrée)",
         "Taux de réponse : pourcentage d'alumni ayant complété leur profil",
         "Répartition par secteur d'activité",
+        "Répartition des postes en cours par type de contrat (CDI, CDD, alternance...)",
         "KPI par tag de question (ex: adéquation formation)",
     ]
     for ind in indicators:
@@ -327,7 +341,7 @@ def generer_document():
         [
             [
                 "Centralisation des données",
-                "Base de données PostgreSQL relationnelle avec 11 tables, API REST FastAPI avec 30+ endpoints, import/export Excel",
+                "Base de données PostgreSQL relationnelle avec 14 tables, API REST FastAPI avec 80 endpoints, import/export Excel",
                 "database.py, main.py, routers/*.py"
             ],
             [
@@ -337,8 +351,8 @@ def generer_document():
             ],
             [
                 "Conformité RGPD",
-                "Table CONSENTEMENT_RGPD (date, type, statut ACCORD/REFUS, canal). Anonymisation logique (UPDATE, pas DELETE) des données personnelles et salariales. Vérification du consentement avant archivage",
-                "routers/rgpd.py, routers/cleanup.py"
+                "Table CONSENTEMENT_RGPD (date, type, statut ACCORD/REFUS, canal). Demandes d'export/suppression avec workflow admin (prise en charge, traitement, actions groupées). Anonymisation logique (UPDATE, pas DELETE) des données personnelles et salariales, puis purge définitive différée. Vérification du consentement avant archivage",
+                "routers/rgpd.py, routers/demandes_rgpd.py, routers/cleanup.py, purge.py"
             ],
             [
                 "Cycle de vie des données",
@@ -393,6 +407,7 @@ def generer_document():
             ["Import/Export", "Pandas + openpyxl", "Lecture de CSV/Excel pour import, génération d'Excel pour export"],
             ["Variables d'env", "python-dotenv", "Chargement des variables d'environnement depuis .env"],
             ["Migrations", "Système custom (run_migrations.py)", "Exécution séquentielle de fichiers SQL avec tracking"],
+            ["Purge RGPD", "Script CLI purge.py", "Suppression définitive différée des comptes anonymisés (--dry-run possible)"],
             ["Frontend (implémenté)", "React / Vite", "Application complète connectée à l'API : authentification OTP, espace alumni (profil, carrière, consentement, questionnaires) et espace admin (dashboard, annuaire, import/export, questionnaires, demandes RGPD)"],
         ]
     )
@@ -408,7 +423,7 @@ def generer_document():
         "Robustesse et sécurité (identifiants en variables d'environnement, protection des routes admin, gestion des erreurs, élimination des race conditions TOCTOU)",
         "Performance (pool de connexions, pagination, préchargement pour les imports)",
         "Bonnes pratiques (Pydantic v2, sérialisation par cursor.description, contraintes de validation)",
-        "Maintenabilité (découpage du fichier unique en 12 routers domain-specific)",
+        "Maintenabilité (découpage du fichier unique en 15 routers domain-specific)",
     ]
     for axis in review_axes:
         doc.add_paragraph(axis, style="List Bullet")
@@ -433,14 +448,17 @@ def generer_document():
             ["PROMOTION", "Cohorte de diplômés (nom, année, filière)", "—"],
             ["ETUDIANT", "Profil alumni (15 champs dont compétences JSONB)", "id_promotion → PROMOTION"],
             ["ENTREPRISE", "Entreprise (nom, secteur, pays, ville)", "—"],
-            ["EXPERIENCE_PRO", "Expérience professionnelle (poste, contrat, salaire)", "id_etudiant → ETUDIANT, id_entreprise → ENTREPRISE"],
+            ["EXPERIENCE_PRO", "Expérience professionnelle (poste, contrat, salaire mensuel et annuel)", "id_etudiant → ETUDIANT, id_entreprise → ENTREPRISE"],
             ["CERTIFICATION", "Certification professionnelle", "—"],
             ["OBTIENT", "Table d'association étudiant-certification", "id_etudiant → ETUDIANT, id_certification → CERTIFICATION"],
-            ["CONSENTEMENT_RGPD", "Enregistrement de consentement", "id_etudiant → ETUDIANT"],
+            ["CONSENTEMENT_RGPD", "Enregistrement de consentement (UNIQUE id_etudiant + type, upsert)", "id_etudiant → ETUDIANT"],
+            ["DEMANDE_RGPD", "Demande d'export ou de suppression RGPD (statuts : envoyee, en_traitement, traitee, rejetee ; snapshot identité conservé)", "id_etudiant → ETUDIANT (SET NULL)"],
             ["QUESTIONNAIRE", "Questionnaire annuel", "—"],
             ["QUESTION", "Question d'un questionnaire", "id_questionnaire → QUESTIONNAIRE (CASCADE)"],
-            ["REPONSE_QUESTIONNAIRE", "Réponse d'un alumni à un questionnaire", "id_etudiant → ETUDIANT, id_questionnaire → QUESTIONNAIRE"],
-            ["AUDIT_LOG", "Journal des opérations de nettoyage", "—"],
+            ["REPONSE_QUESTIONNAIRE", "Réponse d'un alumni à un questionnaire", "id_etudiant → ETUDIANT (CASCADE), id_questionnaire → QUESTIONNAIRE"],
+            ["AUDIT_LOG", "Journal des opérations de nettoyage, RGPD et purge", "—"],
+            ["OTP_CODES", "Table technique : codes OTP de connexion alumni (hash, TTL 10 min, tentatives)", "—"],
+            ["SCHEMA_MIGRATIONS", "Table technique : tracking des migrations SQL exécutées", "—"],
         ]
     )
 
@@ -493,7 +511,7 @@ def generer_document():
     )
     pm_items = [
         "Migrations numérotées (001→006) : chaque migration correspond à un incrément fonctionnel",
-        "Architecture modulaire : le fichier unique initial (~590 lignes) a été découpé en 12 routers domain-specific",
+        "Architecture modulaire : le fichier unique initial (~590 lignes) a été découpé en 15 routers domain-specific",
         "Documentation continue : le README est mis à jour à chaque itération avec les corrections apportées",
         "Tests de robustesse : le README documente les corrections de sécurité (TOCTOU, messages d'erreur, variables d'environnement)",
         "Approche pragmatique : le pool de connexions est artisanal (documenté comme tel), l'auth admin est simplifiée (documentée comme nécessitant une évolution vers OAuth2)",
@@ -524,6 +542,7 @@ def generer_document():
         ["POST", "/promotions/", "Créer une promotion"],
         ["GET", "/promotions/", "Lister les promotions (paginé, filtrable)"],
         ["GET", "/promotions/{id}", "Détail d'une promotion"],
+        ["PUT", "/promotions/{id}", "Mettre à jour une promotion"],
         ["DELETE", "/promotions/{id}", "Supprimer une promotion (+ cascade)"],
         ["POST", "/etudiants/", "Créer un étudiant"],
         ["GET", "/etudiants/", "Lister les étudiants (paginé, recherchable)"],
@@ -531,6 +550,7 @@ def generer_document():
         ["PUT", "/etudiants/{id}", "Mise à jour complète d'un étudiant"],
         ["PATCH", "/etudiants/{id}", "Mise à jour partielle d'un étudiant"],
         ["DELETE", "/etudiants/{id}", "Supprimer un étudiant (+ cascade)"],
+        ["POST", "/etudiants/{id}/anonymiser", "Anonymisation RGPD d'un étudiant (admin)"],
         ["POST", "/entreprises/", "Créer une entreprise"],
         ["GET", "/entreprises/", "Lister les entreprises (paginé, filtrable)"],
         ["GET", "/entreprises/{id}", "Détail d'une entreprise"],
@@ -546,19 +566,39 @@ def generer_document():
         ["DELETE", "/certifications/{id}", "Supprimer une certification"],
         ["POST", "/etudiants-certifications/", "Associer certification à un étudiant"],
         ["DELETE", "/etudiants-certifications/", "Dissocier certification d'un étudiant"],
+        ["GET", "/etudiants/{id}/certifications", "Certifications d'un étudiant (alumni ou admin)"],
+        ["POST", "/etudiants/{id}/certifications", "Alumni ajoute une certification"],
+        ["DELETE", "/etudiants/{id}/certifications/{id_cert}", "Alumni retire une certification"],
         ["GET", "/consentements/etudiant/{id}", "Historique des consentements RGPD"],
         ["POST", "/consentements/", "Enregistrer un consentement"],
         ["DELETE", "/consentements/{id}", "Supprimer un consentement"],
+        ["POST", "/rgpd/demandes", "Créer une demande RGPD (export/suppression) — alumni"],
+        ["GET", "/rgpd/demandes/moi", "Mes demandes RGPD — alumni"],
+        ["DELETE", "/rgpd/demandes/{id}", "Annuler une demande RGPD — alumni"],
+        ["GET", "/rgpd/export", "Export immédiat de mes données (droit d'accès) — alumni"],
         ["GET", "/admin/etudiants/filtrer", "Filtrage avancé des alumni"],
         ["GET", "/admin/indicateurs", "Indicateurs d'insertion (taux emploi, salaire...)"],
         ["GET", "/admin/indicateurs/secteurs", "Répartition par secteur"],
+        ["GET", "/admin/indicateurs/types-contrat", "Répartition des postes en cours par type de contrat"],
         ["GET", "/admin/indicateurs/kpi-tag", "KPI par tag de question"],
+        ["GET", "/admin/indicateurs/kpi-tags", "Tous les KPI par tag"],
+        ["GET", "/admin/indicateurs/kpi-tags-actifs", "Tags KPI disponibles (questions taguées actives)"],
         ["GET", "/admin/cleanup/orphelins", "Détection des orphelins (dry-run)"],
         ["DELETE", "/admin/cleanup/orphelins", "Suppression des orphelins"],
         ["GET", "/admin/cleanup/doublons", "Détection des doublons (dry-run)"],
         ["DELETE", "/admin/cleanup/doublons", "Suppression des doublons"],
         ["POST", "/admin/cleanup/rgpd/archiver", "Anonymisation RGPD"],
         ["GET", "/admin/cleanup/audit", "Historique des audits"],
+        ["GET", "/admin/demandes-rgpd", "Lister les demandes RGPD (filtres statut/type)"],
+        ["GET", "/admin/demandes-rgpd/{id}/export", "Exporter les données d'une demande"],
+        ["POST", "/admin/demandes-rgpd/{id}/prendre-en-charge", "Prendre en charge une demande (verrou)"],
+        ["POST", "/admin/demandes-rgpd/{id}/traiter", "Traiter une demande (traitee/rejetee)"],
+        ["POST", "/admin/demandes-rgpd/bulk/traiter", "Traiter plusieurs demandes en masse"],
+        ["POST", "/admin/demandes-rgpd/bulk/delete", "Supprimer plusieurs demandes en masse"],
+        ["POST", "/admin/demandes-rgpd/bulk/export", "Exporter plusieurs demandes en masse"],
+        ["GET", "/admin/demandes-rgpd/purge-anonymises", "Prévisualiser la purge des comptes anonymisés"],
+        ["POST", "/admin/demandes-rgpd/purge-anonymises", "Exécuter la purge des comptes anonymisés"],
+        ["POST", "/admin/demandes-rgpd/purge-cloturees", "Purger les demandes traitees/rejetees"],
         ["POST", "/admin/questionnaires/", "Créer un questionnaire"],
         ["GET", "/admin/questionnaires/", "Lister les questionnaires"],
         ["GET", "/admin/questionnaires/{id}", "Détail d'un questionnaire"],
@@ -566,6 +606,7 @@ def generer_document():
         ["DELETE", "/admin/questionnaires/{id}", "Supprimer un questionnaire"],
         ["PATCH", "/admin/questionnaires/{id}/desactiver", "Désactiver un questionnaire"],
         ["PATCH", "/admin/questionnaires/{id}/reactiver", "Réactiver un questionnaire"],
+        ["POST", "/admin/questionnaires/notififier", "Notifier les alumni du questionnaire actif"],
         ["GET", "/admin/questionnaires/{id}/reponses", "Voir les réponses"],
         ["GET", "/questionnaires/actif", "Questionnaire actif (alumni)"],
         ["GET", "/questionnaires/etudiant/{id}/reponses", "Mes réponses (alumni)"],
@@ -574,6 +615,7 @@ def generer_document():
         ["GET", "/import/template", "Télécharger le template d'import"],
         ["GET", "/import/export/alumni", "Exporter tous les alumni en Excel"],
         ["POST", "/upload-etudiants/", "Import CSV/Excel (automatisation)"],
+        ["POST", "/newsletter/envoyer", "Newsletter aux alumni consentants (admin)"],
         ["POST", "/auth/otp/request", "Demander un code OTP"],
         ["POST", "/auth/otp/verify", "Vérifier le code OTP → JWT"],
         ["POST", "/auth/admin/login", "Connexion admin → JWT"],

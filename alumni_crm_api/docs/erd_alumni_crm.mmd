@@ -4,8 +4,14 @@
 %% 14 tables : 12 tables métier + otp_codes + schema_migrations
 %% Généré le 10/08/2026 depuis l'introspection de la base réelle
 %% Vérifié et corrigé le 15/08/2026 (schéma réel, migrations jusqu'à
-%% 011_email_academique_unique.sql) : DEMANDE_RGPD complétée (010) et
-%% CONSENTEMENT_RGPD enrichi (007).
+%% 010_email_academique_unique.sql) : DEMANDE_RGPD complétée (009) et
+%% CONSENTEMENT_RGPD enrichi (006).
+%%
+%% Mis à jour le 22/08/2026 : renumérotation continue des migrations (001→012,
+%% l'ancien trou « 003 absent » est comblé), puis :
+%%   - 011 : REPONSE_QUESTIONNAIRE.id_etudiant passe en ON DELETE CASCADE
+%%     (harmonisation avec la base live, fix du drift de la migration 003)
+%%   - 012 : EXPERIENCE_PRO.salary_annuel NUMERIC(10,2) DEFAULT 0
 %%
 %% Convention : le MLD est la traduction directe du MCD. Chaque entité du MCD
 %% devient une table, chaque relation 1-N devient une colonne FK, et la relation
@@ -64,8 +70,9 @@ erDiagram
         string intitule_poste "NOT NULL"
         string type_contrat "NOT NULL"
         date date_debut "NOT NULL"
-        date date_fin "NULL si poste actuel"
-        numeric salaire "NOT NULL"
+        date         date_fin "NULL si poste actuel"
+        numeric salaire "NOT NULL, salaire mensuel"
+        numeric salary_annuel "DEFAULT 0, salaire annuel (migration 012)"
         boolean poste_actuel "DEFAULT true"
     }
     CERTIFICATION {

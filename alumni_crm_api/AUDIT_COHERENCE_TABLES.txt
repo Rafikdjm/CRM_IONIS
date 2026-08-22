@@ -5,8 +5,14 @@ Date de l'audit : 16/08/2026
 Méthode : introspection live PostgreSQL (information_schema.columns,
            pg_constraint, pg_indexes) sur la base "alumni_crm", croisée avec
            les routers, les schémas Pydantic (schemas.py) et les migrations
-           SQL (001, 002, 004, 005, 006, 007, 008, 010).
+           SQL (001, 002, 003, 004, 005, 006, 007, 009).
+           NB : numéros de migrations selon le renommage du 22/08/2026
+           (numérotation continue 001→012 ; l'ancien trou « 003 absent » a
+           été comblé par renumérotation des fichiers et de schema_migrations).
 Contrainte : audit uniquement — AUCUN code modifié.
+MISE À JOUR 22/08/2026 : les 2 P1 listés ci-dessous ont été corrigés depuis
+l'audit (marqués [CORRIGÉ]). Le reste du document est conservé tel quel
+(instantané du 16/08/2026).
 
 État de la base au moment de l'audit :
   1 promotion, 4 entreprises, 3 expériences pro, 1 certification, 1 obtient,
@@ -40,7 +46,7 @@ DELETE force=true      | —              | —                        | Oui en 
 Champ                          | Exposé lecture | Validé écriture | Cohérent SQL | Problème identifié
 -------------------------------|----------------|-----------------|--------------|----------------------------------------
 nom_entreprise / secteur / pays/ville | Oui    | Obligatoires, pas de long. mini | Oui | P3 : "" accepté ; doublons possibles
-DELETE /entreprises/{id}       | —              | —               | NON          | P1 : UPDATE EXPERIENCE_PRO SET id_entreprise = NULL (entreprises.py:139) sur colonne NOT NULL -> IntegrityError -> 400 dès qu'une expérience référence l'entreprise. La FK est ON DELETE CASCADE : un simple DELETE suffit.
+DELETE /entreprises/{id}       | —              | —                | NON          | P1 : UPDATE EXPERIENCE_PRO SET id_entreprise = NULL (entreprises.py:139) sur colonne NOT NULL -> IntegrityError -> 400 dès qu'une expérience référence l'entreprise. La FK est ON DELETE CASCADE : un simple DELETE suffit. [CORRIGÉ 22/08/2026 : DELETE direct en place]
 
 ================================================================================
 3. EXPERIENCE_PRO (3 lignes)
@@ -69,7 +75,7 @@ Champ                 | Exposé lecture | Validé écriture | Cohérent SQL | Pr
 ----------------------|----------------|-----------------|--------------|----------------------------------------
 type_consentement / canal | Oui       | Strings libres  | Oui (VARCHAR)| P3 : aucune liste contrainte
 statut                | Oui            | String libre — PAS de Literal | Oui (aucun CHECK DB) | P2 : statut totalement libre. Le code repose sur la convention 'actif'/'refuse' (admin.py:78, cleanup.py:37) -> une mauvaise valeur est silencieusement ignorée par le filtre "prise_de_contact"
-UNIQUE (id_etudiant, type) | —        | ON CONFLICT upsert | Oui (migration 007) | —
+UNIQUE (id_etudiant, type) | —        | ON CONFLICT upsert | Oui (migration 006) | —
 id_etudiant           | Oui            | —               | Oui (FK CASCADE) | —
 
 ================================================================================
@@ -78,9 +84,9 @@ id_etudiant           | Oui            | —               | Oui (FK CASCADE) | 
 Champ                 | Exposé lecture | Validé écriture | Cohérent SQL | Problème identifié
 ----------------------|----------------|-----------------|--------------|----------------------------------------
 type (QUESTION)       | Oui            | String libre, default 'text' | Oui (VARCHAR, aucun CHECK) | P2 : valeurs type non contraintes ; options non validées vs type
-tag / conditionnee_statut_emploi | Oui | Libres        | Oui (migrations 005/006) | —
+tag / conditionnee_statut_emploi | Oui | Libres        | Oui (migrations 004/005) | —
 reponses (JSONB)      | Oui            | dict libre      | Oui          | P2 : aucune validation — clés non vérifiées vs id_question existants, valeurs non vérifiées vs type de question
-UNIQUE (id_etudiant, id_questionnaire) | — | Upsert ON CONFLICT | Oui en live | P1 : DRIFT migration 004 — voir liste priorisée (2)
+UNIQUE (id_etudiant, id_questionnaire) | — | Upsert ON CONFLICT | Oui en live | P1 : DRIFT migration 003 — voir liste priorisée (2)
 PUT /admin/questionnaires/{id} | Oui  | —               | —            | P3 : renvoie "actif": true en dur même si désactivé (questionnaires.py:276)
 ordre                 | Oui            | int = 0          | Oui          | P3 : q.ordre if q.ordre else i -> un ordre 0 retombe sur l'index (questionnaires.py:44)
 
@@ -90,7 +96,7 @@ ordre                 | Oui            | int = 0          | Oui          | P3 : 
 Champ                 | Exposé lecture | Validé écriture                  | Cohérent SQL | Problème identifié
 ----------------------|----------------|----------------------------------|--------------|----------------------------------------
 type_demande          | Oui            | pattern ^(export|suppression)$   | Oui (CHECK 008) | —
-statut                | Oui (str)      | Cycle géré par _VALID_STATUTS    | Oui (CHECK migration 010 en live) | Cycle envoyee->en_traitement->traitee/rejetee bien synchronisé avec le CHECK 010, mais PAS via Literal Pydantic — contrainte portée par la DB + constantes Python. Risque nul aujourd'hui.
+statut                | Oui (str)      | Cycle géré par _VALID_STATUTS    | Oui (CHECK migration 009 en live) | Cycle envoyee->en_traitement->traitee/rejetee bien synchronisé avec le CHECK 009, mais PAS via Literal Pydantic — contrainte portée par la DB + constantes Python. Risque nul aujourd'hui.
 Filtres liste admin   | Oui            | —                                | —            | P2 : statut/type_demande invalides dans le query param silencieusement ignorés -> liste complète renvoyée au lieu d'une erreur (demandes_rgpd.py:716-721)
 id_etudiant           | Oui            | —                                | Oui (FK SET NULL) | Hard-delete étudiant garde la demande avec id_etudiant=NULL (géré)
 
@@ -99,7 +105,7 @@ id_etudiant           | Oui            | —                                | Ou
 ================================================================================
 Champ                        | Exposé lecture | Validé écriture | Cohérent SQL | Problème identifié
 -----------------------------|----------------|-----------------|--------------|----------------------------------------
-action/details/rows/executed_at/acteur | Oui (/admin/cleanup/audit) | Oui (cleanup, RGPD, purge, etudiants) | Oui (migration 001 + acteur 008) | —
+action/details/rows/executed_at/acteur | Oui (/admin/cleanup/audit) | Oui (cleanup, RGPD, purge, etudiants) | Oui (migration 001 + acteur 007) | —
 Robustesse                   | —              | —               | —            | P3 : _write_audit_log avale toute exception (cleanup.py:66-67) -> échec silencieux ; supprimer_orphelins se dit "transaction unique" mais commit par bloc (cleanup.py:185-243) ; aucune purge/rétention
 
 ================================================================================
@@ -118,11 +124,15 @@ P1 — Incohérences / erreurs trompeuses :
   1. DELETE /entreprises/{id} cassé dès qu'une expérience existe
      (UPDATE vers NULL sur colonne NOT NULL, entreprises.py:139).
      Correctif : suppression directe — la FK est déjà ON DELETE CASCADE.
-  2. Drift migration 004 vs DB live : reponse_questionnaire.id_etudiant a
-     ON DELETE CASCADE en live mais PAS dans la migration 004. Sur une base
+     [CORRIGÉ 22/08/2026 : entreprises.py:139 fait désormais un DELETE direct,
+      le UPDATE vers NULL a disparu.]
+  2. Drift migration 003 vs DB live : reponse_questionnaire.id_etudiant a
+     ON DELETE CASCADE en live mais PAS dans la migration 003. Sur une base
      reconstruite depuis les migrations, le hard-delete d'un étudiant avec
      réponses (etudiants.py:593, promotions.py:174, cleanup doublons)
      échouerait en IntegrityError.
+     [CORRIGÉ 22/08/2026 : la migration 011_fix_reponse_questionnaire_cascade.sql
+      recrée la FK avec ON DELETE CASCADE — base et migrations alignées.]
 
 P2 — Validations manquantes / messages trompeurs :
   3. date_obtention non validée (futur possible) ; message IntegrityError
@@ -150,7 +160,7 @@ RÉPONSES AUX 5 QUESTIONS DE L'UTILISATEUR
    est non atomique (2 transactions) ; la création est transactionnelle.
 2. date_obtention : non validée (date future acceptée).
 3. CONSENTEMENT_RGPD.statut : string libre, non contraint (pas de Literal).
-4. Cycle statuts DEMANDE_RGPD : synchronisé avec le CHECK de la migration 010
+4. Cycle statuts DEMANDE_RGPD : synchronisé avec le CHECK de la migration 009
    (DB + constantes Python), mais pas via Literal Pydantic.
 5. TTL OTP (10 min) : vérifié à chaque validation (verify_otp), pas seulement
    à la création.

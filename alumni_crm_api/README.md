@@ -18,6 +18,9 @@ security.py           # dépendances d'authentification (clé API, JWT admin/alu
 schemas.py             # modèles Pydantic (validation incluse)
 utils.py               # helper de sérialisation cursor -> dict
 main.py                 # assemble les routers + CORS
+run_migrations.py      # exécute les migrations SQL numérotées avec tracking (schema_migrations)
+purge.py               # CLI : purge définitive différée des comptes anonymisés RGPD (--dry-run)
+migrations/            # migrations SQL numérotées 001 → 012
 routers/
   promotions.py         # /promotions          : CRUD des promotions
   etudiants.py          # /etudiants           : CRUD étudiants + profil alumni
@@ -27,12 +30,13 @@ routers/
   rgpd.py               # /consentements       : choix RGPD (prise_de_contact, newsletter, etc.)
   otp.py                # /auth/otp            : connexion alumni par code à 6 chiffres (rate-limiting)
   admin_auth.py         # /auth/admin/login    : connexion admin par code d'accès (hash SHA-256)
-  demandes_rgpd.py      # /rgpd/demandes + /admin/demandes-rgpd : demandes export/suppression, anonymisation
-  questionnaires.py     # /questionnaires + /admin/questionnaires : questionnaires annuels d'insertion
-  admin.py              # /admin               : annuaire filtré, indicateurs dashboard (X-API-Key)
-  cleanup.py            # /admin/cleanup       : orphelins, doublons, archivage RGPD, audit log
-  automatisation.py     # /upload-etudiants/   : import CSV/Excel
-  import_export.py      # /import              : template Excel, import, export alumni
+   demandes_rgpd.py      # /rgpd/demandes + /admin/demandes-rgpd : demandes export/suppression, anonymisation
+   questionnaires.py     # /questionnaires + /admin/questionnaires : questionnaires annuels d'insertion
+   newsletter.py         # /newsletter/envoyer    : envoi de newsletter aux alumni consentants (X-API-Key)
+   admin.py              # /admin               : annuaire filtré, indicateurs dashboard (X-API-Key)
+   cleanup.py            # /admin/cleanup       : orphelins, doublons, archivage RGPD, audit log
+   automatisation.py     # /upload-etudiants/   : import CSV/Excel
+   import_export.py      # /import              : template Excel, import, export alumni
 ```
 
 ## Corrections apportées, classées selon les 4 axes de la revue
