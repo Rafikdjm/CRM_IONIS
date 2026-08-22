@@ -38,45 +38,13 @@
 
 .otp-input:focus {
   outline: none;
-  background: var(--otp-accent-soft);
+  border-color: var(--otp-accent);
+  box-shadow: 0 0 0 3px var(--otp-accent-soft);
 }
 
-.otp-input:focus-visible {
-  outline: 2px solid var(--otp-accent);
-  outline-offset: 2px;
-}
-
-.otp-ring {
-  position: absolute;
-  inset: -4px;
-  height: calc(100% + 8px);
-  width: calc(100% + 8px);
-  pointer-events: none;
-  color: var(--otp-accent);
-}
-
-.otp-ring circle {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 3;
-}
-
-.otp-ring-arc {
-  stroke-dasharray: 0.4 0.6;
-  animation: otp-ring-spin 1.2s linear infinite;
-}
-
-@keyframes otp-ring-spin {
-  to { stroke-dashoffset: -1; }
-}
-
-.otp-ring-static {
-  color: var(--otp-error);
-  opacity: 0.9;
-}
-
-.otp-ring-static circle {
-  stroke-dasharray: 1;
+.otp-verification[data-status='error'] .otp-input {
+  border-color: var(--otp-error);
+  box-shadow: 0 0 0 3px var(--otp-error-soft);
 }
 
 @keyframes otp-shake {
@@ -196,7 +164,6 @@
 /* ── Accessibilité : désactiver/réduire les animations ────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
-  .otp-ring-arc { animation: none; }
   .otp-ghost { transition: none; }
   .otp-particle { animation: none; opacity: 0; }
   .otp-check-circle { animation: none; stroke-dashoffset: 0; }

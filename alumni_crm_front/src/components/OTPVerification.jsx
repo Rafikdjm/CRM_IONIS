@@ -96,7 +96,6 @@ export default function OTPVerification({
 
   const [digits, setDigits] = useState(() => Array(length).fill(''));
   const [sourceDigits, setSourceDigits] = useState(() => Array(length).fill(''));
-  const [focusedIndex, setFocusedIndex] = useState(-1);
   const [ghosts, setGhosts] = useState([]);
   const [errorActive, setErrorActive] = useState(false);
 
@@ -117,7 +116,6 @@ export default function OTPVerification({
   useEffect(() => {
     if (!disabled && !success) {
       inputRefs.current[0]?.focus();
-      setFocusedIndex(0);
     }
   }, [disabled, success]);
 
@@ -125,7 +123,6 @@ export default function OTPVerification({
     setDigits(Array(length).fill(''));
     setSourceDigits(Array(length).fill(''));
     setGhosts([]);
-    setFocusedIndex(0);
     inputRefs.current[0]?.focus();
   }, [resetKey, length]);
 
@@ -335,16 +332,6 @@ export default function OTPVerification({
       <div className="otp-boxes flex justify-center gap-2.5 sm:gap-3" role="group" aria-label={`Code à ${length} chiffres`}>
         {digits.map((d, i) => (
           <div key={i} ref={(el) => { slotRefs.current[i] = el; }} className="otp-slot">
-            {!errorActive && focusedIndex === i && (
-              <svg className="otp-ring" viewBox="0 0 100 100" aria-hidden="true">
-                <circle className="otp-ring-arc" cx="50" cy="50" r="46" pathLength="1" />
-              </svg>
-            )}
-            {errorActive && (
-              <svg className="otp-ring otp-ring-static" viewBox="0 0 100 100" aria-hidden="true">
-                <circle cx="50" cy="50" r="46" pathLength="1" />
-              </svg>
-            )}
             <input
               ref={(el) => { inputRefs.current[i] = el; }}
               type="text"
@@ -357,8 +344,6 @@ export default function OTPVerification({
               onChange={(e) => handleChange(i, e)}
               onKeyDown={(e) => handleKeyDown(i, e)}
               onPaste={handlePaste}
-              onFocus={() => setFocusedIndex(i)}
-              onBlur={() => setFocusedIndex((f) => (f === i ? -1 : f))}
               className={`otp-input h-12 w-11 rounded-xl text-center text-lg font-bold outline-none disabled:opacity-40 sm:h-14 sm:w-12 ${isDark ? 'border border-white/[0.08] bg-white/[0.06] text-white' : 'border border-gray-300 bg-white text-gray-900'}`}
             />
           </div>
