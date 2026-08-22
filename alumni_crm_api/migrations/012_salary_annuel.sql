@@ -1,4 +1,4 @@
--- Migration 013 : Ajout du champ salary_annuel (numerique) a EXPERIENCE_PRO
+-- Migration 012 : Ajout du champ salary_annuel (numerique) a EXPERIENCE_PRO
 -- Permet le calcul automatique du salaire moyen par filiere.
 -- Le champ salaire (texte libre) est conserve pour retrocompatibilite.
 

@@ -1,9 +1,9 @@
 -- ============================================================================
 -- MIGRATION : Correction drift FK REPONSE_QUESTIONNAIRE.id_etudiant
 -- ----------------------------------------------------------------------------
--- Contexte : la migration 004 créait REPONSE_QUESTIONNAIRE.id_etudiant avec
+-- Contexte : la migration 003 créait REPONSE_QUESTIONNAIRE.id_etudiant avec
 -- une FK en NO ACTION (pas de ON DELETE). La base LIVE, elle, porte la FK en
--- ON DELETE CASCADE (appliquée au fil de l'eau via la 009). Une base
+-- ON DELETE CASCADE (appliquée au fil de l'eau via la 008). Une base
 -- reconstruite depuis les migrations devait donc reproduire le même état.
 --
 -- Cette migration garantit l'état CASCADE de façon idempotente :
@@ -12,7 +12,7 @@
 --   - sinon elle supprime toute FK existante (quel que soit son nom) et la
 --     recrée avec ON DELETE CASCADE.
 --
--- La 004 n'est volontairement PAS modifiée (une migration déjà appliquée
+-- La 003 n'est volontairement PAS modifiée (une migration déjà appliquée
 -- ne doit jamais être éditée rétroactivement) : la correction passe par
 -- une nouvelle migration.
 -- ============================================================================

@@ -173,7 +173,7 @@ def main():
         filepath = os.path.join(MIGRATIONS_DIR, filename)
 
         if filename in applied:
-            print(f"[SAUTÉ]  {filename} (déjà appliquée le {filename})")
+            print(f"[SAUTÉ]  {filename} (déjà appliquée)")
             skipped += 1
             continue
 
