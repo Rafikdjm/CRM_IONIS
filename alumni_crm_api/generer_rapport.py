@@ -301,7 +301,7 @@ def generer_document():
     doc.add_heading("3.4 Impact concret pour l'établissement", level=2)
     impacts = [
         "Centralisation : passage de fichiers Excel dispersés à une base de données relationnelle unique et cohérente",
-        "Automatisation : import massif via Excel (2 méthodes : /import/excel et /upload-etudiants/), export complet en un clic",
+        "Gain de temps : import massif via Excel (/import/excel), export complet en un clic",
         "Fiabilité : détection et suppression automatique des doublons (sur clé nom+prénom+email) et des enregistrements orphelins",
         "Indicateurs : calcul automatique des taux d'insertion, permettant de répondre aux obligations de reporting",
         "Conformité RGPD : anonymisation automatique en cas de refus de consentement, traçabilité complète via audit log",
@@ -469,10 +469,9 @@ def generer_document():
 
     doc.add_paragraph("Pilier 1 — Collecte :", style="List Bullet")
     doc.add_paragraph(
-        "Deux méthodes d'import : /upload-etudiants/ (CSV/Excel via Pandas) et "
-        "/import/excel (Excel via openpyxl). Chaque ligne est validée via Pydantic "
-        "avant insertion. Les entreprises existantes sont préchargées en une seule "
-        "requête pour optimiser les performances (pattern anti-N+1)."
+        "Import massif via /import/excel (CSV/Excel via openpyxl). Chaque ligne est "
+        "validée avant insertion. Les entreprises existantes sont préchargées en une "
+        "seule requête pour optimiser les performances (pattern anti-N+1)."
     )
 
     doc.add_paragraph("Pilier 2 — Exploitation :", style="List Bullet")
@@ -614,7 +613,6 @@ def generer_document():
         ["POST", "/import/excel", "Importer des alumni depuis Excel"],
         ["GET", "/import/template", "Télécharger le template d'import"],
         ["GET", "/import/export/alumni", "Exporter tous les alumni en Excel"],
-        ["POST", "/upload-etudiants/", "Import CSV/Excel (automatisation)"],
         ["POST", "/newsletter/envoyer", "Newsletter aux alumni consentants (admin)"],
         ["POST", "/auth/otp/request", "Demander un code OTP"],
         ["POST", "/auth/otp/verify", "Vérifier le code OTP → JWT"],

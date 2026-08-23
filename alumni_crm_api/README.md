@@ -35,7 +35,6 @@ routers/
    newsletter.py         # /newsletter/envoyer    : envoi de newsletter aux alumni consentants (X-API-Key)
    admin.py              # /admin               : annuaire filtré, indicateurs dashboard (X-API-Key)
    cleanup.py            # /admin/cleanup       : orphelins, doublons, archivage RGPD, audit log
-   automatisation.py     # /upload-etudiants/   : import CSV/Excel
    import_export.py      # /import              : template Excel, import, export alumni
 ```
 
@@ -61,7 +60,7 @@ routers/
 - Ajout de contraintes de validation manquantes (`salaire >= 0`, `annee_diplome` dans une plage raisonnable).
 
 **4. Maintenabilité**
-- Le fichier unique de ~590 lignes a été découpé en un router `APIRouter` par domaine métier (Promotions, Étudiants, Entreprises, Expériences, Certifications, RGPD, Admin, Automatisation), `main.py` ne fait plus qu'assembler les routers.
+- Le fichier unique de ~590 lignes a été découpé en un router `APIRouter` par domaine métier (Promotions, Étudiants, Entreprises, Expériences, Certifications, RGPD, Admin), `main.py` ne fait plus qu'assembler les routers.
 
 ## Tests
 

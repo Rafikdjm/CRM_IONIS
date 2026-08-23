@@ -372,7 +372,6 @@ import_items = [
     "Logique complète : création ETUDIANT + ENTREPRISE + EXPERIENCE_PRO, résolution de doublons email",
     "Template de téléchargement (GET /import/template)",
     "Frontend : ExcelImport.jsx (387 lignes) — drag & drop, preview 10 lignes, reconnaissance de colonnes",
-    "Deuxième endpoint : automatisation.py:20-154 — POST /upload-etudiants/ via pandas + Pydantic",
 ]
 for item in import_items:
     doc.add_paragraph(item, style="List Bullet")
@@ -480,7 +479,7 @@ recap = [
     ("5", "Modélisation BDD", "PARTIEL", "erd_alumni_crm.mmd (OK), mcd_corrige.md (obsolète)"),
     ("6", "Interface admin", "FAIT", "AlumniDirectory.jsx:72-114, AdminDashboard.jsx, AdminPromotions.jsx"),
     ("7", "Interface alumni", "FAIT", "AlumniRegistration.jsx, AlumniProfileUpdate.jsx, AlumniCareer.jsx:318-370"),
-    ("8", "Import / Export", "FAIT", "import_export.py:135-266, automatisation.py:20-154, ExcelImport.jsx"),
+    ("8", "Import / Export", "FAIT", "import_export.py, ExcelImport.jsx"),
     ("9", "Rapport de stage", "MANQUANT", "Aucun fichier"),
     ("10", "MCD / MLD", "FAIT", "erd_alumni_crm.mmd, erd_alumni_crm.docx (réserve : mcd_corrige.md obsolète)"),
     ("11", "Prototype fonctionnel", "FAIT", "dist/, requirements.txt, 14 routers, 13 fichiers test"),
