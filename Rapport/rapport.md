@@ -148,7 +148,7 @@ Le passage du MCD au MLD a respecté les règles de transformation standard (ent
 
 **Mission 2 — Développement du backend API**
 
-J'ai développé une API REST complète avec FastAPI (Python), documentée automatiquement via Swagger (`/docs`). L'API comprend **15 routeurs** et **80 endpoints** couvrant :
+J'ai développé une API REST complète avec FastAPI (Python). L'API comprend **15 routeurs** et **80 endpoints** couvrant :
 
 - Authentification (OTP email + code à 6 chiffres, clé d'accès API admin, sessions JWT)
 - Gestion des promotions et des étudiants/alumni (CRUD complet)
@@ -182,7 +182,7 @@ J'ai intégré la conformité RGPD à toutes les étapes du système :
 Un audit de sécurité m'a permis de corriger des failles critiques :
 
 - Ajout de `require_admin_api_key` sur les routes POST/DELETE de promotions et entreprises initialement non protégées.
-- Réactivation du router `automatisation.py` (import Excel/CSV via pandas), initialement démonté de `main.py` car sa route était ouverte : l'upload est désormais protégé par la dépendance `require_admin_api_key` posée au niveau du router.
+- Suppression de la route morte `/upload-etudiants/` (router `automatisation.py`, resté sans appelant front, sans test ni générateur de fichier) : l'import alumni passe désormais exclusivement par l'import Excel, protégé par la dépendance `require_admin_api_key` posée au niveau du router.
 - Correction d'une faille d'ownership : un alumni pouvait lire/modifier les réponses d'un autre alumni en modifiant un ID dans la requête → corrigé via `require_owner_or_admin`.
 - Protection des routes permettant la modification de comptes déjà anonymisés via le garde `refuser_compte_anonymise` (12 points d'appel : PUT/PATCH étudiant, expériences, certifications, consentements, réponses questionnaire).
 - `DELETE /promotions/{id}` renvoie désormais 409 si des étudiants sont rattachés (sauf `?force=true`).
@@ -211,7 +211,7 @@ Le calcul du taux d'emploi à 6 mois a nécessité une **fiabilisation** : l'anc
 Le prototype résultant de ce stage couvre l'intégralité du périmètre fonctionnel défini dans le sujet officiel :
 
 - **14 tables** de base de données, validées par introspection et rejeu complet des 12 migrations sur une base vide (0 différence structurelle constatée).
-- **80 endpoints** API documentés via Swagger, avec authentification OTP + JWT et protection admin, dont les 2 ajouts de fin de stage : `POST /newsletter/envoyer` (envoi de newsletter avec filtres de ciblage) et `POST /admin/questionnaires/notififier` (relance questionnaire : email générique aux non-répondants, filtre par promotion, sans lien direct vers le formulaire à ce jour).
+- **80 endpoints** API avec authentification OTP + JWT et protection admin, dont les 2 ajouts de fin de stage : `POST /newsletter/envoyer` (envoi de newsletter avec filtres de ciblage) et `POST /admin/questionnaires/notififier` (relance questionnaire : email générique aux non-répondants, filtre par promotion, sans lien direct vers le formulaire à ce jour).
 - **14 routes** frontend couvrant les espaces admin et alumni.
 - **8 indicateurs** d'insertion professionnelle, dont 6 exposés via des endpoints dédiés (`/admin/indicateurs`, `/admin/indicateurs/secteurs`, `/admin/indicateurs/types-contrat`, `/admin/indicateurs/kpi-tag`, `/admin/indicateurs/kpi-tags`, `/admin/indicateurs/kpi-tags-actifs`).
 - **5 documents** de livraison complémentaires, couvrant les exigences « Management » du sujet : cartographie des données (exigence M1), charte RGPD (M2), analyse des indicateurs d'insertion (M4), stratégie de mise à jour des données — porteuse de l'exigence M3 (questionnaire annuel automatisé et newsletter) —, et guide des processus d'animation du réseau (livrable attendu du sujet).
@@ -375,7 +375,7 @@ Le schéma ci-dessous a été **régénéré par introspection directe de la bas
 
 ### Annexe E — Liste des endpoints API
 
-[À COMPLÉTER : liste complète des 80 endpoints avec méthode HTTP, chemin et description — générable depuis `/openapi.json`]
+[À COMPLÉTER : liste complète des 80 endpoints avec méthode HTTP, chemin et description]
 
 ### Annexe F — Différentiel de migration et audit de conformité
 
