@@ -261,7 +261,7 @@ function VerticalBarChart({ data, total }) {
         const heightPct = Math.max((stat.count / maxCount) * 100, 4);
         const color = CHART_COLORS[i % CHART_COLORS.length];
         return (
-          <div key={stat.promotion || stat.name || i} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
+          <div key={stat.promotion || stat.name || i} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1.5">
             <span className="text-xs font-semibold text-gray-900 dark:text-slate-100">{stat.count}</span>
             <div
               className="flex w-full flex-1 items-end"

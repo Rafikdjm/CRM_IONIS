@@ -167,6 +167,10 @@ def calculer_indicateurs(db=Depends(get_db)):
             LEFT JOIN ETUDIANT e ON p.id_promotion = e.id_promotion AND e.date_anonymisation IS NULL
             LEFT JOIN EXPERIENCE_PRO exp ON e.id_etudiant = exp.id_etudiant
             GROUP BY p.nom_promotion, p.annee_diplome
+            -- Promotions sans aucun alumni (non anonymise) exclues : elles
+            -- n'ont pas leur place sur un graphique "Alumni par promotion"
+            -- et y creent une barre fantome a zero.
+            HAVING COUNT(e.id_etudiant) > 0
             ORDER BY p.annee_diplome DESC;
         """
         cursor.execute(promo_query)
@@ -515,12 +519,19 @@ def _calculer_kpi_tag(db, tag: str) -> dict:
     """
     cursor = db.cursor()
     try:
+        # Ordre deterministe : date_creation est une DATE (precision jour),
+        # plusieurs questionnaires/questions peuvent donc etre a egalite ;
+        # sans departage explicite, PostgreSQL renvoie une ligne arbitraire et
+        # la carte KPI du Dashboard peut changer de question (donc de type de
+        # graphique) d'un appel a l'autre. On fige : questionnaire le plus
+        # recent, puis question la plus tot du questionnaire.
         cursor.execute(
             "SELECT q.id_question, q.texte, q.type, q.options, q.id_questionnaire "
             "FROM QUESTION q "
             "JOIN QUESTIONNAIRE qn ON q.id_questionnaire = qn.id_questionnaire "
             "WHERE q.tag = %s AND qn.actif = TRUE "
-            "ORDER BY qn.date_creation DESC LIMIT 1;",
+            "ORDER BY qn.date_creation DESC, qn.id_questionnaire DESC, "
+            "q.ordre ASC, q.id_question ASC LIMIT 1;",
             (tag,),
         )
         qrow = cursor.fetchone()
