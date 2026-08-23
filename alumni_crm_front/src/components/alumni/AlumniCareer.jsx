@@ -42,6 +42,22 @@ const EMPTY_CERTIFICATION = {
   date_obtained: '',
 };
 
+const isBlankCareer = (c) =>
+  !c.is_current &&
+  [
+    c.company,
+    c.position,
+    c.sector,
+    c.custom_sector,
+    c.type_contrat,
+    c.start_date,
+    c.end_date,
+    c.salary_range,
+    c.description,
+    c.pays,
+    c.ville,
+  ].every((v) => !(v || '').trim());
+
 function CareerForm({ career, index, onChange, onRemove }) {
   const handleChange = (field, value) => {
     onChange(index, { ...career, [field]: value });
@@ -72,22 +88,22 @@ function CareerForm({ career, index, onChange, onRemove }) {
       </div>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-slate-400">Entreprise *</label>
+          <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-slate-400">Entreprise</label>
           <input
             type="text"
             value={career.company}
             onChange={(e) => handleChange('company', e.target.value)}
-            required
+            placeholder="Ex: Capgemini, Sonatrach..."
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-slate-400">Poste *</label>
+          <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-slate-400">Poste</label>
           <input
             type="text"
             value={career.position}
             onChange={(e) => handleChange('position', e.target.value)}
-            required
+            placeholder="Ex: Développeur Full Stack, Data Analyst..."
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
         </div>
@@ -431,7 +447,7 @@ export default function AlumniCareer() {
       }
 
       for (const career of careers) {
-        if (career.company && career.position) {
+        if (!isBlankCareer(career)) {
           try {
             const sectorToSend = career.sector === 'Autre' && career.custom_sector
               ? career.custom_sector
@@ -555,7 +571,10 @@ export default function AlumniCareer() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0" />
             </svg>
             <p className="mt-2 text-sm text-gray-500 dark:text-slate-400">Aucun parcours enregistré</p>
-            <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">Ajoutez votre premier poste pour constituer votre historique</p>
+            <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">
+              Ajoutez votre premier poste pour constituer votre historique. Pas encore d&apos;expérience
+              professionnelle ? Aucun souci, vous pouvez enregistrer votre parcours sans en ajouter.
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
