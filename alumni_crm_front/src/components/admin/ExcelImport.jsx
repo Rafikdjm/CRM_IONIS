@@ -11,19 +11,14 @@ const loadXlsx = () => {
 
 const EXPECTED_COLUMNS = [
   'prenom', 'nom', 'email', 'telephone', 'promotion', 'annee_diplome',
-  'entreprise', 'poste', 'secteur', 'linkedin', 'adresse', 'ville', 'pays',
-  'derniere_entreprise', 'poste_actuel', 'statut_rgpd', 'competences',
-  'statut_disponibilite', 'date_naissance', 'email_academique',
-  'parcours_anterieur', 'description', 'type_contrat',
+  'entreprise', 'poste', 'secteur', 'entreprise_pays', 'entreprise_ville',
+  'linkedin', 'adresse', 'ville', 'pays',
+  'statut_disponibilite', 'competences', 'date_naissance', 'date_inscription',
+  'email_academique', 'parcours_anterieur', 'type_contrat', 'date_debut',
+  'date_fin', 'poste_actuel',
 ];
 
-const TEMPLATE_COLUMNS = [
-  'Prénom', 'Nom', 'Email', 'Téléphone', 'Promotion', 'Année diplôme',
-  'Dernière entreprise', 'Poste actuel', 'Secteur d\'activité', 'LinkedIn',
-  'Adresse', 'Ville', 'Pays', 'Statut RGPD', 'Compétences', 'Statut disponibilité',
-  'Date de naissance', 'Email académique', 'Parcours antérieur',
-  'Description du poste', 'Type de contrat',
-];
+const TEMPLATE_COLUMNS = EXPECTED_COLUMNS;
 
 export default function ExcelImport() {
   const [file, setFile] = useState(null);
@@ -137,20 +132,20 @@ export default function ExcelImport() {
         const currentExp = experiences.find((e) => e.is_current) || experiences[0] || {};
 
         return {
-          'Prénom': a.first_name || '',
-          'Nom': a.last_name || '',
-          'Email': a.email || '',
-          'Téléphone': a.phone || '',
-          'Promotion': a.promotion || '',
-          'Dernière entreprise': currentExp.company || '',
-          'Poste actuel': currentExp.position || '',
-          'Secteur d\'activité': currentExp.sector || a.sector || '',
-          'LinkedIn': a.linkedin || '',
-          'Adresse': a.address || '',
-          'Ville': a.city || '',
-          'Pays': a.country || '',
-          'Statut disponibilité': a.availability_status || '',
-          'Compétences': (a.skills || []).join(', '),
+          'prenom': a.first_name || '',
+          'nom': a.last_name || '',
+          'email': a.email || '',
+          'telephone': a.phone || '',
+          'promotion': a.promotion || '',
+          'entreprise': currentExp.company || '',
+          'poste': currentExp.position || '',
+          'secteur': currentExp.sector || a.sector || '',
+          'linkedin': a.linkedin || '',
+          'adresse': a.address || '',
+          'ville': a.city || '',
+          'pays': a.country || '',
+          'statut_disponibilite': a.availability_status || '',
+          'competences': (a.skills || []).join(', '),
         };
       }),
     );
@@ -177,10 +172,11 @@ export default function ExcelImport() {
       utils.book_append_sheet(wb, ws, 'Modèle');
       const exampleRow = [
         'Jean', 'Dupont', 'jean.dupont@email.com', '+33612345678', 'Promo 2020', '2020',
-        'Tech Corp', 'Développeur Senior', 'Technologie', 'https://linkedin.com/in/jeandupont',
-        '15 Rue de Paris', 'Paris', 'France', 'Oui', 'Python, React, Management', 'en_poste',
-        '1995-06-15', 'jean.dupont@univ.fr', 'Licence Informatique - Univ. Paris-Saclay',
-        'Développement d\'applications web full-stack', 'CDI',
+        'Tech Corp', 'Développeur Senior', 'Technologie', 'France', 'Paris',
+        'https://linkedin.com/in/jeandupont',
+        '15 Rue de Paris', 'Paris', 'France', 'en_poste',
+        'Python, React, Management', '1995-06-15', '2021-09-01', 'jean.dupont@univ.fr',
+        'Licence Informatique - Univ. Paris-Saclay', 'CDI', '2022-03-01', '', 'Oui',
       ];
       utils.sheet_add_aoa(ws, [exampleRow], { origin: -1 });
       const wbBlob = write(wb, { bookType: 'xlsx', type: 'blob' });
