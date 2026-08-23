@@ -153,7 +153,7 @@ doc.add_paragraph(
     "• Coordonnées : address, city, country, telephone, linkedin, email, "
     "email_academique, date_naissance — collectés à l'inscription "
     "(AlumniRegistration.jsx) et modifiables via le profil "
-    "(AlumniProfile.jsx, AlumniProfileUpdate.jsx)",
+    "(AlumniProfile.jsx)",
     style="List Bullet",
 )
 doc.add_paragraph(
@@ -178,7 +178,7 @@ doc.add_paragraph(
 )
 doc.add_paragraph(
     "• Salaire : colonne salaire (numeric) dans EXPERIENCE_PRO — collecté dans "
-    "AlumniCareer.jsx:121-122 et AlumniProfileUpdate.jsx:96-97, exposé dans le "
+    "AlumniCareer.jsx:151-152, exposé dans le "
     "dashboard (admin.py:338-387)",
     style="List Bullet",
 )
@@ -348,8 +348,8 @@ alumni_checks = [
      "CONFIRMÉ — AlumniRegistration.jsx (632 lignes) : wizard multi-étapes (4 étapes), "
      "distinct de la mise à jour. Stocke alumni_id en localStorage après succès."),
     ("Mise à jour du profil professionnel",
-     "CONFIRMÉE — AlumniProfileUpdate.jsx (425 lignes) : profil + carrière + certifications. "
-     "AlumniCareer.jsx (674 lignes) : CRUD expériences avec modals de confirmation."),
+     "CONFIRMÉE — AlumniProfile.jsx : consultation et mise à jour du profil ; "
+     "AlumniCareer.jsx (710 lignes) : CRUD expériences + certifications avec modals de confirmation."),
     ("Suppression d'une entrée par erreur",
      "CONFIRMÉE — AlumniCareer.jsx:318-333 : bouton \"Supprimer\" + modal de confirmation. "
      "confirmRemove() (l.370) appelle careerAPI.delete() côté serveur. "
@@ -478,7 +478,7 @@ recap = [
     ("4", "Indicateurs d'insertion", "FAIT", "admin.py:164,338-387, AdminDashboard.jsx:935-1263"),
     ("5", "Modélisation BDD", "PARTIEL", "erd_alumni_crm.mmd (OK), mcd_corrige.md (obsolète)"),
     ("6", "Interface admin", "FAIT", "AlumniDirectory.jsx:72-114, AdminDashboard.jsx, AdminPromotions.jsx"),
-    ("7", "Interface alumni", "FAIT", "AlumniRegistration.jsx, AlumniProfileUpdate.jsx, AlumniCareer.jsx:318-370"),
+    ("7", "Interface alumni", "FAIT", "AlumniRegistration.jsx, AlumniProfile.jsx, AlumniCareer.jsx"),
     ("8", "Import / Export", "FAIT", "import_export.py, ExcelImport.jsx"),
     ("9", "Rapport de stage", "MANQUANT", "Aucun fichier"),
     ("10", "MCD / MLD", "FAIT", "erd_alumni_crm.mmd, erd_alumni_crm.docx (réserve : mcd_corrige.md obsolète)"),
@@ -528,8 +528,7 @@ make_table(doc, ["#", "Action", "Justification", "Estimation", "Détails"], medi
 doc.add_paragraph("")
 doc.add_heading("Attention — Non bloquant", level=2)
 doc.add_paragraph("Migration 003 absente (numérotation sautée de 002 à 004) — cosmétique, ne bloque rien", style="List Bullet")
-doc.add_paragraph("AlumniProfileUpdate.jsx:417 empêche la suppression de la dernière expérience — à documenter comme choix UX", style="List Bullet")
-doc.add_paragraph("Les fichiers .loo/.lo1 de Looping (juillet 2026) sont obsolètes — à nettoyer ou archiver", style="List Bullet")
+doc.add_paragraph("Les fichiers Looping obsolètes (MCD_MLD.loo, MCD_MLD.lo1) ont été supprimés — seul MCD_MLD V2.loo est conservé comme source", style="List Bullet")
 
 # ── Sauvegarde ────────────────────────────────────────────────────
 output_path = r"C:\Users\PC\OneDrive\Desktop\stage\Audit_Final_Alumni_CRM.docx"

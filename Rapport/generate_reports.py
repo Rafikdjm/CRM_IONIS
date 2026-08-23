@@ -243,7 +243,7 @@ def generate_cartographie():
 
     pdf.section_title("5.4 Droits RGPD Implementes")
     pdf.bullet("Droit d'acces a vos donnees personnelles : page de profil en lecture seule, suivi des demandes via GET /rgpd/demandes/moi et export Excel auto-service via GET /rgpd/export.")
-    pdf.bullet("Droit de rectification et de mise a jour (AlumniProfile.jsx, AlumniProfileUpdate.jsx).")
+    pdf.bullet("Droit de rectification et de mise a jour (AlumniProfile.jsx).")
     pdf.bullet("Droit a l'effacement (droit a l'oubli) : workflow de demandes auto-service (POST /rgpd/demandes) traite par anonymisation ANONYMISE_<id>@anonymise.io puis purge differee ; anonymisation admin directe possible via POST /etudiants/{id}/anonymiser.")
     pdf.bullet("Droit de retrait du consentement a tout moment (AlumniConsent.jsx avec toggles).")
     pdf.bullet("Les donnees de consentement ne font l'objet d'aucun chiffrement specifique au niveau applicatif : leur protection repose sur les mecanismes standard de l'infrastructure PostgreSQL.")
@@ -322,7 +322,7 @@ def generate_rgpd():
     pdf.chapter_title("4", "Droits RGPD Implementes dans l'Interface")
     pdf.body_text("L'interface alumni affiche et implemente les droits suivants :")
     pdf.bullet("Droit d'acces a vos donnees personnelles : page de profil en lecture seule, suivi des demandes via GET /rgpd/demandes/moi et export Excel auto-service via GET /rgpd/export.")
-    pdf.bullet("Droit de rectification et de mise a jour (AlumniProfile.jsx, AlumniProfileUpdate.jsx).")
+    pdf.bullet("Droit de rectification et de mise a jour (AlumniProfile.jsx).")
     pdf.bullet("Droit a l'effacement (droit a l'oubli) : mentionne dans l'interface, implemente via un workflow de demandes auto-service (POST /rgpd/demandes) traite par anonymisation puis purge differee.")
     pdf.bullet("Droit de retrait du consentement a tout moment (AlumniConsent.jsx avec toggles).")
 
@@ -436,7 +436,7 @@ def generate_strategie():
     pdf.bullet("Ciblage : seuls les alumni ayant active le consentement 'newsletter' (type_consentement = 'newsletter', statut = 'actif') sont contactes.")
     pdf.bullet("Frequence : mensuelle ou bimestrielle, avec un calendrier editorial defini par le service des Relations Entreprises.")
     pdf.bullet("Contenu type : actualites de l'ecosysteme alumni, offres d'emploi partenaires, evenements (reunions, conferences), appel a mise a jour du profil.")
-    pdf.bullet("Call-to-Action (CTA) obligatoire : chaque newsletter doit contenir un lien direct vers la page de mise a jour du profil alumni (AlumniProfileUpdate.jsx).")
+    pdf.bullet("Call-to-Action (CTA) obligatoire : chaque newsletter doit contenir un lien direct vers la page de mise a jour du profil alumni (AlumniProfile.jsx).")
     pdf.bullet("Personnalisation : le ciblage peut etre affine par promotion, secteur d'activite, geographie ou disponibilite (en_poste / en_recherche).")
     pdf.bullet("Suivi des metriques : taux d'ouverture, taux de clic sur le CTA, taux de mise a jour du profil suite a l'envoi.")
     pdf.bullet("Integration RGPD : chaque enquete est precedee d'un rappel du droit de desabonnement. Le mecanisme de desinscription automatique (lien mettant le consentement a 'refuse') n'est pas encore implemente — liens placeholder dans le gabarit HTML (manque encore ouvert).")
