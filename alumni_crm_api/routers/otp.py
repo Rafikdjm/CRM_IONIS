@@ -212,8 +212,15 @@ def request_otp(body: OTPRequest, request: Request, db=Depends(get_db)):
 
     cursor = db.cursor()
     try:
-        logger.info("TMP-DEBUG OTP request — brut=%r normalisé=%r", body.email, email)
-        cursor.execute("SELECT id_etudiant FROM etudiant WHERE LOWER(email) = %s;", (email,))
+        # Connexion possible avec l'email personnel OU l'email académique
+        # (@ionis-stm.com) : les deux identifiants sont acceptés.
+        cursor.execute(
+            """
+            SELECT id_etudiant FROM etudiant
+            WHERE LOWER(email) = %s OR LOWER(email_academique) = %s;
+            """,
+            (email, email),
+        )
         found = cursor.fetchone()
 
         if not found:
@@ -342,8 +349,12 @@ def verify_otp(body: OTPVerify, db=Depends(get_db)):
             )
 
         cursor.execute(
-            "SELECT id_etudiant, nom, prenom, email FROM etudiant WHERE LOWER(email) = %s;",
-            (email,),
+            """
+            SELECT id_etudiant, nom, prenom, email
+            FROM etudiant
+            WHERE LOWER(email) = %s OR LOWER(email_academique) = %s;
+            """,
+            (email, email),
         )
         alumni_row = cursor.fetchone()
         if not alumni_row:
