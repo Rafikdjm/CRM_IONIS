@@ -16,7 +16,7 @@ Ce stage, réalisé au sein d'IONIS-STM dans le cadre du programme Pré-MSc 2026
 
 Mon objectif était de construire une application complète — backend, base de données, frontend et conformité réglementaire — pour qu'un établissement d'enseignement supérieur puisse gérer le cycle de vie de ses étudiants, de l'inscription administrative à l'évolution professionnelle post-diplôme. Le système devait aussi fournir des indicateurs d'insertion professionnelle exploitables par le service des relations entreprises.
 
-Le projet a abouti à un prototype fonctionnel reposant sur une architecture 3-tiers (FastAPI, React/Vite, PostgreSQL), avec 14 tables de base de données, 80 endpoints API, un tableau de bord administrateur et un espace alumni complet. J'ai intégré la conformité RGPD dès la conception : consentements traçables, workflow de demandes de suppression/anonymisation, journal d'audit, durée de conservation affichée et contact DPO. Un audit de sécurité m'a permis de corriger des failles d'authentification, de protéger des routes initialement ouvertes et de rotater une clé API exposée. J'ai enfin comblé les principaux manques identifiés : endpoint de newsletter avec filtres de ciblage, champ salaire numérique pour les calculs statistiques, relances automatiques pour les questionnaires, et initialisation d'un dépôt Git.
+Le projet a abouti à un prototype fonctionnel reposant sur une architecture 3-tiers (FastAPI, React/Vite, PostgreSQL), avec 14 tables de base de données, 80 endpoints API, un tableau de bord administrateur et un espace alumni complet. J'ai intégré la conformité RGPD dès la conception : consentements traçables, workflow de demandes de suppression/anonymisation, journal d'audit, durée de conservation affichée et contact DPO. Un audit de sécurité m'a permis de corriger des failles d'authentification, de protéger des routes initialement ouvertes et de rotater une clé API exposée. J'ai enfin doté le système des dernières briques attendues : endpoint de newsletter avec filtres de ciblage, champ salaire numérique pour les calculs statistiques, relances automatiques pour les questionnaires, et dépôt Git initialisé.
 
 Ce stage m'a permis de développer des compétences en développement web full-stack, en modélisation de bases de données relationnelles et en ingénierie des données personnelles. J'ai aussi identifié des axes d'amélioration concrets pour la pérennité du système.
 
@@ -28,7 +28,7 @@ This internship, completed at IONIS-STM as part of the 2026 Pre-MSc program, foc
 
 The main objective was to develop a full-stack application — backend, database, frontend and regulatory compliance — enabling a higher education institution to manage the complete student lifecycle, from administrative enrollment to post-graduation career progression. The system also needed to provide professional insertion indicators for the corporate relations department.
 
-The project delivered a functional prototype based on a 3-tier architecture (FastAPI, React/Vite, PostgreSQL), featuring 14 database tables, 80 API endpoints, an admin dashboard and a complete alumni portal. GDPR compliance was built in from the start: auditable consent management, a workflow for deletion/anonymization requests, an audit log, data retention information and a DPO contact. A security audit led to the correction of authentication flaws, the protection of initially unprotected routes and the rotation of an exposed API key. Finally, I addressed the main identified gaps: a newsletter endpoint with targeting filters, a numeric salary field for statistical calculations, automatic questionnaire reminders, and the initialization of a Git repository.
+The project delivered a functional prototype based on a 3-tier architecture (FastAPI, React/Vite, PostgreSQL), featuring 14 database tables, 80 API endpoints, an admin dashboard and a complete alumni portal. GDPR compliance was built in from the start: auditable consent management, a workflow for deletion/anonymization requests, an audit log, data retention information and a DPO contact. A security audit led to the correction of authentication flaws, the protection of initially unprotected routes and the rotation of an exposed API key. Finally, I completed the system with its remaining building blocks: a newsletter endpoint with targeting filters, a numeric salary field for statistical calculations, automatic questionnaire reminders, and an initialized Git repository.
 
 This internship allowed me to develop skills in full-stack web development, relational database design, and personal data engineering, while identifying concrete areas for improvement to ensure the system's long-term viability.
 
@@ -78,7 +78,6 @@ Ce stage de substitution, proposé directement par IONIS-STM, m'a offert un cadr
 | 8 | Types de consentement RGPD | Tableau |
 | 9 | Types de questions du questionnaire | Tableau |
 | 10 | Correctifs de sécurité appliqués | Tableau |
-| 11 | Limites identifiées du projet | Tableau |
 
 ---
 
@@ -166,7 +165,7 @@ J'ai développé une API REST complète avec FastAPI (Python), documentée autom
 J'ai développé une interface utilisateur complète avec React + Vite, structurée en deux espaces :
 
 - *Espace administrateur* : tableau de bord avec KPI et graphiques, annuaire filtrable, gestion des promotions, import/export Excel, gestion des questionnaires, traitement des demandes RGPD.
-- *Espace alumni* : inscription multi-étapes, vérification OTP, édition de profil, parcours professionnel (expériences + certifications), consentement RGPD, questionnaire annuel.
+- *Espace alumni* : inscription multi-étapes, vérification OTP, édition de profil, parcours professionnel (expériences et certifications, gérées par ajout/suppression — la modification directe d'une expérience existante n'est pas disponible à ce jour, limite assumée du prototype ; une route de mise à jour reste à créer), consentement RGPD, questionnaire annuel.
 
 Le frontend comprend **14 routes principales** et des composants partagés (thème clair/sombre, indicateurs, protection de routes par rôle). La couche de tests compte 13 fichiers (Vitest + Testing Library, dossier `src/__tests__`).
 
@@ -178,6 +177,7 @@ J'ai intégré la conformité RGPD à toutes les étapes du système :
 - Workflow de traitement des demandes RGPD : statut `envoyée → en cours de traitement → traitée/rejetée`, avec verrou anti-double-traitement.
 - Distinction entre anonymisation (RGPD, réversible) et suppression définitive (hard delete, réservée aux doublons).
 - Purge différée configurable (`PURGE_DELAY_MONTHS`, défaut 6 mois).
+- Information de l'alumni dans l'interface de consentement : durée de conservation des données (suppression 6 mois après anonymisation) et contact DPO (`dpo@ionis-stm.com`).
 
 Un audit de sécurité m'a permis de corriger des failles critiques :
 
@@ -211,12 +211,12 @@ Le calcul du taux d'emploi à 6 mois a nécessité une **fiabilisation** : l'anc
 Le prototype résultant de ce stage couvre l'intégralité du périmètre fonctionnel défini dans le sujet officiel :
 
 - **14 tables** de base de données, validées par introspection et rejeu complet des 12 migrations sur une base vide (0 différence structurelle constatée).
-- **80 endpoints** API documentés via Swagger, avec authentification OTP + JWT et protection admin, dont les 2 ajouts de fin de stage : `POST /newsletter/envoyer` (envoi de newsletter avec filtres de ciblage) et `POST /admin/questionnaires/notififier` (relance questionnaire).
+- **80 endpoints** API documentés via Swagger, avec authentification OTP + JWT et protection admin, dont les 2 ajouts de fin de stage : `POST /newsletter/envoyer` (envoi de newsletter avec filtres de ciblage) et `POST /admin/questionnaires/notififier` (relance questionnaire : email générique aux non-répondants, filtre par promotion, sans lien direct vers le formulaire à ce jour).
 - **14 routes** frontend couvrant les espaces admin et alumni.
 - **8 indicateurs** d'insertion professionnelle, dont 6 exposés via des endpoints dédiés (`/admin/indicateurs`, `/admin/indicateurs/secteurs`, `/admin/indicateurs/types-contrat`, `/admin/indicateurs/kpi-tag`, `/admin/indicateurs/kpi-tags`, `/admin/indicateurs/kpi-tags-actifs`).
 - **5 documents** de livraison complémentaires, couvrant les exigences « Management » du sujet : cartographie des données (exigence M1), charte RGPD (M2), analyse des indicateurs d'insertion (M4), stratégie de mise à jour des données — porteuse de l'exigence M3 (questionnaire annuel automatisé et newsletter) —, et guide des processus d'animation du réseau (livrable attendu du sujet).
 
-Un élément que je souligne est le **système de tags KPI** : chaque question de questionnaire peut être étiquetée (ex. `adequation_formation`) pour alimenter automatiquement un indicateur de pilotage. Ce mécanisme est extensible — ajouter un tag à une question fait apparaître l'indicateur correspondant dans le tableau de bord administrateur sans modification du code backend. C'est une innovation par rapport à la conception initiale.
+Un élément que je souligne est le **système de tags KPI** : chaque question de questionnaire peut être étiquetée (ex. `adequation_formation`) pour alimenter automatiquement un indicateur de pilotage. Ce mécanisme est extensible — ajouter un tag à une question fait apparaître l'indicateur correspondant dans le tableau de bord administrateur sans modification du code backend.
 
 ### 2.4 Réponse à la problématique initiale
 
@@ -233,7 +233,7 @@ Le système répond aux quatre problèmes identifiés dans la section 1.3 :
 
 J'ai réalisé ce stage **en solo** : il n'y avait pas d'équipe technique dédiée au projet. Le suivi régulier avec le tuteur pédagogique m'a fourni un cadre de validation des choix d'architecture et des priorités fonctionnelles.
 
-Le projet était stocké en local sous OneDrive avec synchronisation active, **sans dépôt Git**. Cette organisation a provoqué un incident : un conflit de synchronisation concurrente a entraîné le retour à une version antérieure de plusieurs fichiers frontend en cours de développement, et j'ai dû reprendre le travail concerné. Cet incident est un axe d'amélioration prioritaire (voir section 3.3, axe 5).
+Le projet était stocké en local sous OneDrive avec synchronisation active, **sans dépôt Git**. Cette organisation a provoqué un incident : un conflit de synchronisation concurrente a entraîné le retour à une version antérieure de plusieurs fichiers frontend en cours de développement, et j'ai dû reprendre le travail concerné. Cet incident a conduit à l'initialisation du dépôt Git décrite en section 3.2 (difficulté 6).
 
 Les ressources techniques à disposition comprenaient : un poste de développement local, l'accès aux APIs (Resend pour l'envoi d'OTP email), et les polices/se fontes système pour la mise en forme des documents.
 
@@ -241,9 +241,9 @@ Les ressources techniques à disposition comprenaient : un poste de développeme
 
 **Approche de développement.** J'ai suivi une démarche itérative : modélisation → backend → frontend → audit → documentation. Chaque fonctionnalité était développée, testée manuellement, puis consolidée avant de passer à la suivante. Cette approche m'a permis de détecter tôt des incohérences de modélisation (par exemple le drift de migration sur `reponse_questionnaire.id_etudiant` qui avait `ON DELETE CASCADE` en base réelle mais pas dans le fichier de migration d'origine).
 
-**Audit de fiabilité base/API.** J'ai réalisé un audit complet de la table ETUDIANT et des 9 autres tables : des champs acceptés en écriture mais jamais persistés, un endpoint `DELETE /entreprises/{id}` cassé (UPDATE sur colonne NOT NULL au lieu d'un DELETE avec CASCADE), et le drift de migration mentionné ci-dessus. J'ai utilisé le rejeu complet des 12 migrations sur une base vide comme test de validation.
+**Audit de fiabilité base/API.** J'ai réalisé un audit complet de la table ETUDIANT et des 9 autres tables : des champs acceptés en écriture mais jamais persistés, un endpoint `DELETE /entreprises/{id}` cassé (UPDATE sur colonne NOT NULL au lieu d'un DELETE avec CASCADE), et le drift de migration mentionné ci-dessus. J'ai utilisé le rejeu complet des 12 migrations sur une base vide comme test de validation. Cet audit relève aussi quelques points secondaires laissés ouverts et assumés comme tels : statut des consentements libre (ni `Literal` ni CHECK), date d'obtention des certifications non validée (une date future passe), messages trompeurs sur les associations étudiant/certification, filtres invalides ignorés silencieusement dans la liste admin des demandes RGPD, réponses de questionnaire stockées en JSONB sans vérification des clés, absence de purge des tables `otp_codes` et `AUDIT_LOG`. Tout est consigné dans `AUDIT_COHERENCE_TABLES.txt` pour guider la reprise du projet.
 
-**Modélisation par introspection.** J'ai régénéré le schéma MCD/MLD par introspection réelle de la base (14 tables) plutôt qu'à partir du fichier de conception initial. Cette approche m'a permis de détecter un ancien fichier `mcd_corrige.md` dans le frontend qui s'est révélé obsolète (11 tables au lieu de 14, tables manquantes : DEMANDE_RGPD, OTP_CODES, SCHEMA_MIGRATIONS).
+**Modélisation par introspection.** J'ai régénéré le schéma MCD/MLD par introspection réelle de la base (14 tables) plutôt qu'à partir du fichier de conception initial. Cette approche m'a permis de détecter un ancien fichier `mcd_corrige.md` dans le frontend qui s'est révélé obsolète (11 tables au lieu de 14, tables manquantes : DEMANDE_RGPD, OTP_CODES, SCHEMA_MIGRATIONS) ; il a été supprimé depuis.
 
 **Dashboard refondu.** J'ai repensé le tableau de bord administrateur (bento grid, ombres à deux couches, micro-interactions, tooltips CSS) avec de nouveaux indicateurs visuels (jauge salaire, donut de couverture, barres de types de contrat, timeline de maturité des cohortes) — le tout en CSS/SVG pur, sans nouvelle dépendance.
 
@@ -281,7 +281,7 @@ Le token admin et le token alumni partageaient la même clé de stockage dans le
 
 Un audit d'introspection mené le 16 août a révélé plusieurs écarts. La clé étrangère `reponse_questionnaire.id_etudiant` était en `ON DELETE CASCADE` en base live mais pas dans le fichier de migration 003 : une base reconstruite aurait échoué au premier hard-delete d'un étudiant ayant répondu à un questionnaire. La route `DELETE /entreprises/{id}` renvoyait systématiquement une erreur dès qu'une expérience référençait l'entreprise (mise à jour vers NULL sur une colonne NOT NULL, alors que la clé étrangère est déjà en cascade). Des doublons de consentements s'étaient enfin accumulés faute de contrainte d'unicité.
 
-*Solution* : migration corrective idempotente dédiée au drift (011), suppression directe pour les entreprises (la cascade fait le reste), migration 006 qui dédoublonne puis pose `UNIQUE (id_etudiant, type_consentement)` pour permettre un upsert propre côté API. Le script de rejeu complet des 12 migrations sur base vide est devenu mon test de validation de référence — cette démarche aurait évité un échec de déploiement basé sur un rejeu des migrations.
+*Solution* : migration corrective idempotente dédiée au drift (011), suppression directe pour les entreprises (la cascade fait le reste), migration 006 qui dédoublonne puis pose `UNIQUE (id_etudiant, type_consentement)` pour permettre un upsert propre côté API. Le script de rejeu complet des 12 migrations sur base vide est devenu mon test de validation de référence — cette démarche aurait évité un échec de déploiement basé sur un rejeu des migrations. Pratique retenue depuis : rejouer les migrations sur base vide à chaque évolution du schéma, le drift 003 étant resté quatre semaines indétecté. Deux leçons générales tirées de ces épisodes : introduire des tests backend automatisés — principal chantier technique restant avant une mise en production, quelques tests d'intégration auraient intercepté la route `DELETE /entreprises` cassée comme les endpoints renvoyant 200 OK avec un corps d'erreur —, et poser les contraintes de validation à la source (type contraint `Literal` côté API, CHECK côté base dès la création des colonnes énumérables — le statut des consentements reste libre à ce jour).
 
 **Difficulté 3 — Deux administrateurs pouvaient traiter la même demande RGPD**
 
@@ -305,7 +305,7 @@ Le RGPD impose des contraintes fortes sur la collecte et le traitement des donn�
 
 Le projet était stocké sous OneDrive sans dépôt Git. Un conflit de synchronisation concurrente a entraîné le retour à une version antérieure de plusieurs fichiers frontend en cours de développement ; j'ai repris ce travail à la main. Faute d'historique, je ne peux d'ailleurs pas dire précisément quand le script de test E2E documenté dans le README a disparu du dépôt.
 
-*Solution* : récupération manuelle des fichiers perdus, puis initialisation d'un dépôt Git avec `.gitignore` racine consolidé (couvrant `.env`, `node_modules/`, `venv/`). La leçon tient en une phrase : le versionnement doit précéder la première ligne de code, pas suivre le premier incident.
+*Solution* : récupération manuelle des fichiers perdus, puis initialisation d'un dépôt Git avec `.gitignore` racine consolidé (couvrant `.env`, `node_modules/`, `venv/`). La leçon tient en une phrase : le versionnement doit précéder la première ligne de code, pas suivre le premier incident. Pratique retenue : commits réguliers, et rien d'important qui n'existe qu'en un seul exemplaire sur disque.
 
 **Difficulté 7 — Exposition d'une clé d'accès administrateur**
 
@@ -319,36 +319,7 @@ Le champ `salary_range` était saisi en texte libre (ex. `"35k-45k EUR"`), ce qu
 
 *Solution* : ajout du champ numérique `salary_annuel` (NUMERIC, migration `012_salary_annuel.sql`), alimenté côté frontend par un select de 11 tranches chiffrées (+ option « Non renseigné »). Le backend calcule désormais moyenne, minimum et maximum sur les expériences en cours (`salary_annuel > 0`), avec repli sur l'ancien champ texte pour les données historiques et des moyennes exposées par promotion. Le calcul du salaire moyen par secteur d'activité reste ouvert.
 
-### 3.3 Proposition d'axes d'amélioration
-
-Quatre axes repérés en cours de stage ont été traités en fin de stage (détail en section 3.4). Les cinq suivants découlent chacun d'un épisode vécu ci-dessus ; les extensions purement fonctionnelles viennent ensuite.
-
-**Axe 5 — Versionner dès la première ligne de code.** L'incident de synchronisation (difficulté 6) aurait été anodin avec un dépôt Git ; celui-ci n'a été créé que le dernier jour. Pratique retenue : commit initial avant toute modification, commits réguliers ensuite, et rien d'important qui n'existe qu'en un seul exemplaire sur disque.
-
-**Axe 6 — Rejouer les migrations automatiquement.** Le drift de la migration 003 datait de quatre semaines quand l'audit l'a détecté. Un rejeu sur base vide lancé à chaque évolution du schéma l'aurait signalé le jour même. C'est mécanique, quasi gratuit, et cela évite le pire scénario : un déploiement qui échoue parce que la base reconstruite diffère de la base de développement.
-
-**Axe 7 — Introduire des tests backend automatisés.** Le backend n'a jamais eu de framework de tests (constat toujours valable). Quelques tests d'intégration auraient intercepté la route DELETE entreprises cassée comme les endpoints renvoyant 200 OK avec un corps d'erreur. C'est le principal chantier technique restant avant une mise en production.
-
-**Axe 8 — Poser les contraintes de validation à la source.** Plusieurs correctifs ont consisté à ajouter a posteriori ce qui aurait dû exister dès la création des tables : unicité des consentements (006), cycle de statuts avec CHECK (009), unicité de l'email académique (010). Certaines valeurs restent libres aujourd'hui, comme le statut des consentements. Règle retenue : toute colonne énumérable reçoit un type contraint côté API (`Literal`) et un CHECK côté base, dès sa création.
-
-**Axe 9 — Hygiène des secrets.** Jamais de capture d'écran avec un fichier d'environnement ouvert, rotation immédiate au moindre doute — règle appliquée lors de l'épisode de la difficulté 7.
-
-Viennent enfin des perspectives fonctionnelles, documentées dans le guide des processus mais non issues d'un dysfonctionnement : module de mentorat (mise en relation alumni/étudiants actuels), application mobile pour mettre à jour son profil depuis un smartphone, calendrier automatique d'envoi du questionnaire annuel, et chiffrement applicatif au repos des données sensibles — ce dernier restant délégué à l'infrastructure PostgreSQL.
-
-### 3.4 Limites identifiées et correctifs appliqués
-
-| # | Limite | Correctif appliqué | Statut |
-|---|---|---|---|
-| L1 | **Newsletter et relances non implémentées** — la clé Resend était utilisée uniquement pour les OTP. | Endpoint `POST /newsletter/envoyer` avec filtres de ciblage (promotion, secteur, consentement). En mode console en dev, mode Resend en prod. | ✅ Résolu |
-| L2 | **Salaire en texte libre** — le champ `salary_range` acceptait `"35k-45k EUR"` sans structure numérique. | Nouveau champ `salary_annuel` (NUMERIC) en backend. Frontend : select dropdown avec 11 tranches chiffrées et une option « Non renseigné ». Migration `012_salary_annuel.sql`. Admin router utilise `salary_annuel` pour les calculs. | ✅ Résolu |
-| L3 | **Absence de dépôt Git** — le projet était stocké sous OneDrive sans versionnement. | Initialisation du dépôt Git avec `.gitignore` couvrant `.env`, `node_modules/`, `venv/`. Deux commits (état initial + correctifs). | ✅ Résolu |
-| L4 | **RGPD : pas de DPO, pas de durée de conservation affichée** — le consentement était traçable, mais le frontend n'informait pas l'alumni. | Ajout dans `AlumniConsent.jsx` : bloc « Durée de conservation » (6 mois après anonymisation) + contact DPO (`dpo@ionis-stm.com`). | ✅ Résolu |
-| L5 | **Pas de relance automatique questionnaire** — l'activation était manuelle, aucune notification. | Endpoint `POST /admin/questionnaires/notififier` : cible les alumni n'ayant pas répondu, filtre par promotion, envoie un email de relance générique invitant à compléter le questionnaire depuis l'espace alumni (sans lien direct vers le formulaire à ce jour). | ✅ Résolu |
-| L6 | **Fichier MCD/MLD frontend obsolète** — `mcd_corrige.md` listait 11 tables au lieu de 14. | Suppression du fichier. | ✅ Résolu |
-| L7 | **Clé `ADMIN_API_KEY` exposée** — une capture d'écran avait révélé la clé. | Rotation de la clé : nouvelle valeur `pzQ7Bx_...` dans `.env`. L'ancienne clé est obsolète. | ✅ Résolu |
-| L8 | **Modification directe d'une expérience impossible** — aucune route PUT/PATCH sur les expériences ; l'interface ne permet que l'ajout et la suppression (corriger une saisie oblige à supprimer puis recréer la ligne, opération non atomique). | Non corrigé à ce jour : documenté comme limite assumée du prototype dans le guide des processus et la stratégie de mise à jour. Une route de mise à jour est identifiée comme évolution prioritaire. | ⚠️ Manque encore ouvert |
-
-Au-delà de ce tableau, l'audit de cohérence du 16 août relève quelques points secondaires laissés ouverts et assumés comme tels : statut des consentements libre (ni `Literal` ni CHECK), date d'obtention des certifications non validée (une date future passe), messages trompeurs sur les associations étudiant/certification, filtres invalides ignorés silencieusement dans la liste admin des demandes RGPD, réponses de questionnaire stockées en JSONB sans vérification des clés, absence de purge des tables `otp_codes` et `AUDIT_LOG`. Tout est consigné dans le fichier d'audit (`AUDIT_COHERENCE_TABLES.txt`) pour guider la reprise du projet.
+Viennent enfin des perspectives sans épisode vécu associé, documentées dans le guide des processus mais issues d'aucun dysfonctionnement : calendrier automatique d'envoi du questionnaire annuel (cron job), module de mentorat (mise en relation alumni/étudiants actuels), application mobile pour mettre à jour son profil depuis un smartphone, et chiffrement applicatif au repos des données sensibles — ce dernier restant délégué à l'infrastructure PostgreSQL.
 
 ---
 
