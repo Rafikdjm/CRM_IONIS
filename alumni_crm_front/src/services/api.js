@@ -459,6 +459,25 @@ export const adminIdentityAPI = {
   setName: (name) => localStorage.setItem('admin_name', name),
 };
 
+const dateFichier = () => new Date().toISOString().split('T')[0];
+
+/** Télécharge l'export au format demandé et renvoie {blob, filename}. */
+const telechargerExport = async (url, format, baseNom, optionsRequete = {}) => {
+  if (format === 'json') {
+    const res = await api.get(url, optionsRequete);
+    return {
+      blob: new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' }),
+      filename: `${baseNom}_${dateFichier()}.json`,
+    };
+  }
+  const res = await api.get(url, {
+    ...optionsRequete,
+    params: { ...(optionsRequete.params || {}), format },
+    responseType: 'blob',
+  });
+  return { blob: res.data, filename: `${baseNom}_${dateFichier()}.${format}` };
+};
+
 export const rgpdAPI = {
   /** Crée une demande RGPD ('export' | 'suppression'). */
   create: async (typeDemande) => {
@@ -480,11 +499,10 @@ export const rgpdAPI = {
     await api.delete(`/rgpd/demandes/${idDemande}`);
   },
 
-  /** Export auto-service immédiat (droit d'accès). */
-  exportData: async () => {
+  /** Export auto-service immédiat (droit d'accès) — format : json|xlsx|csv. */
+  exportData: async (format = 'json') => {
     ensureAlumniToken();
-    const res = await api.get('/rgpd/export');
-    return res.data;
+    return telechargerExport('/rgpd/export', format, 'mes_donnees_rgpd');
   },
 };
 
@@ -509,10 +527,13 @@ export const adminRgpdAPI = {
     return res.data;
   },
 
-  /** Export JSON d'un alumni (vérification / historique admin). */
-  exportData: async (idDemande) => {
-    const res = await api.get(`/admin/demandes-rgpd/${idDemande}/export`);
-    return res.data;
+  /** Export d'un alumni (vérification / historique admin) — json|xlsx|csv. */
+  exportData: async (idDemande, format = 'json') => {
+    return telechargerExport(
+      `/admin/demandes-rgpd/${idDemande}/export`,
+      format,
+      `export_rgpd_${idDemande}`,
+    );
   },
 
   /** Traite/rejette en masse (ids: number[], decision: 'traitee'|'rejetee'). */
@@ -532,10 +553,22 @@ export const adminRgpdAPI = {
     return res.data;
   },
 
-  /** Export groupé : {exports: {id: export}, erreurs: {id: msg}}. */
-  bulkExport: async (ids) => {
-    const res = await api.post('/admin/demandes-rgpd/bulk/export', { ids });
-    return res.data;
+  /** Export groupé : json -> {exports, erreurs} ; xlsx/csv -> {blob, filename}. */
+  bulkExport: async (ids, format = 'json') => {
+    if (format === 'json') {
+      const res = await api.post('/admin/demandes-rgpd/bulk/export', { ids });
+      return {
+        data: res.data,
+        blob: new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' }),
+        filename: `export_rgpd_groupe_${dateFichier()}.json`,
+      };
+    }
+    const res = await api.post(
+      '/admin/demandes-rgpd/bulk/export',
+      { ids },
+      { params: { format }, responseType: 'blob' },
+    );
+    return { data: null, blob: res.data, filename: `export_rgpd_groupe_${dateFichier()}.${format}` };
   },
 
   /** Purge toutes les demandes clôturées (traitee/rejetee). */

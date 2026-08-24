@@ -58,6 +58,23 @@ _FALSY_POSTE_ACTUEL = {"false", "0", "non", "faux", "no", "f", "n"}
 _DATE_FORMATS_JJ = ("%d/%m/%Y", "%d-%m-%Y", "%d/%m/%y", "%d-%m-%y")
 
 
+def _detecter_separateur_csv(text: str) -> str:
+    """Détecte le séparateur d'un CSV importé (Excel FR utilise ';',
+    les exports standard ','). On choisit le délimiteur qui produit le
+    plus de colonnes sur la ligne d'en-tête ; fallback virgule."""
+    lignes = text.splitlines()
+    premiere_ligne = lignes[0] if lignes else ""
+    meilleur, max_champs = ",", 1
+    for delim in (",", ";", "\t"):
+        try:
+            champs = next(csv.reader([premiere_ligne], delimiter=delim))
+        except (StopIteration, csv.Error):
+            continue
+        if len(champs) > max_champs:
+            meilleur, max_champs = delim, len(champs)
+    return meilleur
+
+
 def _parse_date_cell(value):
     """Interprète une cellule de date d'un fichier importé.
 
@@ -192,7 +209,7 @@ async def import_excel(file: UploadFile = File(...), db=Depends(get_db)):
     try:
         if file.filename.lower().endswith(".csv"):
             text = content.decode("utf-8-sig")
-            rows = list(csv.reader(io.StringIO(text)))
+            rows = list(csv.reader(io.StringIO(text), delimiter=_detecter_separateur_csv(text)))
         else:
             wb = openpyxl.load_workbook(io.BytesIO(content), read_only=True)
             ws = wb.active

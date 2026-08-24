@@ -5,7 +5,7 @@ Côté alumni (JWT, propriétaire uniquement) :
   - POST   /rgpd/demandes          : créer une demande (export ou suppression)
   - GET    /rgpd/demandes/moi      : lister ses demandes + statuts
   - DELETE /rgpd/demandes/{id}     : annuler une demande non traitée
-  - GET    /rgpd/export            : export auto-service immédiat (JSON)
+  - GET    /rgpd/export            : export auto-service immédiat (json/xlsx/csv)
 
 Côté admin (clé API ou JWT admin) :
   - GET    /admin/demandes-rgpd                          : liste + filtres
@@ -14,7 +14,7 @@ Côté admin (clé API ou JWT admin) :
   - GET    /admin/demandes-rgpd/{id}/export              : export d'un alumni
   - POST   /admin/demandes-rgpd/bulk/traiter             : traiter/rejeter plusieurs demandes
   - POST   /admin/demandes-rgpd/bulk/delete              : supprimer plusieurs demandes
-  - POST   /admin/demandes-rgpd/bulk/export              : export groupé (JSON) de plusieurs demandes
+  - POST   /admin/demandes-rgpd/bulk/export              : export groupé de plusieurs demandes (json/xlsx/csv)
   - POST   /admin/demandes-rgpd/purge-cloturees          : supprime les demandes traitées/rejetées
 
 Cycle de statut d'une demande :
@@ -24,10 +24,16 @@ Cycle de statut d'une demande :
 Toutes les opérations sont tracées dans AUDIT_LOG avec un champ acteur
 ("admin:<nom>" / "alumni:<id>" / "system").
 """
+import csv
+import datetime
+import io
+import json
 import logging
 from typing import List
 
+import openpyxl
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from database import get_db
@@ -224,6 +230,121 @@ def _build_export(cursor, id_etudiant: int) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Sérialisation des exports en fichiers (xlsx / csv)
+# ---------------------------------------------------------------------------
+
+_VALID_FORMATS = ("json", "xlsx", "csv")
+
+# Ordre des feuilles xlsx (une par section) et de la colonne 'section' du csv.
+_EXPORT_SECTIONS = (
+    ("etudiant", "Etudiant"),
+    ("experiences", "Experiences"),
+    ("certifications", "Certifications"),
+    ("consentements", "Consentements"),
+    ("reponses_questionnaires", "Reponses"),
+    ("erreurs", "Erreurs"),  # alimentée uniquement par l'export groupé
+)
+
+
+def _verifier_format(format: str) -> str:
+    if format not in _VALID_FORMATS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Parametre 'format' invalide. Valeurs attendues : {', '.join(_VALID_FORMATS)}.",
+        )
+    return format
+
+
+def _stringifier(valeur) -> str:
+    """Sérialise une cellule pour un fichier xlsx/csv (JSONB, dates...)."""
+    if valeur is None:
+        return ""
+    if isinstance(valeur, (dict, list)):
+        return json.dumps(valeur, ensure_ascii=False, default=str)
+    if isinstance(valeur, (datetime.date, datetime.datetime)):
+        return valeur.isoformat()
+    return str(valeur)
+
+
+def _lignes_section(payload: dict, cle: str, id_demande: int | None) -> list[dict]:
+    """Lignes tabulaires d'une section (dict = ligne unique, liste = n lignes)."""
+    data = payload.get(cle)
+    items = [data] if isinstance(data, dict) else list(data or [])
+    lignes = []
+    for item in items:
+        ligne = {"id_demande": id_demande}
+        ligne.update(item or {})
+        lignes.append(ligne)
+    return lignes
+
+
+def _xlsx_response(exports: list[tuple[int | None, dict]], filename: str) -> StreamingResponse:
+    """Un classeur avec une feuille par section ; plusieurs demandes = lignes
+    cumulées dans les mêmes feuilles (colonne id_demande)."""
+    wb = openpyxl.Workbook()
+    wb.remove(wb.active)
+    for cle, libelle in _EXPORT_SECTIONS:
+        entetes, lignes = [], []
+        for id_demande, payload in exports:
+            for ligne in _lignes_section(payload, cle, id_demande):
+                for k in ligne:
+                    if k not in entetes:
+                        entetes.append(k)
+                lignes.append(ligne)
+        if not lignes:
+            continue
+        ws = wb.create_sheet(title=libelle[:31])
+        ws.append(entetes)
+        for ligne in lignes:
+            ws.append([_stringifier(ligne.get(h)) for h in entetes])
+        for col in ws.columns:
+            largeur = max(len(str(c.value or "")) for c in col)
+            ws.column_dimensions[col[0].column_letter].width = min(largeur + 2, 60)
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+def _csv_response(exports: list[tuple[int | None, dict]], filename: str) -> StreamingResponse:
+    """Table unique : une colonne 'section' identifie le bloc de chaque ligne.
+    Séparateur ';' + BOM utf-8-sig pour un affichage correct dans Excel FR."""
+    entetes, lignes = ["id_demande", "section"], []
+    for id_demande, payload in exports:
+        for cle, libelle in _EXPORT_SECTIONS:
+            for ligne in _lignes_section(payload, cle, id_demande):
+                ligne["section"] = libelle
+                for k in ligne:
+                    if k not in entetes:
+                        entetes.append(k)
+                lignes.append(ligne)
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=";")
+    writer.writerow(entetes)
+    for ligne in lignes:
+        writer.writerow([_stringifier(ligne.get(h)) for h in entetes])
+    return StreamingResponse(
+        iter([output.getvalue().encode("utf-8-sig")]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+def _reponse_export(id_demande: int | None, payload: dict, format: str, base_nom: str):
+    """Répond au format demandé : JSON brut (défaut), classeur xlsx ou csv."""
+    if format == "json":
+        return payload
+    exports = [(id_demande, payload)]
+    if format == "xlsx":
+        return _xlsx_response(exports, f"{base_nom}.xlsx")
+    return _csv_response(exports, f"{base_nom}.csv")
+
+
+# ---------------------------------------------------------------------------
 # Côté alumni
 # ---------------------------------------------------------------------------
 
@@ -368,14 +489,22 @@ def annuler_demande(
 
 
 @alumni_router.get("/export")
-def exporter_mes_donnees(db=Depends(get_db), identity: dict = Depends(current_identity)):
+def exporter_mes_donnees(
+    format: str = Query("json", description="Format de sortie (json/xlsx/csv)"),
+    db=Depends(get_db),
+    identity: dict = Depends(current_identity),
+):
     """Export auto-service immédiat (droit d'accès). Crée une demande 'export'
     automatiquement marquée 'traitee' pour la traçabilité.
+
+    format=json (défaut) renvoie le payload brut ; xlsx/csv renvoient un
+    fichier téléchargeable (Content-Disposition).
 
     traitee_par reste NULL : cet export est auto-traité sans intervention
     admin — seul un VRAI traitement admin (traiter / bulk) doit renseigner ce
     champ. Le champ date_traitement conserve le moment de l'auto-export."""
     id_etudiant = _require_alumni(identity)
+    _verifier_format(format)
     cursor = db.cursor()
     try:
         etudiant = _get_student(cursor, id_etudiant)
@@ -407,7 +536,7 @@ def exporter_mes_donnees(db=Depends(get_db), identity: dict = Depends(current_id
         )
         db.commit()
 
-        return payload
+        return _reponse_export(id_demande, payload, format, "export_rgpd_mes_donnees")
     except HTTPException:
         db.rollback()
         raise
@@ -630,9 +759,18 @@ def bulk_delete(body: BulkIds, db=Depends(get_db)):
 
 
 @admin_router.post("/bulk/export")
-def bulk_export(body: BulkIds, db=Depends(get_db)):
-    """Export groupé : un objet JSON {"<id_demande>": export} pour les demandes
-    dont le compte alumni existe encore."""
+def bulk_export(
+    body: BulkIds,
+    format: str = Query("json", description="Format de sortie (json/xlsx/csv)"),
+    db=Depends(get_db),
+):
+    """Export groupé de plusieurs demandes.
+
+    json (défaut) : {"<id_demande>": export} + erreurs. xlsx/csv : un fichier
+    avec les lignes de toutes les demandes (colonne id_demande) et, le cas
+    échéant, une feuille/section « Erreurs » pour les comptes introuvables.
+    """
+    _verifier_format(format)
     cursor = db.cursor()
     try:
         ids = list(dict.fromkeys(body.ids))
@@ -653,6 +791,17 @@ def bulk_export(body: BulkIds, db=Depends(get_db)):
                 exports[key] = _build_export(cursor, id_etudiant)
             except HTTPException as exc:
                 erreurs[key] = str(exc.detail)
+
+        if format != "json":
+            packs = [(int(k), v) for k, v in exports.items()]
+            if erreurs:
+                packs.append((None, {"erreurs": [
+                    {"id_demande": k, "message": m} for k, m in erreurs.items()
+                ]}))
+            if format == "xlsx":
+                return _xlsx_response(packs, "export_rgpd_groupe.xlsx")
+            return _csv_response(packs, "export_rgpd_groupe.csv")
+
         return {"exports": exports, "erreurs": erreurs}
     except Exception:
         logger.exception("Erreur lors de l'export groupé RGPD")
@@ -766,10 +915,12 @@ def lister_demandes(
 @admin_router.get("/{id_demande}/export")
 def export_admin(
     id_demande: int,
+    format: str = Query("json", description="Format de sortie (json/xlsx/csv)"),
     db=Depends(get_db),
     _auth=Depends(require_admin_api_key),
 ):
-    """Génère l'export JSON des données d'un alumni (pour un export ou une vérification)."""
+    """Génère l'export des données d'un alumni (json/xlsx/csv, droit d'accès)."""
+    _verifier_format(format)
     cursor = db.cursor()
     try:
         cursor.execute(
@@ -782,7 +933,8 @@ def export_admin(
         id_etudiant = row[0]
         if id_etudiant is None:
             raise HTTPException(status_code=410, detail="Compte supprimé/anonymisé, export impossible.")
-        return _build_export(cursor, id_etudiant)
+        payload = _build_export(cursor, id_etudiant)
+        return _reponse_export(id_demande, payload, format, f"demande_{id_demande}_export_rgpd")
     except HTTPException:
         raise
     except Exception:

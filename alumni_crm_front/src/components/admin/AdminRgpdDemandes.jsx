@@ -8,6 +8,15 @@ const MAX_BULK_LIGNES = 5;
 
 const avecS = (n) => (n > 1 ? 's' : '');
 
+const FORMATS_EXPORT = [
+  { value: 'json', label: 'JSON' },
+  { value: 'xlsx', label: 'Excel (.xlsx)' },
+  { value: 'csv', label: 'CSV' },
+];
+
+const labelFormat = (format) =>
+  FORMATS_EXPORT.find((f) => f.value === format)?.label || format;
+
 function nomAlumni(demande) {
   const qui = demande?.nom_complet || 'alumni';
   return demande?.email ? `${qui} (${demande.email})` : qui;
@@ -90,6 +99,7 @@ export default function AdminRgpdDemandes() {
   const [motifRefus, setMotifRefus] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [exportingId, setExportingId] = useState(null);
+  const [exportFormat, setExportFormat] = useState('json');
 
   // Sélection pour actions groupées
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -226,9 +236,8 @@ export default function AdminRgpdDemandes() {
     setExportingId(idDemande);
     setError(null);
     try {
-      const data = await adminRgpdAPI.exportData(idDemande);
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      downloadBlob(blob, `export_rgpd_${idDemande}_${new Date().toISOString().split('T')[0]}.json`);
+      const { blob, filename } = await adminRgpdAPI.exportData(idDemande, exportFormat);
+      downloadBlob(blob, filename);
     } catch (err) {
       const d = err.response?.data?.detail;
       setError(typeof d === 'string' ? d : 'Erreur lors de l\'export.');
@@ -263,7 +272,7 @@ export default function AdminRgpdDemandes() {
       setConfirmModal({
         type: 'bulk-export',
         title: 'Export groupé',
-        message: `Exporter les données JSON des ${selectedIds.size} demande(s) sélectionnée(s) dans un seul fichier ?`,
+        message: `Exporter les données des ${selectedIds.size} demande(s) sélectionnée(s) dans un seul fichier au format ${labelFormat(exportFormat)} ?`,
       });
     }
   };
@@ -291,9 +300,9 @@ export default function AdminRgpdDemandes() {
           result = await adminRgpdAPI.bulkTraiter(ids, 'rejetee', adminName.trim(), motifRefus.trim());
           break;
         case 'bulk-export': {
-          result = await adminRgpdAPI.bulkExport(ids);
-          const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
-          downloadBlob(blob, `export_rgpd_groupe_${new Date().toISOString().split('T')[0]}.json`);
+          const res = await adminRgpdAPI.bulkExport(ids, exportFormat);
+          downloadBlob(res.blob, res.filename);
+          result = res.data;
           break;
         }
         case 'bulk-delete':
@@ -306,7 +315,13 @@ export default function AdminRgpdDemandes() {
           return;
       }
       adminIdentityAPI.setName(adminName.trim());
-      setBulkResult(buildBulkSummary(confirmModal.type, result, demandesById));
+      if (confirmModal.type === 'bulk-export' && !result) {
+        // Formats fichier (xlsx/csv) : pas de résumé JSON renvoyé par l'API,
+        // les éventuelles erreurs figurent dans la section « Erreurs » du fichier.
+        setBulkResult({ titre: `✓ Fichier d'export groupé téléchargé (${labelFormat(exportFormat)})`, lignes: [], erreurs: [] });
+      } else {
+        setBulkResult(buildBulkSummary(confirmModal.type, result, demandesById));
+      }
       setConfirmModal(null);
       await loadDemandes();
     } catch (err) {
@@ -398,6 +413,22 @@ export default function AdminRgpdDemandes() {
           <option value="suppression">Suppression</option>
         </select>
 
+        <label className="flex items-center gap-2 text-sm text-gray-500 dark:text-slate-400">
+          Format d'export
+          <select
+            value={exportFormat}
+            onChange={(e) => setExportFormat(e.target.value)}
+            aria-label="Format d'export"
+            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+          >
+            {FORMATS_EXPORT.map((f) => (
+              <option key={f.value} value={f.value}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <input
           type="text"
           value={searchQuery}
@@ -438,7 +469,7 @@ export default function AdminRgpdDemandes() {
             onClick={() => openBulkAction('export')}
             className="rounded-lg bg-gray-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-700"
           >
-            Exporter le JSON
+            Exporter ({labelFormat(exportFormat)})
           </button>
           <button
             onClick={() => openBulkAction('delete')}
@@ -571,7 +602,7 @@ export default function AdminRgpdDemandes() {
                         disabled={exportingId === d.id_demande}
                         className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                       >
-                        {exportingId === d.id_demande ? 'Export...' : 'Exporter le JSON'}
+                        {exportingId === d.id_demande ? 'Export...' : `Exporter (${labelFormat(exportFormat)})`}
                       </button>
                     )}
                   </td>

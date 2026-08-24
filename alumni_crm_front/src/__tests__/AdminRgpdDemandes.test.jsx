@@ -213,18 +213,20 @@ describe('AdminRgpdDemandes - message après action groupée', () => {
 
   it('export groupé : téléchargement déclenché et résumé affiché', async () => {
     const user = userEvent.setup()
+    const donneesJson = { exports: { 1: { etudiant: { prenom: 'Jean', nom: 'Dupont' } } }, erreurs: {} }
     adminRgpdAPI.bulkExport.mockResolvedValue({
-      exports: { 1: { etudiant: { prenom: 'Jean', nom: 'Dupont' } } },
-      erreurs: {},
+      data: donneesJson,
+      blob: new Blob([JSON.stringify(donneesJson)], { type: 'application/json' }),
+      filename: 'export_rgpd_groupe_2026-08-01.json',
     })
 
     render(<AdminRgpdDemandes />)
     await screen.findByText('Jean Dupont')
 
     await selectionner(user, [1])
-    await confirmer(user, 'Exporter le JSON')
+    await confirmer(user, 'Exporter (JSON)')
 
-    expect(adminRgpdAPI.bulkExport).toHaveBeenCalledWith([1])
+    expect(adminRgpdAPI.bulkExport).toHaveBeenCalledWith([1], 'json')
     expect(downloadBlob).toHaveBeenCalledTimes(1)
     expect(await screen.findByText('✓ Export effectué pour 1 demande')).toBeInTheDocument()
     expect(
@@ -233,18 +235,46 @@ describe('AdminRgpdDemandes - message après action groupée', () => {
     expect(screen.queryByText(/experiences/i)).not.toBeInTheDocument()
   })
 
-  it('export groupé : erreurs d’export listées séparément', async () => {
+  it('export groupé en Excel : sélecteur de format pris en compte', async () => {
     const user = userEvent.setup()
     adminRgpdAPI.bulkExport.mockResolvedValue({
+      data: null,
+      blob: new Blob(['xlsx-content']),
+      filename: 'export_rgpd_groupe_2026-08-01.xlsx',
+    })
+
+    render(<AdminRgpdDemandes />)
+    await screen.findByText('Jean Dupont')
+
+    await user.selectOptions(screen.getByLabelText('Format d\'export'), 'xlsx')
+    await selectionner(user, [1])
+    await confirmer(user, 'Exporter (Excel (.xlsx))')
+
+    expect(adminRgpdAPI.bulkExport).toHaveBeenCalledWith([1], 'xlsx')
+    expect(downloadBlob).toHaveBeenCalledWith(
+      expect.any(Blob),
+      'export_rgpd_groupe_2026-08-01.xlsx',
+    )
+    expect(await screen.findByText(/Fichier d'export groupé téléchargé/)).toBeInTheDocument()
+  })
+
+  it('export groupé : erreurs d’export listées séparément', async () => {
+    const user = userEvent.setup()
+    const donneesJson = {
       exports: {},
       erreurs: { 2: 'Compte supprimé/anonymisé, export impossible.' },
+    }
+    adminRgpdAPI.bulkExport.mockResolvedValue({
+      data: donneesJson,
+      blob: new Blob([JSON.stringify(donneesJson)], { type: 'application/json' }),
+      filename: 'export_rgpd_groupe_2026-08-01.json',
     })
 
     render(<AdminRgpdDemandes />)
     await screen.findByText('Marie Martin')
 
     await selectionner(user, [2])
-    await confirmer(user, 'Exporter le JSON')
+    await confirmer(user, 'Exporter (JSON)')
 
     expect(await screen.findByText('✓ Export groupé terminé')).toBeInTheDocument()
     expect(screen.getByText('1 erreur rencontrée :')).toBeInTheDocument()

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import ThemeToggle from '../shared/ThemeToggle';
 import { loginAPI } from '../../services/api';
+import ionisStmLogo from '../../assets/ionis-stm-logo.png';
 
 const navItems = [
   {
@@ -80,11 +81,11 @@ export default function AdminLayout() {
         style={{ borderColor: 'var(--border-primary)', backgroundColor: 'var(--bg-sidebar)' }}
       >
         <div className="flex h-16 items-center gap-2 border-b px-6" style={{ borderColor: 'var(--border-primary)' }}>
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-            <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342" />
-            </svg>
-          </div>
+          <img
+            src={ionisStmLogo}
+            alt="Logo IONIS STM"
+            className="h-8 w-auto max-w-[72px] flex-shrink-0 object-contain"
+          />
           <div>
             <h1 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Alumni CRM</h1>
             <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Administration</p>

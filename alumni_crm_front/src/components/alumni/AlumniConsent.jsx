@@ -68,6 +68,7 @@ export default function AlumniConsent() {
   const [demandeError, setDemandeError] = useState(null);
   const [demandeSuccess, setDemandeSuccess] = useState(null);
   const [exporting, setExporting] = useState(false);
+  const [formatExport, setFormatExport] = useState('json');
   const [submittingDemande, setSubmittingDemande] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -96,9 +97,8 @@ export default function AlumniConsent() {
     setDemandeError(null);
     setDemandeSuccess(null);
     try {
-      const data = await rgpdAPI.exportData();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      downloadBlob(blob, `mes_donnees_rgpd_${new Date().toISOString().split('T')[0]}.json`);
+      const { blob, filename } = await rgpdAPI.exportData(formatExport);
+      downloadBlob(blob, filename);
       setDemandeSuccess('Export généré. Une trace a été enregistrée dans vos demandes.');
       await loadDemandes();
     } catch (err) {
@@ -302,13 +302,27 @@ export default function AlumniConsent() {
           </div>
         )}
 
-        <div className="mt-4 flex flex-wrap gap-3">
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-slate-300">
+            Format
+            <select
+              value={formatExport}
+              onChange={(e) => setFormatExport(e.target.value)}
+              disabled={exporting}
+              aria-label="Format de l'export de mes données"
+              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            >
+              <option value="json">JSON</option>
+              <option value="xlsx">Excel (.xlsx)</option>
+              <option value="csv">CSV</option>
+            </select>
+          </label>
           <button
             onClick={handleExport}
             disabled={exporting}
             className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {exporting ? 'Export en cours...' : '⬇ Exporter mes données (JSON)'}
+            {exporting ? 'Export en cours...' : '⬇ Exporter mes données'}
           </button>
           <button
             onClick={() => setShowDeleteConfirm(true)}

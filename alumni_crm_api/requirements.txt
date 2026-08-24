@@ -7,3 +7,4 @@ pydantic[email]
 python-dotenv
 PyJWT
 resend
+httpx2
