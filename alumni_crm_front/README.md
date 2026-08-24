@@ -1,16 +1,70 @@
-# React + Vite
+# Alumni CRM — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Interface React + Vite de l'Alumni CRM (IONIS-STM) : espace administrateur
+(dashboard KPI, annuaire filtrable, promotions, questionnaires, demandes RGPD,
+import/export Excel) et espace alumni (inscription multi-étapes avec OTP,
+profil, parcours professionnel, consentements RGPD, questionnaire annuel).
 
-Currently, two official plugins are available:
+## Prérequis
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js 18+
+- Le backend FastAPI lancé en local (voir `alumni_crm_api/README.md`)
 
-## React Compiler
+## Installation et démarrage
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+npm run dev
+```
 
-## Expanding the Oxlint configuration
+L'application tourne sur le port **3000** (`http://localhost:3000`).
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Proxy API en développement
+
+En dev, Vite proxifie les appels vers `/api` vers le backend :
+
+| Réglage | Valeur (vite.config.js) |
+|---|---|
+| Cible | `http://127.0.0.1:8000` |
+| Rewrite | le préfixe `/api` est retiré (`/api/admin/indicateurs` → `/admin/indicateurs`) |
+
+Aucune configuration CORS n'est donc nécessaire en développement.
+
+## Variables d'environnement
+
+Copier `.env.example` vers `.env` puis ajuster :
+
+| Variable | Rôle | Défaut |
+|---|---|---|
+| `VITE_SHOW_DEV_PREVIEW` | Affiche l'aperçu du code OTP à l'écran (bloc « Code de connexion / Aperçu de l'e-mail reçu »). Mettre à `false` pour masquer ce bloc (démonstration/production). | affiché sauf si `false` |
+
+## Scripts
+
+| Script | Commande | Description |
+|---|---|---|
+| `dev` | `vite` | Serveur de développement (HMR, proxy API) |
+| `build` | `vite build` | Build de production dans `dist/` |
+| `preview` | `vite preview` | Sert le build de production localement |
+| `test` | `vitest run` | Suite de tests (14 fichiers, 117 tests) |
+| `test:watch` | `vitest` | Tests en mode watch |
+| `lint` | `oxlint` | Lint du code |
+
+## Structure
+
+```
+src/
+  components/
+    admin/     Dashboard, annuaire, promotions, questionnaires, RGPD, import Excel
+    alumni/    Inscription multi-étapes, profil, parcours, consentement, survey
+    shared/    ThemeToggle (clair/sombre), KPICard, LoadingSpinner, ProtectedRoute
+  contexts/    Thème clair/sombre
+  services/    api.js — client axios (baseURL '/api')
+  utils/       Helpers (emails académiques, téléchargement blob)
+  __tests__/   Suite Vitest + Testing Library (jsdom)
+```
+
+## Authentification
+
+- **Alumni** : connexion par code OTP à 6 chiffres envoyé par email (session JWT).
+- **Admin** : connexion par code d'accès (session JWT distincte, clé `admin_role`
+  séparée de `alumni_id` côté navigateur pour éviter toute confusion de session).

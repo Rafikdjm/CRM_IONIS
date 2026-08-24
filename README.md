@@ -12,9 +12,9 @@ Alumni CRM est une application web 3-tiers qui permet à un établissement d'ens
 
 | Couche | Technologie |
 |---|---|
-| Backend | Python / FastAPI (15 routers, 80 endpoints REST documentés via Swagger) |
+| Backend | Python / FastAPI (16 routeurs montés dans 14 fichiers, 80 endpoints REST documentés via Swagger) |
 | Frontend | React + Vite (espace admin + espace alumni) |
-| Base de données | PostgreSQL (14 tables, 12 migrations versionnées) |
+| Base de données | PostgreSQL (14 tables, 13 migrations versionnées) |
 | Emails | Resend (OTP + newsletter), mode console en développement |
 
 ## Fonctionnalités
@@ -38,7 +38,7 @@ MCD_MLD V2.loo      Modèle Looping (conception MCD/MLD initiale)
 alumni_crm_api/
   docs/             erd_alumni_crm.mmd / .docx (MLD régénéré par introspection),
                     methodologie_indicateurs_dashboard.docx
-  migrations/       Migrations SQL numérotées 001 → 012
+  migrations/       Migrations SQL numérotées 001 → 013
 ```
 
 ## Démarrage rapide

@@ -144,11 +144,11 @@ J'ai conçu un modèle de données relationnel couvrant cinq domaines fonctionne
 - *Questionnaires* : QUESTIONNAIRE, QUESTION, REPONSE_QUESTIONNAIRE
 - *Infrastructure* : otp_codes, schema_migrations
 
-Le passage du MCD au MLD a respecté les règles de transformation standard (entité forte → table, association N:M → table de jonction). J'ai versionné 12 migrations SQL, appliquées via un script maison (`run_migrations.py`) qui ne rejoue que les migrations non encore exécutées.
+Le passage du MCD au MLD a respecté les règles de transformation standard (entité forte → table, association N:M → table de jonction). J'ai versionné 13 migrations SQL, appliquées via un script maison (`run_migrations.py`) qui ne rejoue que les migrations non encore exécutées.
 
 **Mission 2 — Développement du backend API**
 
-J'ai développé une API REST complète avec FastAPI (Python). L'API comprend **15 routeurs** et **80 endpoints** couvrant :
+J'ai développé une API REST complète avec FastAPI (Python). L'API comprend **16 routeurs** et **80 endpoints** couvrant :
 
 - Authentification (OTP email + code à 6 chiffres, clé d'accès API admin, sessions JWT)
 - Gestion des promotions et des étudiants/alumni (CRUD complet)
@@ -167,7 +167,7 @@ J'ai développé une interface utilisateur complète avec React + Vite, structur
 - *Espace administrateur* : tableau de bord avec KPI et graphiques, annuaire filtrable, gestion des promotions, import/export Excel, gestion des questionnaires, traitement des demandes RGPD.
 - *Espace alumni* : inscription multi-étapes, vérification OTP, édition de profil, parcours professionnel (expériences et certifications, gérées par ajout/suppression — la modification directe d'une expérience existante n'est pas disponible à ce jour, limite assumée du prototype ; une route de mise à jour reste à créer), consentement RGPD, questionnaire annuel.
 
-Le frontend comprend **14 routes principales** et des composants partagés (thème clair/sombre, indicateurs, protection de routes par rôle). La couche de tests compte 13 fichiers (Vitest + Testing Library, dossier `src/__tests__`).
+Le frontend comprend **14 routes principales** et des composants partagés (thème clair/sombre, indicateurs, protection de routes par rôle). La couche de tests compte 14 fichiers (Vitest + Testing Library, dossier `src/__tests__`).
 
 **Mission 4 — Conformité RGPD et audit de sécurité**
 
@@ -210,7 +210,7 @@ Le calcul du taux d'emploi à 6 mois a nécessité une **fiabilisation** : l'anc
 
 Le prototype résultant de ce stage couvre l'intégralité du périmètre fonctionnel défini dans le sujet officiel :
 
-- **14 tables** de base de données, validées par introspection et rejeu complet des 12 migrations sur une base vide (0 différence structurelle constatée).
+- **14 tables** de base de données, validées par introspection et rejeu complet des 13 migrations sur une base vide (0 différence structurelle constatée).
 - **80 endpoints** API avec authentification OTP + JWT et protection admin, dont les 2 ajouts de fin de stage : `POST /newsletter/envoyer` (envoi de newsletter avec filtres de ciblage) et `POST /admin/questionnaires/notififier` (relance questionnaire : email générique aux non-répondants, filtre par promotion, sans lien direct vers le formulaire à ce jour).
 - **14 routes** frontend couvrant les espaces admin et alumni.
 - **8 indicateurs** d'insertion professionnelle, dont 6 exposés via des endpoints dédiés (`/admin/indicateurs`, `/admin/indicateurs/secteurs`, `/admin/indicateurs/types-contrat`, `/admin/indicateurs/kpi-tag`, `/admin/indicateurs/kpi-tags`, `/admin/indicateurs/kpi-tags-actifs`).
@@ -235,13 +235,13 @@ J'ai réalisé ce stage **en solo** : il n'y avait pas d'équipe technique dédi
 
 Le projet était stocké en local sous OneDrive avec synchronisation active, **sans dépôt Git**. Cette organisation a provoqué un incident : un conflit de synchronisation concurrente a entraîné le retour à une version antérieure de plusieurs fichiers frontend en cours de développement, et j'ai dû reprendre le travail concerné. Cet incident a conduit à l'initialisation du dépôt Git décrite en section 3.2 (difficulté 6).
 
-Les ressources techniques à disposition comprenaient : un poste de développement local, l'accès aux APIs (Resend pour l'envoi d'OTP email), et les polices/se fontes système pour la mise en forme des documents.
+Les ressources techniques à disposition comprenaient : un poste de développement local, l'accès aux APIs (Resend pour l'envoi d'OTP email), et les polices système pour la mise en forme des documents.
 
 ### 2.6 Méthodes et stratégies mises en œuvre
 
 **Approche de développement.** J'ai suivi une démarche itérative : modélisation → backend → frontend → audit → documentation. Chaque fonctionnalité était développée, testée manuellement, puis consolidée avant de passer à la suivante. Cette approche m'a permis de détecter tôt des incohérences de modélisation (par exemple le drift de migration sur `reponse_questionnaire.id_etudiant` qui avait `ON DELETE CASCADE` en base réelle mais pas dans le fichier de migration d'origine).
 
-**Audit de fiabilité base/API.** J'ai réalisé un audit complet de la table ETUDIANT et des 9 autres tables : des champs acceptés en écriture mais jamais persistés, un endpoint `DELETE /entreprises/{id}` cassé (UPDATE sur colonne NOT NULL au lieu d'un DELETE avec CASCADE), et le drift de migration mentionné ci-dessus. J'ai utilisé le rejeu complet des 12 migrations sur une base vide comme test de validation. Cet audit relève aussi quelques points secondaires laissés ouverts et assumés comme tels : statut des consentements libre (ni `Literal` ni CHECK), date d'obtention des certifications non validée (une date future passe), messages trompeurs sur les associations étudiant/certification, filtres invalides ignorés silencieusement dans la liste admin des demandes RGPD, réponses de questionnaire stockées en JSONB sans vérification des clés, absence de purge des tables `otp_codes` et `AUDIT_LOG`. Tout est consigné dans `AUDIT_COHERENCE_TABLES.txt` pour guider la reprise du projet.
+**Audit de fiabilité base/API.** J'ai réalisé un audit complet de la table ETUDIANT et des 9 autres tables : des champs acceptés en écriture mais jamais persistés, un endpoint `DELETE /entreprises/{id}` cassé (UPDATE sur colonne NOT NULL au lieu d'un DELETE avec CASCADE), et le drift de migration mentionné ci-dessus. J'ai utilisé le rejeu complet des 13 migrations sur une base vide comme test de validation. Cet audit relève aussi quelques points secondaires laissés ouverts et assumés comme tels : statut des consentements libre (ni `Literal` ni CHECK), date d'obtention des certifications non validée (une date future passe), messages trompeurs sur les associations étudiant/certification, filtres invalides ignorés silencieusement dans la liste admin des demandes RGPD, réponses de questionnaire stockées en JSONB sans vérification des clés, absence de purge des tables `otp_codes` et `AUDIT_LOG`. Tout est consigné dans `AUDIT_COHERENCE_TABLES.txt` pour guider la reprise du projet.
 
 **Modélisation par introspection.** J'ai régénéré le schéma MCD/MLD par introspection réelle de la base (14 tables) plutôt qu'à partir du fichier de conception initial. Cette approche m'a permis de détecter un ancien fichier `mcd_corrige.md` dans le frontend qui s'est révélé obsolète (11 tables au lieu de 14, tables manquantes : DEMANDE_RGPD, OTP_CODES, SCHEMA_MIGRATIONS) ; il a été supprimé depuis.
 
@@ -261,7 +261,7 @@ Les ressources techniques à disposition comprenaient : un poste de développeme
 - *Gestion des sessions et des rôles* : séparation stricte des sessions admin et alumni côté navigateur (clés distinctes `admin_role` / `alumni_id`), vérification du rôle contenu dans le JWT avant chaque appel sensible, purge d'un token orphelin à la réception d'un 401. Ce dispositif fait suite à un bug concret (section 3.2) et est couvert par les tests.
 - *Conception de workflows concurrents* : statut intermédiaire `en_traitement` et verrou `prise_en_charge_par` dans le traitement des demandes RGPD, pour empêcher deux administrateurs de travailler en même temps sur la même demande.
 - *Indicateurs statistiques honnêtes* : exposition des hypothèses de calcul dans l'API elle-même (champ `hypothese`) et refus d'afficher un chiffre trompeur — les cohortes dont la fenêtre de six mois n'est pas écoulée renvoient `null` avec un statut `en_attente`.
-- *Tests automatisés* : suite Vitest côté frontend (13 fichiers : authentification OTP, consentements, import Excel, routes protégées). Une démarche de test E2E sans mocks (parcours alumni et parcours admin contre le vrai backend) a été conçue et documentée dans le README ; son script n'est en revanche plus présent dans le dépôt — le reconstituer fait partie des suites à donner au projet.
+- *Tests automatisés* : suite Vitest côté frontend (14 fichiers / 117 tests : authentification OTP, consentements, import Excel, routes protégées). Une démarche de test E2E sans mocks (parcours alumni et parcours admin contre le vrai backend) a été conçue et documentée dans le README ; son script n'est en revanche plus présent dans le dépôt — le reconstituer fait partie des suites à donner au projet.
 
 **Compétences transversales.**
 
@@ -281,7 +281,7 @@ Le token admin et le token alumni partageaient la même clé de stockage dans le
 
 Un audit d'introspection mené le 16 août a révélé plusieurs écarts. La clé étrangère `reponse_questionnaire.id_etudiant` était en `ON DELETE CASCADE` en base live mais pas dans le fichier de migration 003 : une base reconstruite aurait échoué au premier hard-delete d'un étudiant ayant répondu à un questionnaire. La route `DELETE /entreprises/{id}` renvoyait systématiquement une erreur dès qu'une expérience référençait l'entreprise (mise à jour vers NULL sur une colonne NOT NULL, alors que la clé étrangère est déjà en cascade). Des doublons de consentements s'étaient enfin accumulés faute de contrainte d'unicité.
 
-*Solution* : migration corrective idempotente dédiée au drift (011), suppression directe pour les entreprises (la cascade fait le reste), migration 006 qui dédoublonne puis pose `UNIQUE (id_etudiant, type_consentement)` pour permettre un upsert propre côté API. Le script de rejeu complet des 12 migrations sur base vide est devenu mon test de validation de référence — cette démarche aurait évité un échec de déploiement basé sur un rejeu des migrations. Pratique retenue depuis : rejouer les migrations sur base vide à chaque évolution du schéma, le drift 003 étant resté quatre semaines indétecté. Deux leçons générales tirées de ces épisodes : introduire des tests backend automatisés — principal chantier technique restant avant une mise en production, quelques tests d'intégration auraient intercepté la route `DELETE /entreprises` cassée comme les endpoints renvoyant 200 OK avec un corps d'erreur —, et poser les contraintes de validation à la source (type contraint `Literal` côté API, CHECK côté base dès la création des colonnes énumérables — le statut des consentements reste libre à ce jour).
+*Solution* : migration corrective idempotente dédiée au drift (011), suppression directe pour les entreprises (la cascade fait le reste), migration 006 qui dédoublonne puis pose `UNIQUE (id_etudiant, type_consentement)` pour permettre un upsert propre côté API. Le script de rejeu complet des 13 migrations sur base vide est devenu mon test de validation de référence — cette démarche aurait évité un échec de déploiement basé sur un rejeu des migrations. Pratique retenue depuis : rejouer les migrations sur base vide à chaque évolution du schéma, le drift 003 étant resté quatre semaines indétecté. Deux leçons générales tirées de ces épisodes : introduire des tests backend automatisés — principal chantier technique restant avant une mise en production, quelques tests d'intégration auraient intercepté la route `DELETE /entreprises` cassée comme les endpoints renvoyant 200 OK avec un corps d'erreur —, et poser les contraintes de validation à la source (type contraint `Literal` côté API, CHECK côté base dès la création des colonnes énumérables — le statut des consentements reste libre à ce jour).
 
 **Difficulté 3 — Deux administrateurs pouvaient traiter la même demande RGPD**
 
@@ -345,7 +345,7 @@ Le schéma ci-dessous a été **régénéré par introspection directe de la bas
 
 - `alumni_crm_api/docs/erd_alumni_crm.mmd` — définition Mermaid du schéma relationnel (MLD) ;
 - `alumni_crm_api/docs/erd_alumni_crm.docx` — version documentée du MLD ;
-- `docs/MCD_MLD V2.loo` — modèle Looping (MCD + MLD) issu de la phase de conception.
+- `MCD_MLD V2.loo` (racine du dépôt) — modèle Looping (MCD + MLD) issu de la phase de conception.
 
 **Vue d'ensemble des 14 tables et de leurs relations :**
 
@@ -355,7 +355,7 @@ Le schéma ci-dessous a été **régénéré par introspection directe de la bas
 | Parcours professionnel | ENTREPRISE, EXPERIENCE_PRO, CERTIFICATION, OBTIENT | EXPERIENCE_PRO → ETUDIANT et ENTREPRISE (N:1, avec `salary_annuel NUMERIC`) ; OBTIENT = association N:M ETUDIANT ↔ CERTIFICATION |
 | RGPD | CONSENTEMENT_RGPD, DEMANDE_RGPD, AUDIT_LOG | CONSENTEMENT_RGPD → ETUDIANT ; DEMANDE_RGPD → ETUDIANT en SET NULL pour préserver l'historique après anonymisation ; AUDIT_LOG journalise anonymisations, purges et nettoyages |
 | Questionnaires | QUESTIONNAIRE, QUESTION, REPONSE_QUESTIONNAIRE | QUESTION → QUESTIONNAIRE (N:1, avec tags KPI) ; REPONSE_QUESTIONNAIRE → ETUDIANT + QUESTIONNAIRE (réponses stockées en JSON) |
-| Infrastructure | otp_codes, schema_migrations | otp_codes : codes OTP hachés identifiés par l'email ; schema_migrations : suivi des 12 migrations versionnées |
+| Infrastructure | otp_codes, schema_migrations | otp_codes : codes OTP hachés identifiés par l'email ; schema_migrations : suivi des 13 migrations versionnées |
 
 **Règles d'intégrité** : clés étrangères avec CASCADE sur les données dépendant d'un étudiant (expériences, certifications obtenues, consentements, réponses), SET NULL sur les demandes RGPD, contraintes d'unicité (ex. email étudiant), contraintes CHECK sur les énumérations (statuts de demande RGPD, types de consentement).
 
@@ -379,4 +379,4 @@ Le schéma ci-dessous a été **régénéré par introspection directe de la bas
 
 ### Annexe F — Différentiel de migration et audit de conformité
 
-[À COMPLÉTER : tableau du drift de migration corrigé et résultats du rejeu des 12 migrations]
+[À COMPLÉTER : tableau du drift de migration corrigé et résultats du rejeu des 13 migrations]

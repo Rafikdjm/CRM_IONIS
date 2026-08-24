@@ -100,9 +100,11 @@ run.font.color.rgb = RGBColor(0x55, 0x55, 0x55)
 
 doc.add_paragraph("")
 
+date_audit = datetime.date.today().strftime("%d/%m/%Y")
+
 p = doc.add_paragraph()
 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-run = p.add_run(f"Date de l'audit : 19 août 2026\nÉchéance soutenance : 19 septembre 2026")
+run = p.add_run(f"Date de l'audit : {date_audit} (mise a jour du document initial du 19/08/2026)\nÉchéance soutenance : 19 septembre 2026")
 run.font.size = Pt(12)
 run.font.color.rgb = RGBColor(0x55, 0x55, 0x55)
 
@@ -177,9 +179,11 @@ doc.add_paragraph(
     style="List Bullet",
 )
 doc.add_paragraph(
-    "• Salaire : colonne salaire (numeric) dans EXPERIENCE_PRO — collecté dans "
-    "AlumniCareer.jsx:151-152, exposé dans le "
-    "dashboard (admin.py:338-387)",
+    "• Salaire : colonnes salaire (numeric) et salary_annuel NUMERIC(10,2) "
+    "(migration 012_salary_annuel.sql) dans EXPERIENCE_PRO — saisie via un select "
+    "de tranches chiffrées SALARY_RANGES (AlumniCareer.jsx:9-22, select en "
+    "AlumniCareer.jsx:151-156) converti en salary_annuel côté client "
+    "(api.js:336-343), exploité par le dashboard (admin.py:145 calculer_indicateurs)",
     style="List Bullet",
 )
 
@@ -200,13 +204,13 @@ rgpd_items = [
     ("Consentement horodaté",
      "CONSENTEMENT_RGPD.date_consentement (DATE NOT NULL) — erd_alumni_crm.mmd:84"),
     ("Modifiable",
-     "UPSERT sur (id_etudiant, type_consentement) UNIQUE — migration 007_consentement_upsert.sql, endpoint rgpd.py:46"),
+     "UPSERT sur (id_etudiant, type_consentement) UNIQUE — migration 006_consentement_upsert.sql, endpoint rgpd.py:41"),
     ("Traçé en base",
      "Chaque action loguée dans AUDIT_LOG avec acteur (admin:nom | alumni:id | system) — erd_alumni_crm.mmd:119"),
     ("Export fonctionnel",
      "demandes_rgpd.py — workflow complet : demande → traitement → export JSON / anonymisation avec CASCADE (purge.py)"),
     ("Suppression fonctionnelle",
-     "Anonymisation différée (6 mois par défaut via PURGE_DELAY_MONTHS) avec date_anonymisation sur ETUDIANT, FK CASCADE sur REPONSE_QUESTIONNAIRE — migration 009_purge_anonymises.sql"),
+     "Anonymisation différée (6 mois par défaut via PURGE_DELAY_MONTHS) avec date_anonymisation sur ETUDIANT, FK CASCADE sur REPONSE_QUESTIONNAIRE — migration 008_purge_anonymises.sql"),
     ("Interface alumni",
      "AlumniConsent.jsx — toggle avec sauvegarde serveur"),
     ("Interface admin",
@@ -218,33 +222,34 @@ for title, desc in rgpd_items:
 # ── 1.3 Stratégie de mise à jour ─────────────────────────────────
 doc.add_heading("1.3 Stratégie de mise à jour des données (gouvernance)", level=2)
 p = doc.add_paragraph()
-run = p.add_run("Statut : PARTIEL")
+run = p.add_run("Statut : FAIT")
 run.bold = True
-run.font.color.rgb = RGBColor(0xF3, 0x9C, 0x12)
+run.font.color.rgb = RGBColor(0x27, 0xAE, 0x60)
 
 doc.add_heading("Questionnaire annuel — FAIT", level=3)
 doc.add_paragraph(
     "Le système de questionnaire annuel existe et fonctionne :"
 )
-doc.add_paragraph("Tables : QUESTIONNAIRE, QUESTION, REPONSE_QUESTIONNAIRE — migration 004_questionnaire_annuel.sql", style="List Bullet")
+doc.add_paragraph("Tables : QUESTIONNAIRE, QUESTION, REPONSE_QUESTIONNAIRE — migration 003_questionnaire_annuel.sql", style="List Bullet")
 doc.add_paragraph("Création admin : AdminQuestionnaires.jsx + questionnaires.py", style="List Bullet")
 doc.add_paragraph("Réponses alumni : AlumniSurvey.jsx", style="List Bullet")
-doc.add_paragraph("KPI via tag sur QUESTION (migration 005_question_tag.sql) et conditionnee_statut_emploi (migration 006)", style="List Bullet")
-doc.add_paragraph("Indicateurs calculés dans admin.py:328-387 (taux d'emploi, salaire moyen, taux 6 mois, taux adéquation)", style="List Bullet")
+doc.add_paragraph("KPI via tag sur QUESTION (migration 004_question_tag.sql) et conditionnee_statut_emploi (migration 005_question_statut_emploi.sql)", style="List Bullet")
+doc.add_paragraph("Indicateurs calculés dans admin.py (calculer_indicateurs, admin.py:145) : taux d'emploi, salaire moyen, taux 6 mois, taux adéquation", style="List Bullet")
 
-doc.add_heading("Relance proactive — MANQUANT", level=3)
+doc.add_heading("Relance proactive — FAIT", level=3)
 p = doc.add_paragraph()
 run = p.add_run(
-    "Il n'existe AUCUN mécanisme de relance automatique. L'alumni doit se connecter "
-    "de sa propre initiative. La seule utilisation de l'API Resend (otp.py:76-88) est "
-    "pour l'envoi de codes OTP d'authentification. Il n'y a aucun email de relance, "
-    "aucune notification push, aucun cron job de sollicitation."
+    "L'endpoint POST /admin/questionnaires/notififier (questionnaires.py:456) envoie "
+    "une notification email aux alumni n'ayant pas encore répondu au questionnaire "
+    "actif, avec filtre optionnel par promotion. L'envoi passe par Resend "
+    "(comme les OTP), le corps du message est générique et ne contient pas encore "
+    "de lien direct vers le formulaire."
 )
 run.italic = True
 
-doc.add_paragraph("Ce qu'il faudrait ajouter :", style="List Bullet")
-doc.add_paragraph("Un endpoint/scheduler (ex : cron hebdomadaire) identifiant les alumni sans réponse au questionnaire actif", style="List Bullet 2")
-doc.add_paragraph("Des emails de relance automatisés via Resend (clé API déjà configurée dans .env et config.py:10-11)", style="List Bullet 2")
+doc.add_paragraph("Reste à faire (non bloquant, suites à donner au projet) :", style="List Bullet")
+doc.add_paragraph("Un déclenchement automatique planifié (cron hebdomadaire) en plus de l'appel manuel de l'endpoint", style="List Bullet 2")
+doc.add_paragraph("Une interface admin dédiée au déclenchement de la relance (aujourd'hui appel API uniquement)", style="List Bullet 2")
 doc.add_paragraph("Idéalement 2-3 relances espacées, puis un flag \"injoignable\"", style="List Bullet 2")
 
 # ── 1.4 Indicateurs d'insertion ──────────────────────────────────
@@ -255,15 +260,15 @@ run.bold = True
 run.font.color.rgb = RGBColor(0x27, 0xAE, 0x60)
 
 indicators = [
-    ("Taux d'emploi global", "admin.py:164", "Hero card AdminDashboard.jsx:995"),
-    ("Taux d'emploi à 6 mois", "admin.py (taux_6_mois)", "KPI card AdminDashboard.jsx"),
-    ("Taux d'adéquation formation/emploi", "admin.py (taux_adquation)", "KPI card"),
-    ("Salaire moyen", "admin.py:338-387", "Jauge demi-cercle dynamique AdminDashboard.jsx:1198-1215"),
-    ("Taux de recommandation", "admin.py (taux_recommandation)", "KPI card"),
-    ("Répartition sectorielle", "admin.py (repartition_secteur)", "Donut chart"),
-    ("Évolution par promotion", "admin.py (evolution_promotions)", "Bar chart"),
-    ("Taux de complétion profil", "admin.py (taux_completion)", "KPI card"),
-    ("Types de contrat", "intégré", "Bar chart horizontal"),
+    ("Taux d'emploi global", "admin.py:145 (calculer_indicateurs)", "Hero card AdminDashboard.jsx:92"),
+    ("Taux d'emploi à 6 mois", "admin.py:145 (calculer_indicateurs)", "KPI card AdminDashboard.jsx"),
+    ("Taux d'adéquation formation/emploi", "admin.py:692 (/indicateurs/kpi-tag)", "KPI card"),
+    ("Salaire moyen", "admin.py:145 (calculer_indicateurs)", "Jauge demi-cercle dynamique AdminDashboard.jsx"),
+    ("Taux de recommandation", "admin.py (calculer_indicateurs)", "KPI card"),
+    ("Répartition sectorielle", "admin.py:402 (/indicateurs/secteurs)", "Donut chart"),
+    ("Évolution par promotion", "admin.py (calculer_indicateurs)", "Bar chart"),
+    ("Taux de complétion profil", "admin.py (calculer_indicateurs)", "KPI card"),
+    ("Types de contrat", "admin.py:452 (/indicateurs/types-contrat)", "Bar chart horizontal"),
     ("Maturité des cohortes", "admin.py (taux_6_mois par promo)", "Timeline"),
 ]
 make_table(doc, ["Indicateur", "API (admin.py)", "Dashboard (AdminDashboard.jsx)"], indicators)
@@ -284,16 +289,16 @@ doc.add_heading("2. INFORMATIQUE", level=1)
 # ── 2.1 Modélisation BDD ─────────────────────────────────────────
 doc.add_heading("2.1 Modélisation de la base de données", level=2)
 p = doc.add_paragraph()
-run = p.add_run("Statut : PARTIEL")
+run = p.add_run("Statut : FAIT")
 run.bold = True
-run.font.color.rgb = RGBColor(0xF3, 0x9C, 0x12)
+run.font.color.rgb = RGBColor(0x27, 0xAE, 0x60)
 
 doc.add_heading("MCD/MLD existant", level=3)
 mcd_files = [
-    ("erd_alumni_crm.mmd", "148 lignes, 14 tables", "COMPLET et à jour (10/08/2026, vérifié 15/08/2026)", "FAIT"),
+    ("erd_alumni_crm.mmd", "155 lignes, 14 tables", "COMPLET et à jour (10/08/2026, vérifié 15/08 et 22/08/2026)", "FAIT"),
     ("erd_alumni_crm.docx", "40 Ko", "Version Word du précédent (15/08/2026)", "FAIT"),
-    ("MCD_MLD V2.loo + MCD_MLD.loo + .lo1", "Binaires", "Phase initiale Looping (28/07/2026), supplanté par Mermaid", "Obsolète"),
-    ("mcd_corrige.md", "102 lignes, 11 tables", "OBSOLÈTE — manque DEMANDE_RGPD, OTP_CODES, SCHEMA_MIGRATIONS", "À corriger"),
+    ("000_schema_initial.sql + migrations 001-013", "14 fichiers SQL", "Rejeu complet validé sur base vide : les 14 tables sont recréées (24/08/2026)", "FAIT"),
+    ("MCD_MLD V2.loo", "Binaire Looping", "Phase initiale de conception (28/07/2026), supplanté par Mermaid ; les autres fichiers Looping (.loo/.lo1 doublons) ont été supprimés", "Source historique"),
 ]
 make_table(doc, ["Fichier", "Description", "Statut", "Verdict"], mcd_files)
 
@@ -302,11 +307,6 @@ doc.add_heading("Relation 1-N étudiant → expériences", level=3)
 doc.add_paragraph(
     "CONFIRMÉE — erd_alumni_crm.mmd:18 : ETUDIANT ||--o{ EXPERIENCE_PRO (0,n expériences par étudiant). "
     "Historique de carrière multiple, pas un seul poste."
-)
-
-doc.add_heading("Ce qu'il faut corriger", level=3)
-doc.add_paragraph(
-    "Synchroniser ou supprimer mcd_corrige.md (alumni_crm_front/) pour qu'il reflète le schéma réel (14 tables)."
 )
 
 # ── 2.2 Interface admin ──────────────────────────────────────────
@@ -318,7 +318,7 @@ run.font.color.rgb = RGBColor(0x27, 0xAE, 0x60)
 
 doc.add_heading("Filtrage combiné promotion + secteur + entreprise", level=3)
 doc.add_paragraph(
-    "CONFIRMÉ — AlumniDirectory.jsx (719 lignes) : filtres AND-combinés dans un useMemo (l.72-114) :"
+    "CONFIRMÉ — AlumniDirectory.jsx (686 lignes) : filtres AND-combinés dans un useMemo (l.72-114) :"
 )
 filter_items = [
     "Promotion : serveur (params.promotion, l.43)",
@@ -332,7 +332,7 @@ for f in filter_items:
 
 doc.add_heading("Dashboard avec indicateurs d'insertion", level=3)
 doc.add_paragraph(
-    "CONFIRMÉ — AdminDashboard.jsx (1266 lignes) : hero cards, jauge salaire dynamique, "
+    "CONFIRMÉ — AdminDashboard.jsx (1208 lignes) : hero cards, jauge salaire dynamique, "
     "donuts, bar charts, timeline cohortes, KPI tags depuis questionnaires."
 )
 
@@ -345,15 +345,16 @@ run.font.color.rgb = RGBColor(0x27, 0xAE, 0x60)
 
 alumni_checks = [
     ("Formulaire d'inscription INITIAL distinct",
-     "CONFIRMÉ — AlumniRegistration.jsx (632 lignes) : wizard multi-étapes (4 étapes), "
+     "CONFIRMÉ — AlumniRegistration.jsx (601 lignes) : wizard multi-étapes (4 étapes), "
      "distinct de la mise à jour. Stocke alumni_id en localStorage après succès."),
     ("Mise à jour du profil professionnel",
      "CONFIRMÉE — AlumniProfile.jsx : consultation et mise à jour du profil ; "
-     "AlumniCareer.jsx (710 lignes) : CRUD expériences + certifications avec modals de confirmation."),
+     "AlumniCareer.jsx (671 lignes) : CRUD expériences + certifications avec modals de confirmation. "
+     "Limite assumée : pas de modification in place d'une expérience existante (ajout/suppression uniquement)."),
     ("Suppression d'une entrée par erreur",
-     "CONFIRMÉE — AlumniCareer.jsx:318-333 : bouton \"Supprimer\" + modal de confirmation. "
-     "confirmRemove() (l.370) appelle careerAPI.delete() côté serveur. "
-     "Bloqué sur comptes anonymisés (l.324-326)."),
+     "CONFIRMÉE — AlumniCareer.jsx : bouton \"Supprimer\" + modal de confirmation. "
+     "confirmRemove() (l.403) appelle careerAPI.delete() côté serveur. "
+     "Bloqué sur comptes anonymisés."),
 ]
 for title, desc in alumni_checks:
     doc.add_paragraph(f"• {title} : {desc}", style="List Bullet")
@@ -367,18 +368,18 @@ run.font.color.rgb = RGBColor(0x27, 0xAE, 0x60)
 
 doc.add_paragraph("Import Excel — CONFIRMÉ :")
 import_items = [
-    "import_export.py:135-266 : POST /import/excel — accepte .xlsx, .xls, .csv",
-    "21 colonnes supportées (l.27-51) : prénom, nom, email, téléphone, promotion, entreprise, poste, secteur, salaire, etc.",
+    "import_export.py:186 : POST /import/excel — accepte .xlsx, .xls, .csv",
+    "25 colonnes supportées (COLUMN_MAP, import_export.py:28) : prénom, nom, email, téléphone, promotion, entreprise, poste, secteur, salaire, etc.",
     "Logique complète : création ETUDIANT + ENTREPRISE + EXPERIENCE_PRO, résolution de doublons email",
-    "Template de téléchargement (GET /import/template)",
-    "Frontend : ExcelImport.jsx (387 lignes) — drag & drop, preview 10 lignes, reconnaissance de colonnes",
+    "Template de téléchargement (GET /import/template, import_export.py:350)",
+    "Frontend : ExcelImport.jsx (366 lignes) — drag & drop, preview 10 lignes, reconnaissance de colonnes",
 ]
 for item in import_items:
     doc.add_paragraph(item, style="List Bullet")
 
 doc.add_paragraph("")
 doc.add_paragraph("Export — CONFIRMÉ :")
-doc.add_paragraph("GET /import/export/alumni (import_export.py:304) — génère .xlsx", style="List Bullet")
+doc.add_paragraph("GET /import/export/alumni (import_export.py:383) — génère .xlsx", style="List Bullet")
 doc.add_paragraph("Fallback client-side dans ExcelImport.jsx:119-156", style="List Bullet")
 
 doc.add_page_break()
@@ -391,17 +392,18 @@ doc.add_heading("3. LIVRABLES ATTENDUS", level=1)
 # ── 3.1 Rapport de stage ─────────────────────────────────────────
 doc.add_heading("3.1 Rapport de stage", level=2)
 p = doc.add_paragraph()
-run = p.add_run("Statut : MANQUANT")
+run = p.add_run("Statut : FAIT")
 run.bold = True
-run.font.color.rgb = RGBColor(0xE7, 0x4C, 0x3C)
+run.font.color.rgb = RGBColor(0x27, 0xAE, 0x60)
 
 doc.add_paragraph(
-    "Aucun brouillon de rapport de stage n'existe dans le projet."
+    "Le rapport de stage existe : source Markdown (Rapport/rapport.md) et PDF "
+    "généré par script (Rapport/generate_reports.py)."
 )
 rapport_items = [
-    "generer_rapport.py (594 lignes) génère un document de préparation à l'oral (Preparation_Oral_Stage_CRM_Alumni.docx), PAS un rapport de stage",
-    "Les 4 PDFs dans Rapport/ sont des livrables thématiques (cartographie, RGPD, stratégie, indicateurs), pas un rapport de stage structuré",
-    "Aucun fichier contenant une introduction, conclusion, bibliographie, ou plan de rapport",
+    "Structure complète : résumé/abstract, contexte IONIS-STM, missions, bilan de compétences, difficultés/solutions, bibliographie, annexes",
+    "Couvre les 5 domaines de mission du sujet (modélisation, backend, frontend, RGPD, indicateurs)",
+    "Quelques compléments rédactionnels restent à porter par l'auteur (tuteur, dates, captures des annexes)",
 ]
 for item in rapport_items:
     doc.add_paragraph(item, style="List Bullet")
@@ -414,10 +416,10 @@ run.bold = True
 run.font.color.rgb = RGBColor(0x27, 0xAE, 0x60)
 
 mcd_livrable = [
-    ("Fichier principal", "alumni_crm_api/docs/erd_alumni_crm.mmd — 14 tables, à jour au 15/08/2026"),
+    ("Fichier principal", "alumni_crm_api/docs/erd_alumni_crm.mmd — 14 tables, à jour au 22/08/2026"),
     ("Version Word", "alumni_crm_api/docs/erd_alumni_crm.docx — 40 Ko, 15/08/2026"),
-    ("Fichiers Looping", "MCD_MLD V2.loo (28/07/2026) — phase initiale, supplanté par Mermaid"),
-    ("Note", "mcd_corrige.md dans alumni_crm_front/ est obsolète (manque 3 tables)"),
+    ("Fichier Looping", "MCD_MLD V2.loo (28/07/2026) — phase initiale, supplanté par Mermaid"),
+    ("Rejeu base vide", "000_schema_initial.sql + 013_otp_codes.sql : les migrations reconstruisent intégralement le schéma (validé 24/08/2026)"),
 ]
 for title, desc in mcd_livrable:
     doc.add_paragraph(f"• {title} : {desc}", style="List Bullet")
@@ -430,11 +432,11 @@ run.bold = True
 run.font.color.rgb = RGBColor(0x27, 0xAE, 0x60)
 
 proto_items = [
-    "Backend FastAPI opérationnel (14 routers, 50+ endpoints, Swagger à /docs)",
+    "Backend FastAPI opérationnel (16 routeurs montés, 80 endpoints)",
     "Frontend React/Vite complet (dist/ présent avec build production)",
-    "Base PostgreSQL (14 tables, 12 migrations)",
+    "Base PostgreSQL (14 tables, 13 migrations)",
     "Auth OTP + JWT (alumni), API Key + JWT (admin)",
-    "Tests : 13 fichiers Vitest frontend, 66 assertions",
+    "Tests : 14 fichiers Vitest frontend, 117 tests",
     "Import/Export Excel, RGPD bout en bout, questionnaire annuel",
 ]
 for item in proto_items:
@@ -443,26 +445,22 @@ for item in proto_items:
 # ── 3.4 Guide animation réseau ───────────────────────────────────
 doc.add_heading("3.4 Guide des processus d'animation du réseau", level=2)
 p = doc.add_paragraph()
-run = p.add_run("Statut : PARTIEL")
+run = p.add_run("Statut : FAIT")
 run.bold = True
-run.font.color.rgb = RGBColor(0xF3, 0x9C, 0x12)
+run.font.color.rgb = RGBColor(0x27, 0xAE, 0x60)
 
-doc.add_paragraph("Pas de guide standalone dédié au service des relations entreprises.")
 doc.add_paragraph(
-    "Contenu partiel dans \"Stratégie de Mise à Jour des Données - Alumni CRM.pdf\" "
-    "(Section 4, ~3 pages) couvrant :"
+    "Guide standalone dédié au service des relations entreprises, généré par "
+    "script : \"Guide des Processus - Animation du Reseau Alumni.pdf\" "
+    "(Rapport/generate_reports.py)."
 )
 animation_items = [
-    "Pilotage des campagnes de questionnaire",
+    "Pilotage des campagnes de questionnaire (création, relances via POST /admin/questionnaires/notififier)",
     "Valorisation du réseau (filtrage dashboard, identification partenariats)",
-    "Newsletter (levier d'animation, ciblage par consentement)",
+    "Newsletter (levier d'animation, ciblage par consentement via POST /newsletter/envoyer)",
 ]
 for item in animation_items:
     doc.add_paragraph(item, style="List Bullet")
-doc.add_paragraph(
-    "Il manque un document dédié et complet avec : processus opérationnels, rôles, "
-    "fréquence des actions, templates de communication."
-)
 
 doc.add_page_break()
 
@@ -473,17 +471,17 @@ doc.add_heading("4. TABLEAU RÉCAPITULATIF", level=1)
 
 recap = [
     ("1", "Cartographie des données", "FAIT", "AlumniRegistration.jsx, AlumniProfile.jsx, AlumniCareer.jsx, erd_alumni_crm.mmd"),
-    ("2", "Charte RGPD / consentement", "FAIT", "rgpd.py, demandes_rgpd.py, purge.py, AlumniConsent.jsx, AdminRgpdDemandes.jsx, migrations 007-010"),
-    ("3", "Stratégie de mise à jour", "PARTIEL", "questionnaires.py, AdminQuestionnaires.jsx, AlumniSurvey.jsx — MANQUANT : relance proactive"),
-    ("4", "Indicateurs d'insertion", "FAIT", "admin.py:164,338-387, AdminDashboard.jsx:935-1263"),
-    ("5", "Modélisation BDD", "PARTIEL", "erd_alumni_crm.mmd (OK), mcd_corrige.md (obsolète)"),
+    ("2", "Charte RGPD / consentement", "FAIT", "rgpd.py, demandes_rgpd.py, purge.py, AlumniConsent.jsx, AdminRgpdDemandes.jsx, migrations 006-010"),
+    ("3", "Stratégie de mise à jour", "FAIT", "questionnaires.py (relance : POST /admin/questionnaires/notififier), AdminQuestionnaires.jsx, AlumniSurvey.jsx — restent cron + UI dédiée (non bloquant)"),
+    ("4", "Indicateurs d'insertion", "FAIT", "admin.py:145+ (/indicateurs...), AdminDashboard.jsx"),
+    ("5", "Modélisation BDD", "FAIT", "erd_alumni_crm.mmd (14 tables) ; mcd_corrige.md supprimé"),
     ("6", "Interface admin", "FAIT", "AlumniDirectory.jsx:72-114, AdminDashboard.jsx, AdminPromotions.jsx"),
     ("7", "Interface alumni", "FAIT", "AlumniRegistration.jsx, AlumniProfile.jsx, AlumniCareer.jsx"),
-    ("8", "Import / Export", "FAIT", "import_export.py, ExcelImport.jsx"),
-    ("9", "Rapport de stage", "MANQUANT", "Aucun fichier"),
-    ("10", "MCD / MLD", "FAIT", "erd_alumni_crm.mmd, erd_alumni_crm.docx (réserve : mcd_corrige.md obsolète)"),
-    ("11", "Prototype fonctionnel", "FAIT", "dist/, requirements.txt, 14 routers, 13 fichiers test"),
-    ("12", "Guide animation réseau", "PARTIEL", "Section 4 du PDF Stratégie de Mise à Jour — pas de guide standalone"),
+    ("8", "Import / Export", "FAIT", "import_export.py (COLUMN_MAP 25 colonnes), ExcelImport.jsx"),
+    ("9", "Rapport de stage", "FAIT", "Rapport/rapport.md + Rapport de Stage - Alumni CRM.pdf (compléments rédactionnels en cours)"),
+    ("10", "MCD / MLD", "FAIT", "erd_alumni_crm.mmd, erd_alumni_crm.docx, MCD_MLD V2.loo"),
+    ("11", "Prototype fonctionnel", "FAIT", "dist/, requirements.txt, 16 routeurs montés (14 fichiers), 80 endpoints, 14 fichiers de tests (117 tests)"),
+    ("12", "Guide animation réseau", "FAIT", "Guide des Processus - Animation du Reseau Alumni.pdf (standalone)"),
 ]
 make_table(doc, ["#", "Point", "Statut", "Fichiers / Routes concernés"], recap)
 
@@ -497,38 +495,35 @@ doc.add_heading("5. PLAN D'ACTION PRIORITAIRE AVANT LA SOUTENANCE (19 septembre 
 doc.add_heading("Urgence CRITIQUE — Manques documentaires (rédaction)", level=2)
 critical = [
     ("1", "Rédiger le rapport de stage",
-     "Aucun brouillon n'existe. C'est le livrable le plus important.",
-     "2-3 semaines",
-     "Introduction/contexte, missions, analyse conception (MCD/MLD, architecture), "
-     "réalisation technique, résultats/indicateurs, conclusion/limites, bibliographie"),
+     "FAIT depuis la version initiale de l'audit : Rapport/rapport.md + PDF généré.",
+     "—",
+     "Restent les compléments rédactionnels portés par l'auteur (tuteur, dates, captures des annexes)"),
     ("2", "Rédiger le guide d'animation du réseau",
-     "Document dédié au service des relations entreprises.",
-     "2-3 jours",
-     "Processus opérationnels, rôles/responsabilités, fréquence des actions "
-     "(campagnes questionnaire, relances, newsletter), templates de communication. "
-     "Le contenu de la Section 4 du PDF Stratégie peut servir de base"),
+     "FAIT depuis la version initiale de l'audit : Guide des Processus - Animation du Reseau Alumni.pdf.",
+     "—",
+     "Document standalone généré par Rapport/generate_reports.py"),
 ]
 make_table(doc, ["#", "Action", "Justification", "Estimation", "Détails"], critical)
 
 doc.add_paragraph("")
 doc.add_heading("Urgence MOYENNE — Manques techniques (code)", level=2)
 medium = [
-    ("3", "Implémenter la relance proactive",
-     "Le questionnaire annuel fonctionne mais personne n'est sollicité.",
+    ("3", "Compléter la relance proactive",
+     "PARTIELLEMENT FAIT : POST /admin/questionnaires/notififier envoie déjà les relances email aux non-répondants (filtre promotion).",
      "1-2 jours",
-     "Endpoint/cron identifiant les alumni sans réponse + emails de relance via Resend "
-     "(clé API déjà configurée dans .env) + 2-3 relances espacées"),
+     "Reste : déclenchement planifié (cron hebdomadaire), interface admin dédiée au déclenchement, 2-3 relances espacées + flag \"injoignable\""),
     ("4", "Synchroniser mcd_corrige.md",
-     "Le fichier dans alumni_crm_front/ affiche 11 tables au lieu de 14.",
-     "30 min",
-     "Copier depuis erd_alumni_crm.mmd ou supprimer pour éviter la confusion"),
+     "FAIT : le fichier obsolète a été supprimé du dépôt ; erd_alumni_crm.mmd fait foi (14 tables).",
+     "—",
+     "Rien à faire"),
 ]
 make_table(doc, ["#", "Action", "Justification", "Estimation", "Détails"], medium)
 
 doc.add_paragraph("")
 doc.add_heading("Attention — Non bloquant", level=2)
-doc.add_paragraph("Migration 003 absente (numérotation sautée de 002 à 004) — cosmétique, ne bloque rien", style="List Bullet")
+doc.add_paragraph("Rejouabilité base vide rétablie (24/08/2026) : migration 000_schema_initial.sql (bootstrap des tables métier) + 013_otp_codes.sql (table OTP, anciennement créée hors migrations) — rejeu complet 000→013 validé sur base vide, 14/14 tables recréées", style="List Bullet")
 doc.add_paragraph("Les fichiers Looping obsolètes (MCD_MLD.loo, MCD_MLD.lo1) ont été supprimés — seul MCD_MLD V2.loo est conservé comme source", style="List Bullet")
+doc.add_paragraph("Suites techniques documentées dans le README API : reconstituer le script E2E (la démarche est décrite), introduire des tests backend automatisés (pytest)", style="List Bullet")
 
 # ── Sauvegarde ────────────────────────────────────────────────────
 output_path = r"C:\Users\PC\OneDrive\Desktop\stage\Audit_Final_Alumni_CRM.docx"

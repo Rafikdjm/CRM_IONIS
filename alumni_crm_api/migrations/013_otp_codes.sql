@@ -1,3 +1,7 @@
+-- Migration 013 : table otp_codes
+-- Formalise dans le versionnage la table creee initialement hors migrations
+-- (ancien create_otp_table.sql a la racine). Idempotente : sans effet sur les
+-- bases ou la table existe deja.
 CREATE TABLE IF NOT EXISTS otp_codes (
     id SERIAL PRIMARY KEY,
     email TEXT NOT NULL,

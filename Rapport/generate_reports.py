@@ -697,7 +697,7 @@ def generate_rapport_stage():
     )
 
     pdf.section_title("4.3 Backend API (FastAPI)")
-    pdf.body_text("L'API expose 80 endpoints REST organises en 15 modules :")
+    pdf.body_text("L'API expose 80 endpoints REST organises en 16 routeurs montes (14 fichiers) :")
     pdf.bullet("Authentification : OTP send/verify, admin login, API key validation.")
     pdf.bullet("Gestion des promotions : CRUD complet.")
     pdf.bullet("Gestion des etudiants/alumni : CRUD + profil enrichi (jointures promotion, entreprise, experiences, certifications).")
@@ -706,8 +706,7 @@ def generate_rapport_stage():
     pdf.bullet("RGPD : consentement (upsert), demandes (export Excel, suppression/anonymisation), audit log.")
     pdf.bullet("Questionnaires : CRUD admin + soumission alumni avec validation des cles.")
     pdf.bullet("Dashboard admin : indicateurs, stats, filtrage alumni, evolution temporelle.")
-    pdf.bullet("Import/Export : template Excel, import alumni, export complet.")
-    pdf.bullet("Automatisation : upload Excel/CSV d'etudiants en masse, protege par cle API admin.")
+    pdf.bullet("Import/Export : template Excel, import alumni protege par cle API admin, export complet.")
     pdf.bullet("Newsletter et relances : envoi cible via POST /newsletter/envoyer (filtres promotion, secteur, consentement newsletter actif) et rappels de questionnaire via POST /admin/questionnaires/notififier (ciblage des non-repondants).")
     pdf.bullet("Nettoyage : orphelins, doublons, archivage, purge differee.")
 
