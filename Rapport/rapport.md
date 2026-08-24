@@ -157,7 +157,7 @@ J'ai développé une API REST complète avec FastAPI (Python). L'API comprend **
 - RGPD (consentement, demandes de suppression/anonymisation, journal d'audit)
 - Questionnaires (CRUD admin + soumission alumni avec validation des clés)
 - Dashboard administrateur (indicateurs, statistiques, filtrage, évolution temporelle)
-- Import/export (template Excel, import alumni, export complet)
+- Import/export (template Excel, import alumni CSV/Excel avec détection automatique du séparateur, export complet)
 - Nettoyage (détection d'orphelins, fusion de doublons, archivage, purge différée)
 
 **Mission 3 — Développement du frontend React**
@@ -175,6 +175,7 @@ J'ai intégré la conformité RGPD à toutes les étapes du système :
 
 - 4 types de consentement gérés indépendamment via des toggles : prise de contact, partage de données, enquêtes, newsletter.
 - Workflow de traitement des demandes RGPD : statut `envoyée → en cours de traitement → traitée/rejetée`, avec verrou anti-double-traitement.
+- Exports de données (droit d'accès et portabilité) téléchargeables aux formats JSON, Excel (.xlsx) ou CSV : auto-service côté alumni (`GET /rgpd/export`), unitaire et groupé côté admin, avec une section « Erreurs » dans l'export groupé pour les comptes introuvables ou anonymisés.
 - Distinction entre anonymisation (RGPD, réversible) et suppression définitive (hard delete, réservée aux doublons).
 - Purge différée configurable (`PURGE_DELAY_MONTHS`, défaut 6 mois).
 - Information de l'alumni dans l'interface de consentement : durée de conservation des données (suppression 6 mois après anonymisation) et contact DPO (`dpo@ionis-stm.com`).
