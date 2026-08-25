@@ -45,7 +45,7 @@ Copier `.env.example` vers `.env` puis ajuster :
 | `dev` | `vite` | Serveur de développement (HMR, proxy API) |
 | `build` | `vite build` | Build de production dans `dist/` |
 | `preview` | `vite preview` | Sert le build de production localement |
-| `test` | `vitest run` | Suite de tests (14 fichiers, 117 tests) |
+| `test` | `vitest run` | Suite de tests (14 fichiers, 118 tests) |
 | `test:watch` | `vitest` | Tests en mode watch |
 | `lint` | `oxlint` | Lint du code |
 

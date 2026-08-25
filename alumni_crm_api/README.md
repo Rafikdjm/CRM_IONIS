@@ -30,12 +30,12 @@ routers/
   rgpd.py               # /consentements       : choix RGPD (prise_de_contact, newsletter, etc.)
   otp.py                # /auth/otp            : connexion alumni par code à 6 chiffres (rate-limiting)
   admin_auth.py         # /auth/admin/login    : connexion admin par code d'accès (hash SHA-256)
-   demandes_rgpd.py      # /rgpd/demandes + /admin/demandes-rgpd : demandes export/suppression, anonymisation
-   questionnaires.py     # /questionnaires + /admin/questionnaires : questionnaires annuels d'insertion
-   newsletter.py         # /newsletter/envoyer    : envoi de newsletter aux alumni consentants (X-API-Key)
-   admin.py              # /admin               : annuaire filtré, indicateurs dashboard (X-API-Key)
-   cleanup.py            # /admin/cleanup       : orphelins, doublons, archivage RGPD, audit log
-   import_export.py      # /import              : template Excel, import, export alumni
+  demandes_rgpd.py      # /rgpd/demandes + /admin/demandes-rgpd : demandes export/suppression, anonymisation
+  questionnaires.py     # /questionnaires + /admin/questionnaires : questionnaires annuels d'insertion
+  newsletter.py         # /newsletter/envoyer    : envoi de newsletter aux alumni consentants (X-API-Key)
+  admin.py              # /admin               : annuaire filtré, indicateurs dashboard (X-API-Key)
+  cleanup.py            # /admin/cleanup       : orphelins, doublons, archivage RGPD, audit log
+  import_export.py      # /import              : template Excel, import, export alumni
 ```
 
 ## Corrections apportées, classées selon les 4 axes de la revue
@@ -69,7 +69,7 @@ est faite par des scripts de contrôle ad hoc qui exercent les routes réelles
 via l'API HTTP (voir « Test fonctionnel de bout en bout » ci-dessous).
 
 **Frontend** : la suite Vitest se lance avec `npm test` dans `alumni_crm_front`
-(14 fichiers de tests, 117 tests — auth OTP, consentements RGPD, import
+(14 fichiers de tests, 118 tests — auth OTP, consentements RGPD, import
 Excel, indicateurs complémentaires, routes protégées).
 
 ### Test fonctionnel de bout en bout (E2E)
