@@ -20,7 +20,7 @@ utils.py               # helper de sérialisation cursor -> dict
 main.py                 # assemble les routers + CORS
 run_migrations.py      # exécute les migrations SQL numérotées avec tracking (schema_migrations)
 purge.py               # CLI : purge définitive différée des comptes anonymisés RGPD (--dry-run)
-migrations/            # migrations SQL numérotées 001 → 013
+migrations/            # migrations SQL numérotées 000 → 014
 routers/
   promotions.py         # /promotions          : CRUD des promotions
   etudiants.py          # /etudiants           : CRUD étudiants + profil alumni

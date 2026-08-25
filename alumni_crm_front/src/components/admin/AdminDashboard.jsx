@@ -510,7 +510,7 @@ function RatingVisual({ valeur, unite }) {
 // fourchette codée en dur, aucune référence de marché externe : le sujet
 // de stage exige des indicateurs d'insertion calculés uniquement à partir
 // des données collectées par le CRM (voir aussi
-// docs/methodologie_indicateurs_dashboard.docx).
+// Rapport/methodologie_indicateurs_dashboard.docx).
 //
 // Règles de calcul de la fourchette affichée :
 //   - Échantillon suffisant (>= SEUIL_ECHANTILLON_SALAIRE salaires) :

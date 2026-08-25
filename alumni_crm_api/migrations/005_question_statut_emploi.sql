@@ -1,4 +1,4 @@
--- 006: Add conditionnee_statut_emploi column to QUESTION
+-- 005: Add conditionnee_statut_emploi column to QUESTION
 -- Permet de marquer les questions qui ne doivent etre posees qu'aux alumni
 -- ayant un poste (disponibilite autre que "en_recherche").
 

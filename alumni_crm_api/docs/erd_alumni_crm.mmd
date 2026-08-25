@@ -7,11 +7,13 @@
 %% 010_email_academique_unique.sql) : DEMANDE_RGPD complétée (009) et
 %% CONSENTEMENT_RGPD enrichi (006).
 %%
-%% Mis à jour le 22/08/2026 : renumérotation continue des migrations (001→012,
+%% Mis à jour le 25/08/2026 : renumérotation continue des migrations (000→014),
 %% l'ancien trou « 003 absent » est comblé), puis :
 %%   - 011 : REPONSE_QUESTIONNAIRE.id_etudiant passe en ON DELETE CASCADE
 %%     (harmonisation avec la base live, fix du drift de la migration 003)
 %%   - 012 : EXPERIENCE_PRO.salary_annuel NUMERIC(10,2) DEFAULT 0
+%%   - 013 : OTP_CODES formalisée dans le versionnage (CREATE TABLE IF NOT EXISTS)
+%%   - 014 : QUESTIONNAIRE.actif BOOLEAN DEFAULT TRUE (formalisé)
 %%
 %% Convention : le MLD est la traduction directe du MCD. Chaque entité du MCD
 %% devient une table, chaque relation 1-N devient une colonne FK, et la relation

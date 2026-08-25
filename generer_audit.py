@@ -297,7 +297,7 @@ doc.add_heading("MCD/MLD existant", level=3)
 mcd_files = [
     ("erd_alumni_crm.mmd", "155 lignes, 14 tables", "COMPLET et à jour (10/08/2026, vérifié 15/08 et 22/08/2026)", "FAIT"),
     ("erd_alumni_crm.docx", "40 Ko", "Version Word du précédent (15/08/2026)", "FAIT"),
-    ("000_schema_initial.sql + migrations 001-013", "14 fichiers SQL", "Rejeu complet validé sur base vide : les 14 tables sont recréées (24/08/2026)", "FAIT"),
+    ("000_schema_initial.sql + migrations 001-014", "15 fichiers SQL", "Rejeu complet validé sur base vide : les 14 tables sont recréées (25/08/2026)", "FAIT"),
     ("MCD_MLD V2.loo", "Binaire Looping", "Phase initiale de conception (28/07/2026), supplanté par Mermaid ; les autres fichiers Looping (.loo/.lo1 doublons) ont été supprimés", "Source historique"),
 ]
 make_table(doc, ["Fichier", "Description", "Statut", "Verdict"], mcd_files)
@@ -434,7 +434,7 @@ run.font.color.rgb = RGBColor(0x27, 0xAE, 0x60)
 proto_items = [
     "Backend FastAPI opérationnel (16 routeurs montés, 80 endpoints)",
     "Frontend React/Vite complet (dist/ présent avec build production)",
-    "Base PostgreSQL (14 tables, 13 migrations)",
+    "Base PostgreSQL (14 tables, 15 migrations)",
     "Auth OTP + JWT (alumni), API Key + JWT (admin)",
     "Tests : 14 fichiers Vitest frontend, 117 tests",
     "Import/Export Excel, RGPD bout en bout, questionnaire annuel",

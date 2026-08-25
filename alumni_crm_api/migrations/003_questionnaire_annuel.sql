@@ -1,4 +1,4 @@
--- 004: Tables pour le questionnaire annuel
+-- 003: Tables pour le questionnaire annuel
 
 CREATE TABLE IF NOT EXISTS QUESTIONNAIRE (
     id_questionnaire SERIAL PRIMARY KEY,
