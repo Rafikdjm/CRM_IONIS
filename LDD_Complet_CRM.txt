@@ -1,0 +1,248 @@
+-- ============================================================================
+-- LDD COMPLET — CRM Alumni (PostgreSQL)
+-- État final après migrations 000 → 014
+-- ============================================================================
+
+-- ============================================================================
+-- 1. PROMOTION
+-- ============================================================================
+CREATE TABLE PROMOTION(
+   id_promotion SERIAL,
+   nom_promotion VARCHAR(100) NOT NULL,
+   annee_diplome INTEGER NOT NULL,
+   filiere VARCHAR(100) NOT NULL,
+   PRIMARY KEY(id_promotion)
+);
+
+-- ============================================================================
+-- 2. ENTREPRISE
+-- ============================================================================
+CREATE TABLE ENTREPRISE(
+   id_entreprise SERIAL,
+   nom_entreprise VARCHAR(150) NOT NULL,
+   secteur_activite VARCHAR(150) NOT NULL,
+   pays VARCHAR(100) NOT NULL,
+   ville VARCHAR(100) NOT NULL,
+   PRIMARY KEY(id_entreprise)
+);
+
+-- ============================================================================
+-- 3. CERTIFICATION
+-- ============================================================================
+CREATE TABLE CERTIFICATION(
+   id_certification SERIAL,
+   nom_certification VARCHAR(150) NOT NULL,
+   organisme VARCHAR(150) NOT NULL,
+   PRIMARY KEY(id_certification)
+);
+
+-- ============================================================================
+-- 4. AUDIT_LOG
+-- ============================================================================
+CREATE TABLE AUDIT_LOG(
+   id_log SERIAL,
+   action VARCHAR(100) NOT NULL,
+   details TEXT,
+   rows_affected INTEGER DEFAULT 0,
+   executed_at TIMESTAMP DEFAULT NOW(),
+   acteur VARCHAR(255) DEFAULT NULL,
+   PRIMARY KEY(id_log)
+);
+
+-- ============================================================================
+-- 5. QUESTIONNAIRE
+-- ============================================================================
+CREATE TABLE QUESTIONNAIRE(
+   id_questionnaire SERIAL,
+   titre VARCHAR(255) NOT NULL,
+   description TEXT DEFAULT '',
+   date_creation DATE DEFAULT CURRENT_DATE,
+   actif BOOLEAN DEFAULT TRUE,
+   PRIMARY KEY(id_questionnaire)
+);
+
+-- ============================================================================
+-- 6. QUESTION
+-- ============================================================================
+CREATE TABLE QUESTION(
+   id_question SERIAL,
+   texte TEXT NOT NULL,
+   type VARCHAR(50) NOT NULL DEFAULT 'text',
+   options JSONB DEFAULT '[]',
+   ordre INTEGER NOT NULL DEFAULT 0,
+   tag VARCHAR(100) DEFAULT NULL,
+   conditionnee_statut_emploi BOOLEAN NOT NULL DEFAULT FALSE,
+   id_questionnaire INTEGER NOT NULL,
+   PRIMARY KEY(id_question),
+   FOREIGN KEY(id_questionnaire) REFERENCES QUESTIONNAIRE(id_questionnaire) ON DELETE CASCADE
+);
+
+-- ============================================================================
+-- 7. OTP_CODES
+-- ============================================================================
+CREATE TABLE otp_codes(
+   id SERIAL,
+   email TEXT NOT NULL,
+   code_hash TEXT NOT NULL,
+   attempts INTEGER DEFAULT 0,
+   created_at TIMESTAMP DEFAULT NOW(),
+   expires_at TIMESTAMP NOT NULL,
+   used BOOLEAN DEFAULT FALSE,
+   ip_address TEXT DEFAULT '',
+   PRIMARY KEY(id),
+   UNIQUE(email)
+);
+
+-- ============================================================================
+-- 8. SCHEMA_MIGRATIONS
+-- ============================================================================
+CREATE TABLE SCHEMA_MIGRATIONS(
+   nom_fichier VARCHAR(255),
+   date_execution TIMESTAMP NOT NULL DEFAULT NOW(),
+   PRIMARY KEY(nom_fichier)
+);
+
+-- ============================================================================
+-- 9. DEMANDE_RGPD
+-- ============================================================================
+CREATE TABLE DEMANDE_RGPD(
+   id_demande SERIAL,
+   type_demande VARCHAR(20) NOT NULL,
+   statut VARCHAR(20) NOT NULL DEFAULT 'envoyee',
+   date_demande TIMESTAMP NOT NULL DEFAULT NOW(),
+   date_traitement TIMESTAMP,
+   traitee_par VARCHAR(255),
+   motif_refus TEXT,
+   nom_complet VARCHAR(255),
+   email VARCHAR(255),
+   prise_en_charge_par VARCHAR(255),
+   date_prise_en_charge TIMESTAMP,
+   id_etudiant INTEGER,
+   PRIMARY KEY(id_demande),
+   CONSTRAINT chk_demande_type   CHECK (type_demande IN ('export', 'suppression')),
+   CONSTRAINT chk_demande_statut CHECK (statut IN ('envoyee', 'en_traitement', 'traitee', 'rejetee'))
+);
+
+-- ============================================================================
+-- 10. ETUDIANT
+-- ============================================================================
+CREATE TABLE ETUDIANT(
+   id_etudiant SERIAL,
+   nom VARCHAR(100) NOT NULL,
+   prenom VARCHAR(100) NOT NULL,
+   email VARCHAR(150) NOT NULL,
+   email_academique VARCHAR(150),
+   telephone VARCHAR(20) NOT NULL,
+   date_naissance DATE NOT NULL,
+   parcours_anterieur TEXT NOT NULL,
+   date_inscription DATE NOT NULL,
+   address VARCHAR(255) DEFAULT '',
+   city VARCHAR(100) DEFAULT '',
+   country VARCHAR(100) DEFAULT '',
+   linkedin VARCHAR(255) DEFAULT '',
+   availability_status VARCHAR(50) DEFAULT '',
+   skills JSONB DEFAULT '[]'::jsonb,
+   date_anonymisation TIMESTAMP DEFAULT NULL,
+   id_promotion INTEGER NOT NULL,
+   PRIMARY KEY(id_etudiant),
+   CONSTRAINT etudiant_email_key            UNIQUE (email),
+   CONSTRAINT etudiant_email_academique_key UNIQUE (email_academique)
+);
+
+-- ============================================================================
+-- 11. EXPERIENCE_PRO
+-- ============================================================================
+CREATE TABLE EXPERIENCE_PRO(
+   id_experience SERIAL,
+   intitule_poste VARCHAR(150) NOT NULL,
+   type_contrat VARCHAR(50) NOT NULL,
+   date_debut DATE NOT NULL,
+   date_fin DATE,
+   salaire NUMERIC NOT NULL,
+   salary_annuel NUMERIC(10,2) DEFAULT 0,
+   poste_actuel BOOLEAN DEFAULT TRUE,
+   id_entreprise INTEGER NOT NULL,
+   id_etudiant INTEGER NOT NULL,
+   PRIMARY KEY(id_experience)
+);
+
+-- ============================================================================
+-- 12. OBTIENT
+-- ============================================================================
+CREATE TABLE OBTIENT(
+   id_etudiant INTEGER,
+   id_certification INTEGER,
+   date_obtention DATE NOT NULL,
+   PRIMARY KEY(id_etudiant, id_certification)
+);
+
+-- ============================================================================
+-- 13. CONSENTEMENT_RGPD
+-- ============================================================================
+CREATE TABLE CONSENTEMENT_RGPD(
+   id_consentement SERIAL,
+   date_consentement DATE NOT NULL,
+   type_consentement VARCHAR(100) NOT NULL,
+   statut VARCHAR(50) NOT NULL,
+   canal VARCHAR(50) NOT NULL,
+   id_etudiant INTEGER NOT NULL,
+   PRIMARY KEY(id_consentement),
+   CONSTRAINT uq_consentement_etudiant_type UNIQUE (id_etudiant, type_consentement)
+);
+
+-- ============================================================================
+-- 14. REPONSE_QUESTIONNAIRE
+-- ============================================================================
+CREATE TABLE REPONSE_QUESTIONNAIRE(
+   id_reponse SERIAL,
+   reponses JSONB NOT NULL DEFAULT '{}',
+   date_reponse TIMESTAMP DEFAULT NOW(),
+   id_questionnaire INTEGER NOT NULL,
+   id_etudiant INTEGER NOT NULL,
+   PRIMARY KEY(id_reponse)
+);
+
+
+-- ============================================================================
+-- RELATIONS (clés étrangères)
+-- ============================================================================
+
+ALTER TABLE ETUDIANT
+    ADD CONSTRAINT fk_etudiant_promotion
+    FOREIGN KEY (id_promotion) REFERENCES PROMOTION(id_promotion) ON DELETE CASCADE;
+
+ALTER TABLE DEMANDE_RGPD
+    ADD CONSTRAINT fk_demande_etudiant
+    FOREIGN KEY (id_etudiant) REFERENCES ETUDIANT(id_etudiant) ON DELETE SET NULL;
+
+ALTER TABLE EXPERIENCE_PRO
+    ADD CONSTRAINT fk_experience_etudiant
+    FOREIGN KEY (id_etudiant) REFERENCES ETUDIANT(id_etudiant) ON DELETE CASCADE;
+
+ALTER TABLE EXPERIENCE_PRO
+    ADD CONSTRAINT fk_experience_entreprise
+    FOREIGN KEY (id_entreprise) REFERENCES ENTREPRISE(id_entreprise) ON DELETE CASCADE;
+
+ALTER TABLE OBTIENT
+    ADD CONSTRAINT fk_obtient_etudiant
+    FOREIGN KEY (id_etudiant) REFERENCES ETUDIANT(id_etudiant) ON DELETE CASCADE;
+
+ALTER TABLE OBTIENT
+    ADD CONSTRAINT fk_obtient_certification
+    FOREIGN KEY (id_certification) REFERENCES CERTIFICATION(id_certification) ON DELETE CASCADE;
+
+ALTER TABLE CONSENTEMENT_RGPD
+    ADD CONSTRAINT fk_consentement_etudiant
+    FOREIGN KEY (id_etudiant) REFERENCES ETUDIANT(id_etudiant) ON DELETE CASCADE;
+
+ALTER TABLE QUESTION
+    ADD CONSTRAINT fk_question_questionnaire
+    FOREIGN KEY (id_questionnaire) REFERENCES QUESTIONNAIRE(id_questionnaire) ON DELETE CASCADE;
+
+ALTER TABLE REPONSE_QUESTIONNAIRE
+    ADD CONSTRAINT fk_reponse_etudiant
+    FOREIGN KEY (id_etudiant) REFERENCES ETUDIANT(id_etudiant) ON DELETE CASCADE;
+
+ALTER TABLE REPONSE_QUESTIONNAIRE
+    ADD CONSTRAINT fk_reponse_questionnaire
+    FOREIGN KEY (id_questionnaire) REFERENCES QUESTIONNAIRE(id_questionnaire) ON DELETE CASCADE;
