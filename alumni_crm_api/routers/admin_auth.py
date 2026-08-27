@@ -9,6 +9,7 @@ import hashlib
 import logging
 from datetime import datetime, timedelta, timezone
 
+import jwt
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel
 
@@ -74,14 +75,14 @@ def admin_login(body: AdminLoginRequest, request: Request):
     expected_hash = _hash_code(settings.admin_access_code)
 
     if submitted_hash != expected_hash:
-        logger.warning("Tentative de connexion admin échouée depuis l'IP %s", ip)
-        remaining = _MAX_ATTEMPTS - len(_rate_limits.get(f"admin_login:{ip}", []))
+        hits = _rate_limits.get(f"admin_login:{ip}", [])
+        remaining = max(0, _MAX_ATTEMPTS - len(hits))
+        logger.warning("Tentative de connexion admin échouée depuis l'IP %s (%d restante(s))", ip, remaining)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Code d'accès incorrect.",
+            detail=f"Code d'accès incorrect. {remaining} tentative{'s' if remaining != 1 else ''} restante{'s' if remaining != 1 else ''}.",
         )
 
-    import jwt
     token_payload = {
         "sub": "admin",
         "role": "admin",

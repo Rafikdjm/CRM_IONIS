@@ -8,10 +8,6 @@ export const prepareIOSWindow = () => {
 };
 
 export const downloadBlob = (blob, filename, preOpenedWindow) => {
-  console.log('[downloadBlob] userAgent:', navigator.userAgent);
-  console.log('[downloadBlob] platform:', navigator.platform, '- maxTouchPoints:', navigator.maxTouchPoints);
-  console.log('[downloadBlob] isIOSDevice:', isIOSDevice());
-
   const url = window.URL.createObjectURL(blob);
   const cleanup = () => window.URL.revokeObjectURL(url);
 

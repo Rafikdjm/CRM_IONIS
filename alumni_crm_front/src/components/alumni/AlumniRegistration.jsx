@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { alumniAPI, promotionsAPI } from '../../services/api';
-import { SECTORS } from '../../constants';
 import { buildAcademicEmail } from '../../utils/academicEmail';
 
 const INITIAL_STATE = {
@@ -18,14 +17,11 @@ const INITIAL_STATE = {
   previous_education: '',
   previous_school: '',
   linkedin: '',
-  sector: '',
-  custom_sector: '',
 };
 
 const STEPS = [
   { key: 'personal', label: 'Informations personnelles', icon: UserIcon },
   { key: 'academic', label: 'Parcours académique', icon: AcademicIcon },
-  { key: 'sector', label: "Secteur d'activité", icon: BriefcaseIcon },
   { key: 'social', label: 'Réseaux sociaux', icon: LinkIcon },
 ];
 
@@ -41,14 +37,6 @@ function AcademicIcon({ className }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342" />
-    </svg>
-  );
-}
-
-function BriefcaseIcon({ className }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0" />
     </svg>
   );
 }
@@ -72,7 +60,7 @@ function CheckIcon({ className }) {
 function InfoTooltip({ text }) {
   const [show, setShow] = useState(false);
   return (
-    <span className="relative ml-1.5 inline-flex">
+    <span className="relative z-10 ml-1.5 inline-flex">
       <button
         type="button"
         onMouseEnter={() => setShow(true)}
@@ -85,7 +73,7 @@ function InfoTooltip({ text }) {
         </svg>
       </button>
       {show && (
-        <span className="absolute bottom-full left-1/2 z-20 mb-2 w-56 -translate-x-1/2 rounded-lg border border-gray-200 bg-gray-900 px-3 py-2 text-xs text-white shadow-lg dark:border-slate-600">
+        <span className="absolute bottom-full left-1/2 z-30 mb-2 w-56 -translate-x-1/2 rounded-lg border border-gray-200 bg-gray-900 px-3 py-2 text-xs text-white shadow-lg dark:border-slate-600">
           {text}
           <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
         </span>
@@ -126,7 +114,6 @@ export default function AlumniRegistration() {
   const sectionFields = useMemo(() => [
     ['first_name', 'last_name', 'email'],
     ['id_promotion'],
-    ['sector'],
     [],
   ], []);
 
@@ -141,13 +128,7 @@ export default function AlumniRegistration() {
     if (name === 'email_academique') {
       setEmailAcademiqueEdited(true);
     }
-    setForm((prev) => {
-      const next = { ...prev, [name]: value };
-      if (name === 'sector' && value !== 'Autre') {
-        next.custom_sector = '';
-      }
-      return next;
-    });
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleBlur = (field) => {
@@ -166,7 +147,7 @@ export default function AlumniRegistration() {
 
   const inputClass = (name, required = false) => {
     const state = getFieldState(name, required);
-    const base = 'w-full rounded-lg border px-4 py-2.5 text-sm transition-all duration-200 outline-none';
+    const base = 'w-full max-w-full rounded-lg border px-3 py-2.5 text-sm transition-all duration-200 outline-none sm:px-4';
     const focus = 'focus:ring-1 focus:ring-blue-500/20';
     if (state === 'error') return `${base} border-red-300 bg-red-50/30 focus:border-red-400 focus:ring-1 focus:ring-red-400/20 dark:border-red-800 dark:bg-red-950/30 dark:text-slate-100`;
     if (state === 'valid') return `${base} border-emerald-300 bg-emerald-50/20 focus:border-blue-500 ${focus} dark:border-emerald-700 dark:bg-emerald-950/20 dark:text-slate-100`;
@@ -181,31 +162,9 @@ export default function AlumniRegistration() {
     setError(null);
 
     try {
-      const sectorToSend = form.sector === 'Autre' && form.custom_sector
-        ? form.custom_sector
-        : form.sector;
-      const payload = { ...form, email: form.email.trim().toLowerCase(), sector: sectorToSend };
-      delete payload.custom_sector;
+      const payload = { ...form, email: form.email.trim().toLowerCase() };
       const res = await alumniAPI.create(payload);
-      const newId = res.data?.id_etudiant || res.data?.id || res.data?.etudiant?.id_etudiant;
-      const normalizedEmail = (form.email || '').trim().toLowerCase();
-      if (newId) {
-        localStorage.setItem('alumni_id', String(newId));
-        localStorage.setItem('alumni_email', normalizedEmail);
-        localStorage.setItem('alumni_name', `${form.first_name} ${form.last_name}`);
-      } else {
-        try {
-          const searchRes = await alumniAPI.getAll({ search: form.email });
-          const found = (searchRes.data || []).find((a) => (a.email || '').toLowerCase() === normalizedEmail);
-          if (found) {
-            localStorage.setItem('alumni_id', String(found.id));
-            localStorage.setItem('alumni_email', found.email || normalizedEmail);
-            localStorage.setItem('alumni_name', `${form.first_name} ${form.last_name}`);
-          }
-        } catch {
-          // Search fallback failed
-        }
-      }
+      void res;
       setSuccess(true);
     } catch (err) {
       const detail = err.response?.data?.detail;
@@ -230,18 +189,18 @@ export default function AlumniRegistration() {
           </div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100">Inscription réussie !</h2>
           <p className="mt-2 text-sm text-gray-500 dark:text-slate-400">
-            Votre compte a été créé. Vous pouvez maintenant compléter votre profil et votre parcours.
+            Votre compte a été créé. Connectez-vous avec votre email pour recevoir un code OTP.
           </p>
           <div className="mt-6 flex justify-center gap-3">
             <button
-              onClick={() => navigate('/alumni')}
-              className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+              onClick={() => navigate('/', { state: { prefillEmail: form.email.trim().toLowerCase() } })}
+              className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 min-h-[44px]"
             >
-              Compléter mon profil
+              Se connecter
             </button>
             <button
               onClick={() => { setForm(INITIAL_STATE); setSuccess(false); setTouched({}); setActiveStep(0); setEmailAcademiqueEdited(false); }}
-              className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 min-h-[44px]"
             >
               Inscrire un autre
             </button>
@@ -253,7 +212,7 @@ export default function AlumniRegistration() {
 
   const scrollToSection = (index) => {
     setActiveStep(index);
-    const sectionIds = ['section-personal', 'section-academic', 'section-sector', 'section-social'];
+    const sectionIds = ['section-personal', 'section-academic', 'section-social'];
     document.getElementById(sectionIds[index])?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -294,7 +253,9 @@ export default function AlumniRegistration() {
                       <StepIcon className="h-5 w-5" />
                     )}
                   </div>
-                  <span className={`hidden text-xs font-medium sm:block ${
+                  <span className={`text-xs font-medium ${
+                    isCurrent ? 'block' : 'hidden sm:block'
+                  } ${
                     isCurrent ? 'text-blue-600' : isCompleted ? 'text-blue-600' : 'text-gray-400 dark:text-slate-500'
                   }`}>
                     {step.label}
@@ -336,7 +297,7 @@ export default function AlumniRegistration() {
               <p className="text-xs text-gray-400 dark:text-slate-500">Vos coordonnées et informations de base</p>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 [&>*]:min-w-0">
             <div>
               <label className={labelClass}>
                 Prénom <span className="text-red-500">*</span>
@@ -436,7 +397,7 @@ export default function AlumniRegistration() {
                 className={inputClass('city')}
               />
             </div>
-            <div className="sm:col-span-2">
+            <div className="md:col-span-2">
               <label className={labelClass}>Adresse</label>
               <input
                 type="text"
@@ -471,7 +432,7 @@ export default function AlumniRegistration() {
               <p className="text-xs text-gray-400 dark:text-slate-500">Votre formation et établissement d'origine</p>
             </div>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 [&>*]:min-w-0">
             <div>
               <label className={labelClass}>
                 Promotion <span className="text-red-500">*</span>
@@ -514,48 +475,6 @@ export default function AlumniRegistration() {
                 className={inputClass('previous_school')}
               />
             </div>
-          </div>
-        </div>
-
-        {/* Section: Secteur d'activité */}
-        <div id="section-sector" className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-          <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
-              <BriefcaseIcon className="h-5 w-5" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Secteur d'activité</h2>
-              <p className="text-xs text-gray-400 dark:text-slate-500">Votre domaine professionnel actuel</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className={labelClass}>Secteur</label>
-              <select
-                name="sector"
-                value={form.sector}
-                onChange={handleChange}
-                className={inputClass('sector')}
-              >
-                <option value="">Sélectionner un secteur</option>
-                {SECTORS.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
-            </div>
-            {form.sector === 'Autre' && (
-              <div>
-                <label className={labelClass}>Précisez votre secteur</label>
-                <input
-                  type="text"
-                  name="custom_sector"
-                  value={form.custom_sector}
-                  onChange={handleChange}
-                  placeholder="Veuillez préciser votre secteur..."
-                  className={inputClass('custom_sector')}
-                />
-              </div>
-            )}
           </div>
         </div>
 
@@ -602,14 +521,14 @@ export default function AlumniRegistration() {
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+            className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 min-h-[44px]"
           >
             Annuler
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-blue-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-blue-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
           >
             {submitting ? (
               <>

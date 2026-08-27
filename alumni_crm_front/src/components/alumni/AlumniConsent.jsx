@@ -30,7 +30,6 @@ export default function AlumniConsent() {
         }
       } catch {
         // Endpoint peut ne pas exister encore — on garde les valeurs par défaut
-        console.warn('[RGPD] Endpoint GET consentements indisponible, utilisation des valeurs par défaut.');
       } finally {
         setLoading(false);
       }
@@ -320,14 +319,14 @@ export default function AlumniConsent() {
           <button
             onClick={handleExport}
             disabled={exporting}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {exporting ? 'Export en cours...' : '⬇ Exporter mes données'}
           </button>
           <button
             onClick={() => setShowDeleteConfirm(true)}
             disabled={hasPendingSuppression}
-            className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {hasPendingSuppression ? 'Suppression déjà envoyée / en cours' : '🗑 Demander la suppression de mon compte'}
           </button>
@@ -343,13 +342,13 @@ export default function AlumniConsent() {
               <button
                 onClick={handleRequestSuppression}
                 disabled={submittingDemande}
-                className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 disabled:opacity-50"
+                className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700 disabled:opacity-50"
               >
                 {submittingDemande ? 'Envoi...' : 'Confirmer la demande'}
               </button>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-slate-700 dark:text-slate-200"
+                className="min-h-[44px] rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-slate-700 dark:text-slate-200"
               >
                 Annuler
               </button>
@@ -428,7 +427,7 @@ export default function AlumniConsent() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? (
             <>

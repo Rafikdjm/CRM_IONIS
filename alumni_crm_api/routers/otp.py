@@ -5,13 +5,14 @@ En mode console (OTP_MODE=console), le code est affiché dans les logs
 du serveur pour faciliter les tests en dev.
 """
 import hashlib
+import json
 import logging
 import math
-import random
 import secrets
 import string
 from datetime import datetime, timedelta, timezone
 
+import jwt
 import pg8000.dbapi
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr
@@ -70,7 +71,7 @@ def _hash_code(code: str) -> str:
 
 
 def _generate_code() -> str:
-    return ''.join(random.choices(string.digits, k=6))
+    return ''.join(secrets.choice(string.digits) for _ in range(6))
 
 
 def _send_otp_email(email: str, code: str) -> None:
@@ -363,7 +364,6 @@ def verify_otp(body: OTPVerify, db=Depends(get_db)):
         columns = [desc[0] for desc in cursor.description]
         alumni_data = dict(zip(columns, alumni_row))
 
-        import jwt
         token_payload = {
             "sub": email,
             "role": "alumni",

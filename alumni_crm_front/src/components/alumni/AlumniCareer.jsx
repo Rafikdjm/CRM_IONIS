@@ -65,11 +65,11 @@ function CareerForm({ career, index, onChange, onRemove }) {
 
   return (
     <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-slate-600 dark:bg-slate-800/50">
-      <div className="mb-3 flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-700 dark:text-slate-300">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <span className="min-w-0 text-sm font-medium text-gray-700 dark:text-slate-300">
           {career.is_current ? 'Poste actuel' : `Poste #${index + 1}`}
           {!career.id && (
-            <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+            <span className="ml-2 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">
               Non sauvegardé
             </span>
           )}
@@ -86,7 +86,7 @@ function CareerForm({ career, index, onChange, onRemove }) {
           Retirer
         </button>
       </div>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 [&>*]:min-w-0">
         <div>
           <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-slate-400">Entreprise</label>
           <input
@@ -112,7 +112,7 @@ function CareerForm({ career, index, onChange, onRemove }) {
           <select
             value={career.type_contrat || ''}
             onChange={(e) => handleChange('type_contrat', e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            className="w-full max-w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           >
             <option value="">Sélectionner</option>
             {CONTRACT_TYPES.map((t) => (
@@ -125,7 +125,7 @@ function CareerForm({ career, index, onChange, onRemove }) {
           <select
             value={career.sector}
             onChange={(e) => handleChange('sector', e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            className="w-full max-w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           >
             <option value="">Sélectionner</option>
             {SECTORS.map((s) => (
@@ -141,7 +141,7 @@ function CareerForm({ career, index, onChange, onRemove }) {
               value={career.custom_sector || ''}
               onChange={(e) => handleChange('custom_sector', e.target.value)}
               placeholder="Veuillez préciser votre secteur..."
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            className="w-full max-w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
             />
           </div>
         )}
@@ -150,7 +150,7 @@ function CareerForm({ career, index, onChange, onRemove }) {
           <select
             value={career.salary_range}
             onChange={(e) => handleChange('salary_range', e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            className="w-full max-w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           >
             {SALARY_RANGES.map((r) => (
               <option key={r.value} value={r.value}>{r.label}</option>
@@ -183,7 +183,7 @@ function CareerForm({ career, index, onChange, onRemove }) {
             type="month"
             value={career.start_date}
             onChange={(e) => handleChange('start_date', e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            className="w-full max-w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
         </div>
         <div>
@@ -193,7 +193,7 @@ function CareerForm({ career, index, onChange, onRemove }) {
             value={career.end_date}
             onChange={(e) => handleChange('end_date', e.target.value)}
             disabled={career.is_current}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-700 dark:disabled:text-slate-500"
+            className="w-full max-w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-700 dark:disabled:text-slate-500"
           />
         </div>
         <div className="md:col-span-2">
@@ -207,7 +207,7 @@ function CareerForm({ career, index, onChange, onRemove }) {
           />
         </div>
         <div className="md:col-span-2">
-          <label className="flex items-center gap-2">
+          <label className="flex min-h-[44px] cursor-pointer items-center gap-2 py-2">
             <input
               type="checkbox"
               checked={career.is_current}
@@ -235,8 +235,8 @@ function CertificationForm({ cert, index, onChange, onRemove }) {
 
   return (
     <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-slate-600 dark:bg-slate-800/50">
-      <div className="mb-3 flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-700 dark:text-slate-300">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <span className="min-w-0 text-sm font-medium text-gray-700 dark:text-slate-300">
           Certification #{index + 1}
           {!cert.id && (
             <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-300">
@@ -248,7 +248,7 @@ function CertificationForm({ cert, index, onChange, onRemove }) {
           type="button"
           onClick={() => onRemove(index)}
           title={cert.id ? 'Supprimer cette certification (enregistrée)' : 'Retirer cette certification du formulaire'}
-          className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950 min-h-[44px]"
+          className="inline-flex items-center gap-1 rounded-lg px-3 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-950 min-h-[44px]"
         >
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -256,38 +256,38 @@ function CertificationForm({ cert, index, onChange, onRemove }) {
           Retirer
         </button>
       </div>
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <div className="md:col-span-2">
-          <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-slate-400">Nom de la certification *</label>
-          <input
-            type="text"
-            value={cert.name}
-            onChange={(e) => handleChange('name', e.target.value)}
-            required
-            placeholder="Ex: AWS Solutions Architect, PMP, Scrum Master..."
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-          />
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 [&>*]:min-w-0">
+          <div className="md:col-span-2">
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-slate-400">Nom de la certification *</label>
+            <input
+              type="text"
+              value={cert.name}
+              onChange={(e) => handleChange('name', e.target.value)}
+              required
+              placeholder="Ex: AWS Solutions Architect, PMP, Scrum Master..."
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-slate-400">Organisme émetteur</label>
+            <input
+              type="text"
+              value={cert.issuer}
+              onChange={(e) => handleChange('issuer', e.target.value)}
+              placeholder="Ex: Amazon, PMI, Scrum.org..."
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-slate-400">Date d'obtention</label>
+            <input
+              type="month"
+              value={cert.date_obtained}
+              onChange={(e) => handleChange('date_obtained', e.target.value)}
+              className="w-full max-w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            />
+          </div>
         </div>
-        <div>
-          <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-slate-400">Organisme émetteur</label>
-          <input
-            type="text"
-            value={cert.issuer}
-            onChange={(e) => handleChange('issuer', e.target.value)}
-            placeholder="Ex: Amazon, PMI, Scrum.org..."
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-slate-400">Date d'obtention</label>
-          <input
-            type="month"
-            value={cert.date_obtained}
-            onChange={(e) => handleChange('date_obtained', e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
-          />
-        </div>
-      </div>
     </div>
   );
 }
@@ -432,51 +432,40 @@ export default function AlumniCareer() {
     setSaving(true);
     setError(null);
     setSuccess(false);
-    const errors = [];
 
     try {
       const existingRes = await careerAPI.getByAlumni(alumniId);
       const existingCareers = existingRes.data || [];
-
-      for (const career of existingCareers) {
-        try {
-          await careerAPI.delete(alumniId, career.id);
-        } catch {
-          errors.push(`Suppression poste "${career.company || career.position}" échouée`);
-        }
-      }
-
-      for (const career of careers) {
-        if (!isBlankCareer(career)) {
-          try {
-            const sectorToSend = career.sector === 'Autre' && career.custom_sector
-              ? career.custom_sector
-              : career.sector;
-            await careerAPI.add(alumniId, { ...career, sector: sectorToSend });
-          } catch {
-            errors.push(`Ajout poste "${career.company}" échoué`);
-          }
-        }
-      }
-
       const existingCertsRes = await careerAPI.getCertifications(alumniId).catch(() => ({ data: [] }));
-      for (const cert of (existingCertsRes.data || [])) {
-        try {
-          await careerAPI.deleteCertification(alumniId, cert.id);
-        } catch {
-          errors.push(`Suppression certification "${cert.name}" échouée`);
-        }
-      }
+      const existingCerts = existingCertsRes.data || [];
 
-      for (const cert of certifications) {
-        if (cert.name) {
-          try {
-            await careerAPI.addCertification(alumniId, cert);
-          } catch {
-            errors.push(`Ajout certification "${cert.name}" échoué`);
-          }
-        }
-      }
+      const deleteCareerOps = existingCareers.map((c) =>
+        careerAPI.delete(alumniId, c.id).catch(() => null),
+      );
+      const deleteCertOps = existingCerts.map((c) =>
+        careerAPI.deleteCertification(alumniId, c.id).catch(() => null),
+      );
+      await Promise.all([...deleteCareerOps, ...deleteCertOps]);
+
+      const newCareerOps = careers
+        .filter((c) => !isBlankCareer(c))
+        .map((career) => {
+          const sectorToSend = career.sector === 'Autre' && career.custom_sector
+            ? career.custom_sector
+            : career.sector;
+          return careerAPI.add(alumniId, { ...career, sector: sectorToSend }).catch((err) => {
+            throw new Error(`Ajout poste "${career.company}" échoué: ${err.response?.data?.detail || err.message}`);
+          });
+        });
+      const newCertOps = certifications
+        .filter((c) => c.name)
+        .map((cert) =>
+          careerAPI.addCertification(alumniId, cert).catch((err) => {
+            throw new Error(`Ajout certification "${cert.name}" échoué: ${err.response?.data?.detail || err.message}`);
+          }),
+        );
+
+      await Promise.all([...newCareerOps, ...newCertOps]);
 
       const [refreshedCareersRes, refreshedCertsRes] = await Promise.all([
         careerAPI.getByAlumni(alumniId),
@@ -485,14 +474,10 @@ export default function AlumniCareer() {
       setCareers(refreshedCareersRes.data || []);
       setCertifications(refreshedCertsRes.data || []);
 
-      if (errors.length > 0) {
-        setError(`${errors.length} opération(s) échouée(s) : ${errors.join('; ')}`);
-      } else {
-        setSuccess(true);
-        setTimeout(() => setSuccess(false), 3000);
-      }
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Erreur lors de la sauvegarde du parcours.');
+      setError(err.message || 'Erreur lors de la sauvegarde du parcours.');
     } finally {
       setSaving(false);
     }
@@ -539,7 +524,7 @@ export default function AlumniCareer() {
             <button
               type="button"
               onClick={addCareer}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 min-h-[44px]"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -597,7 +582,7 @@ export default function AlumniCareer() {
           <button
             type="button"
             onClick={addCertification}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 min-h-[44px]"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -634,7 +619,7 @@ export default function AlumniCareer() {
           type="submit"
           disabled={saving || isAnonymised}
           title={isAnonymised ? 'Compte anonymisé : modification impossible' : undefined}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50 min-h-[44px]"
         >
           {saving ? (
             <>

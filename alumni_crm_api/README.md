@@ -64,13 +64,15 @@ routers/
 
 ## Tests
 
-**Backend** : pas de framework de tests (pytest) pour l'instant — la validation
-est faite par des scripts de contrôle ad hoc qui exercent les routes réelles
-via l'API HTTP (voir « Test fonctionnel de bout en bout » ci-dessous).
+**Backend** : la suite de tests pytest, un temps présente dans le dépôt, n'est
+plus conservée à l'issue du stage ; la validation repose sur des scripts de
+contrôle ad hoc qui exercent les routes réelles via l'API HTTP (voir
+« Test fonctionnel de bout en bout » ci-dessous) et sur le rejeu complet des
+migrations sur une base vide.
 
-**Frontend** : la suite Vitest se lance avec `npm test` dans `alumni_crm_front`
-(14 fichiers de tests, 118 tests — auth OTP, consentements RGPD, import
-Excel, indicateurs complémentaires, routes protégées).
+**Frontend** : les dépendances et la configuration Vitest restent en place
+(`npm test` dans `alumni_crm_front`), mais aucune suite de tests automatisés
+n'est fournie dans le dépôt à l'issue du stage.
 
 ### Test fonctionnel de bout en bout (E2E)
 

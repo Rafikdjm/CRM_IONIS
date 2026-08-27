@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { loginAPI } from '../services/api';
 import { useTheme } from '../contexts/theme';
 import OTPVerification from './OTPVerification';
@@ -70,13 +70,14 @@ function AbstractBackground() {
 
 export default function AuthPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme, toggleTheme } = useTheme();
 
   const [adminMode, setAdminMode] = useState(false);
 
   // ── Alumni state (OTP flow) ──
   const [step, setStep] = useState('EMAIL_STEP');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(location.state?.prefillEmail || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [cooldown, setCooldown] = useState(0);
@@ -102,12 +103,10 @@ export default function AuthPage() {
   const handleRequestOTP = async (e) => {
     e.preventDefault();
     const trimmed = email.trim();
-    console.log('[AuthPage] handleRequestOTP called', { email: trimmed, step, loading });
     if (!trimmed) return;
     setLoading(true);
     setError(null);
     try {
-      console.log('[AuthPage] Calling loginAPI.requestOTP…', trimmed);
       await loginAPI.requestOTP(trimmed);
       setOtpSuccess(false);
       setStep('OTP_STEP');
@@ -180,7 +179,6 @@ export default function AuthPage() {
   };
 
   const handleBackToEmail = () => {
-    console.log('[AuthPage] handleBackToEmail called', { loading, step });
     setStep('EMAIL_STEP');
     setLoading(false);
     setOtpError(null);
@@ -298,7 +296,7 @@ export default function AuthPage() {
                     <button
                       type="button"
                       onClick={() => setShowAdminCode((v) => !v)}
-                      className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isDark ? 'text-blue-200/40 hover:text-blue-200/70' : 'text-gray-400 hover:text-gray-600'}`}
+                      className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center ${isDark ? 'text-blue-200/40 hover:text-blue-200/70' : 'text-gray-400 hover:text-gray-600'}`}
                       tabIndex={-1}
                     >
                       {showAdminCode ? (
@@ -327,7 +325,7 @@ export default function AuthPage() {
                 <button
                   type="submit"
                   disabled={adminLoading || !adminCode.trim()}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:from-cyan-400 hover:to-blue-500 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none sm:text-sm"
+                    className="inline-flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:from-cyan-400 hover:to-blue-500 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none sm:text-sm"
                 >
                   {adminLoading ? (
                     <>
@@ -384,7 +382,7 @@ export default function AuthPage() {
                   <button
                     type="submit"
                     disabled={loading || !email.trim()}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:from-cyan-400 hover:to-blue-500 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none sm:text-sm"
+                  className="inline-flex w-full min-h-[44px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-3.5 text-base font-semibold text-white shadow-lg shadow-blue-500/25 transition-all hover:from-cyan-400 hover:to-blue-500 hover:shadow-xl hover:shadow-blue-500/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none sm:text-sm"
                   >
                     {loading ? (
                       <>

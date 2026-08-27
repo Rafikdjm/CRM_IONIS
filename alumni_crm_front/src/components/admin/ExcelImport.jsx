@@ -209,7 +209,7 @@ export default function ExcelImport() {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Importer un fichier</h2>
           <button
             onClick={handleDownloadTemplate}
-            className="text-sm font-medium text-blue-600 hover:text-blue-800"
+            className="min-h-[44px] text-sm font-medium text-blue-600 hover:text-blue-800"
           >
             Télécharger le modèle Excel
           </button>
@@ -258,7 +258,7 @@ export default function ExcelImport() {
                 setPreview([]);
                 setColumns([]);
               }}
-              className="text-blue-600 hover:text-blue-800"
+              className="text-blue-600 hover:text-blue-800 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -319,7 +319,7 @@ export default function ExcelImport() {
             <button
               onClick={handleImport}
               disabled={importing}
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {importing ? (
                 <>

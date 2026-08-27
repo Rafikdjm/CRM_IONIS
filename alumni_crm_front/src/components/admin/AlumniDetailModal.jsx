@@ -84,7 +84,7 @@ export default function AlumniDetailModal({ alumniId, onClose }) {
           <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100">Fiche Alumni</h2>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-200 hover:text-gray-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-200 hover:text-gray-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
             aria-label="Fermer"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
@@ -253,7 +253,7 @@ export default function AlumniDetailModal({ alumniId, onClose }) {
         <div className="border-t border-gray-200 px-6 py-3 dark:border-slate-700">
           <button
             onClick={onClose}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 min-h-[44px]"
           >
             Fermer
           </button>

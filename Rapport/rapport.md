@@ -10,74 +10,103 @@
 
 ---
 
+[BROUILLON IA — À RÉÉCRIRE]
+
 ## Résumé
 
 Ce stage, réalisé au sein d'IONIS-STM dans le cadre du programme Pré-MSc 2026, porte sur la conception et le développement d'un Alumni CRM : un système web centralisé destiné au suivi du parcours étudiant et à la valorisation du réseau des anciens diplômés.
 
-Mon objectif était de construire une application complète — backend, base de données, frontend et conformité réglementaire — pour qu'un établissement d'enseignement supérieur puisse gérer le cycle de vie de ses étudiants, de l'inscription administrative à l'évolution professionnelle post-diplôme. Le système devait aussi fournir des indicateurs d'insertion professionnelle exploitables par le service des relations entreprises.
+La problématique identifiée était l'absence d'un outil centralisé permettant à un établissement d'enseignement supérieur de suivre le cycle de vie de ses étudiants — de l'inscription administrative à l'évolution professionnelle post-diplôme — et de disposer d'indicateurs d'insertion fiables pour le pilotage de la formation. Les données d'insertion étaient dispersées, les indicateurs calculés manuellement, le réseau alumni inactif et la conformité RGPD non formalisée.
 
-Le projet a abouti à un prototype fonctionnel reposant sur une architecture 3-tiers (FastAPI, React/Vite, PostgreSQL), avec 14 tables de base de données, 80 endpoints API, un tableau de bord administrateur et un espace alumni complet. J'ai intégré la conformité RGPD dès la conception : consentements traçables, workflow de demandes de suppression/anonymisation, journal d'audit, durée de conservation affichée et contact DPO. Un audit de sécurité m'a permis de corriger des failles d'authentification, de protéger des routes initialement ouvertes et de rotater une clé API exposée. J'ai enfin doté le système des dernières briques attendues : endpoint de newsletter avec filtres de ciblage, champ salaire numérique pour les calculs statistiques, relances automatiques pour les questionnaires, et dépôt Git initialisé.
+La démarche a consisté à concevoir et développer une application complète — backend, base de données, frontend et conformité réglementaire — en suivant une approche itérative : modélisation, développement backend, développement frontend, audit de sécurité et documentation. Le système repose sur une architecture 3-tiers (FastAPI, React/Vite, PostgreSQL) avec 14 tables de base de données, 85 endpoints API, 14 routes frontend et 8 indicateurs d'insertion professionnelle.
 
-Ce stage m'a permis de développer des compétences en développement web full-stack, en modélisation de bases de données relationnelles et en ingénierie des données personnelles. J'ai aussi identifié des axes d'amélioration concrets pour la pérennité du système.
+Le projet a abouti à un prototype fonctionnel couvrant l'intégralité du périmètre fonctionnel défini dans le sujet de stage. La conformité RGPD a été intégrée dès la conception : consentements traçables, workflow de demandes de suppression et d'anonymisation, journal d'audit et durée de conservation affichée. Un audit de sécurité a permis de corriger des failles d'authentification et de protéger des routes initialement ouvertes. Les livrables documentaires complémentaires (cartographie des données, charte RGPD, stratégie de mise à jour, analyse des indicateurs d'insertion et guide des processus d'animation du réseau) couvrent les exigences du volet Management du sujet de stage.
 
 ---
+
+[BROUILLON IA — À RÉÉCRIRE]
 
 ## Abstract
 
-This internship, completed at IONIS-STM as part of the 2026 Pre-MSc program, focuses on designing and building an Alumni CRM: a centralized web application for tracking student paths and strengthening the alumni network.
+This internship, completed at IONIS-STM as part of the 2026 Pre-MSc program, focuses on designing and building an Alumni CRM: a centralized web application for tracking student career paths and strengthening the alumni network.
 
-The main objective was to develop a full-stack application — backend, database, frontend and regulatory compliance — enabling a higher education institution to manage the complete student lifecycle, from administrative enrollment to post-graduation career progression. The system also needed to provide professional insertion indicators for the corporate relations department.
+The core issue was the lack of a unified tool enabling a higher-education institution to monitor students throughout their entire journey — from initial enrollment to post-graduation professional development — and to produce reliable insertion indicators for program evaluation. Student data was scattered across disconnected channels, insertion rates were computed manually, the alumni network was dormant, and GDPR compliance had not been formalized.
 
-The project delivered a functional prototype based on a 3-tier architecture (FastAPI, React/Vite, PostgreSQL), featuring 14 database tables, 80 API endpoints, an admin dashboard and a complete alumni portal. GDPR compliance was built in from the start: auditable consent management, a workflow for deletion/anonymization requests, an audit log, data retention information and a DPO contact. A security audit led to the correction of authentication flaws, the protection of initially unprotected routes and the rotation of an exposed API key. Finally, I completed the system with its remaining building blocks: a newsletter endpoint with targeting filters, a numeric salary field for statistical calculations, automatic questionnaire reminders, and an initialized Git repository.
+The approach followed an iterative cycle: data modeling, backend development, frontend implementation, security audit, and documentation. The resulting system is built on a 3-tier architecture (FastAPI, React/Vite, PostgreSQL) and includes 14 database tables, 80 API endpoints, 14 frontend routes, and 8 professional insertion indicators.
 
-This internship allowed me to develop skills in full-stack web development, relational database design, and personal data engineering, while identifying concrete areas for improvement to ensure the system's long-term viability.
+The project delivered a functional prototype covering the full scope defined in the internship brief. GDPR compliance was embedded from the start: traceable consent management, a deletion/anonymization request workflow, an audit log, and visible data retention periods. A security audit led to the correction of authentication flaws and the protection of initially unprotected routes. Supplementary documentation (data mapping, GDPR charter, update strategy, insertion indicator analysis, and alumni network process guide) fulfills the Management track requirements of the internship specification.
+
+---
+
+[BROUILLON IA — À RÉÉCRIRE]
+
+## Préambule — Remerciements
+
+### Remerciements au tuteur pédagogique
+
+Je tiens à remercier [À COMPLÉTER : nom du tuteur pédagogique, fonction] pour son accompagnement tout au long de ce stage. Sa disponibilité, la pertinence de ses retours et sa capacité à poser les bonnes questions ont orienté les choix d'architecture et les priorités fonctionnelles du projet. Les points de suivi réguliers m'ont permis de conserver une direction claire malgré l'ampleur du périmètre fonctionnel à couvrir.
+
+### Remerciements à l'équipe et au projet
+
+Ce stage de substitution, proposé directement par IONIS-STM, m'a offert un cadre de travail encadré et exigeant. L'absence d'une équipe technique dédiée au projet m'a contraint à structurer seul l'ensemble du processus de développement, de la modélisation du MCD à la rédaction des livrables documentaires. Cette expérience a été formatrice sur le plan de l'autonomie et de la prise de décision technique. Je remercie [À COMPLÉTER : nom(s) et fonction(s) des autres interlocuteurs IONIS-STM impliqués] pour les échanges qui ont enrichi la démarche.
+
+### Remerciements à l'école
+
+Je remercie IONIS-STM et son équipe pédagogique pour la qualité de la formation dispensée en Pré-MSc, qui m'a doté des fondamentaux techniques nécessaires à la réalisation de ce projet. Les connaissances acquises en développement web, en modélisation de bases de données et en gestion de projets m'ont permis d'aborder ce stage avec les compétences requises.
 
 ---
 
-## Remerciements
-
-Je tiens à remercier [À COMPLÉTER : nom du tuteur pédagogique, fonction] pour son accompagnement tout au long de ce stage, pour la pertinence de ses retours et sa disponibilité. Je remercie également [À COMPLÉTER : nom(s) et fonction(s) des autres interlocuteurs IONIS-STM impliqués] pour les échanges qui ont orienté les choix techniques et fonctionnels du projet.
-
-Ce stage de substitution, proposé directement par IONIS-STM, m'a offert un cadre de travail encadré et exigeant. L'absence d'une équipe technique dédiée m'a contraint à structurer seul l'ensemble du processus de développement, de la modélisation à la documentation — une expérience formatrice sur le plan de l'autonomie et de la prise de décision technique.
-
----
+[BROUILLON IA — À RÉÉCRIRE]
 
 ## Liste des abréviations et glossaire
 
 | Abréviation | Signification |
 |---|---|
-| API | Application Programming Interface |
-| CRM | Customer Relationship Management (ici : Alumni CRM) |
-| CTI | Commission des Titres d'Ingénieur |
-| CRUD | Create, Read, Update, Delete |
-| DPO | Data Protection Officer (Délégué à la Protection des Données) |
-| HCERES | Haute Autorité pour l'Évaluation de la Recherche et l'Enseignement Supérieur |
-| JWT | JSON Web Token |
-| KPI | Key Performance Indicator (Indicateur Clé de Performance) |
-| MCD | Modèle Conceptuel de Données |
-| MLD | Modèle Logique de Données |
-| N:M | Relation many-to-many (cardinalité plusieurs-à-plusieurs) |
-| OTP | One-Time Password (mot de passe à usage unique) |
-| RGPD | Règlement Général sur la Protection des Données (Règlement UE 2016/679) |
-| REST | Representational State Transfer |
-| SPA | Single Page Application |
+| API | Application Programming Interface — interface de programmation permettant la communication entre le frontend et le backend |
+| CRM | Customer Relationship Management — système de gestion de la relation client (ici : Alumni CRM, appliqué au réseau des anciens) |
+| CRUD | Create, Read, Update, Delete — les quatre opérations de base sur les données |
+| CTI | Commission des Titres d'Ingénieur — organisme d'accréditation des formations d'ingénieurs en France |
+| CASCADE | Mécanisme de clé étrangère PostgreSQL assurant la suppression en cascade des enregistrements liés |
+| DPO | Data Protection Officer — Délégué à la Protection des Données, contact réglementaire RGPD |
+| HCERES | Haute Autorité pour l'Évaluation de la Recherche et l'Enseignement Supérieur — organisme d'évaluation des formations |
+| JWT | JSON Web Token — standard de jeton d'authentification utilisé pour les sessions utilisateur |
+| KPI | Key Performance Indicator — Indicateur Clé de Performance utilisé dans le tableau de bord administrateur |
+| MCD | Modèle Conceptuel de Données — représentation abstraite des entités et relations du système |
+| MLD | Modèle Logique de Données — traduction du MLD en schéma de tables relationnelles |
+| N:M | Relation many-to-many (cardinalité plusieurs-à-plusieurs) — par exemple Étudiant ↔ Certification via la table OBTIENT |
+| OTP | One-Time Password — mot de passe à usage unique, ici code à 6 chiffres envoyé par email |
+| RGPD | Règlement Général sur la Protection des Données (Règlement UE 2016/679) — cadre réglementaire européen |
+| REST | Representational State Transfer — style d'architecture pour les API web |
+| SPA | Single Page Application — application web mono-page (architecture React) |
 
 ---
 
+[BROUILLON IA — À RÉÉCRIRE]
+
 ## Liste des figures et tableaux
 
-| N° | Titre | Type |
-|---|---|---|
-| 1 | Architecture 3-tiers du système | Figure |
-| 2 | Schéma relationnel de la base de données (MLD) | Figure |
-| 3 | Dashboard administrateur — Vue d'ensemble | Figure |
-| 4 | Espace alumni — Formulaire d'inscription | Figure |
-| 5 | Répartition des 14 tables par domaine fonctionnel | Tableau |
-| 6 | Endpoints API — Modules et nombre de routes | Tableau |
-| 7 | Indicateurs d'insertion professionnelle | Tableau |
-| 8 | Types de consentement RGPD | Tableau |
-| 9 | Types de questions du questionnaire | Tableau |
-| 10 | Correctifs de sécurité appliqués | Tableau |
+| N° | Titre | Type | Emplacement |
+|---|---|---|---|
+| 1 | Architecture 3-tiers du système | Figure | [À INSÉRER] |
+| 2 | Schéma relationnel de la base de données (MLD) | Figure | [À INSÉRER — source : `erd_alumni_crm.mmd`] |
+| 3 | Dashboard administrateur — Vue d'ensemble | Figure | [À INSÉRER] |
+| 4 | Espace alumni — Formulaire d'inscription | Figure | [À INSÉRER] |
+| 5 | Espace alumni — Gestion du profil | Figure | [À INSÉRER] |
+| 6 | Espace alumni — Parcours professionnel | Figure | [À INSÉRER] |
+| 7 | Espace alumni — Consentement RGPD | Figure | [À INSÉRER] |
+| 8 | Espace alumni — Questionnaire annuel | Figure | [À INSÉRER] |
+| 9 | Dashboard administrateur — Indicateurs et KPI | Figure | [À INSÉRER] |
+| 10 | Dashboard administrateur — Répartition par secteur | Figure | [À INSÉRER] |
+| 11 | Dashboard administrateur — Alumni par promotion | Figure | [À INSÉRER] |
+| 12 | Répartition des 14 tables par domaine fonctionnel | Tableau | Section 2.2 |
+| 13 | Endpoints API — Modules et nombre de routes | Tableau | Section 2.2 |
+| 14 | Indicateurs d'insertion professionnelle | Tableau | Section 2.2 |
+| 15 | Types de consentement RGPD | Tableau | Section 2.2 |
+| 16 | Types de questions du questionnaire | Tableau | Section 2.2 |
+| 17 | Correctifs de sécurité appliqués | Tableau | Section 2.2 |
+| 18 | Problèmes identifiés et solutions apportées | Tableau | Section 2.2 |
+| 19 | Modèle de données relationnel — Vue d'ensemble | Tableau | Annexe A |
+| 20 | Endpoints API — Liste complète | Tableau | Annexe E |
 
 ---
 
@@ -110,6 +139,45 @@ L'absence d'un outil centralisé de suivi alumni posait plusieurs problèmes con
 4. **Conformité RGPD non formalisée** : la collecte et le traitement des données personnelles des alumni n'obéissaient à aucun workflow traçable.
 
 La problématique du stage était donc de concevoir et développer un système capable de répondre simultanément à ces quatre problèmes, tout en étant conforme aux exigences réglementaires et en fournissant des indicateurs exploitables pour le pilotage.
+
+### 1.4 Positionnement du groupe IONIS Education Group
+
+[BROUILLON IA — À RÉÉCRIRE]
+
+IONIS Education Group constitue l'un des principaux groupes d'enseignement supérieur privés en France. Le groupe fédère un portefeuille d'écoles spécialisées dans les domaines du numérique, de l'ingénierie et du management, couvrant un spectre large de formations allant du Pré-MSc au niveau Bac+5.
+
+Chaque école du groupe (EPITECH pour le développement informatique, ESGI pour l'informatique et le management, IIM pour le management du numérique, ESM pour le management, ISA pour l'agronomie, entre autres) cible des parcours spécifiques mais partage une même exigence de placement professionnel et de suivi des diplômés. Cette organisation en écosystème多écoles crée un enjeu commun : disposer d'un dispositif de suivi alumni scalable, capable de fonctionner à l'échelle de plusieurs centaines de diplômés par promotion sur l'ensemble du groupe.
+
+[À COMPLÉTER : données chiffrées sur le nombre total d'étudiants, le nombre de promotions, le nombre d'écoles du groupe — sources internes Ionis Education Group]
+
+### 1.5 Enjeux du suivi alumni dans le contexte Ionis
+
+[BROUILLON IA — À RÉÉCRIRE]
+
+Le suivi de l'insertion professionnelle des anciens élèves constitue un enjeu à plusieurs niveaux dans le contexte d'un groupe comme Ionis Education Group :
+
+**Enjeu réglementaire.** Les organismes de tutelle et de certification — la CTI pour les formations d'ingénieurs, le HCERES pour l'enseignement supérieur — exigent des établissements la communication de rapports d'insertion professionnelle réguliers. Ces rapports contiennent des indicateurs standardisés : taux d'emploi à 6 mois et à 12 mois après la diplomation, adéquation formation-emploi, répartition par secteur d'activité et par type de contrat. L'absence de données fiables et centralisées rend la production de ces rapports fastidieuse et sujette à erreurs.
+
+**Enjeu pédagogique.** Le taux d'insertion et la nature des postes occupés par les diplômés constituent des indicateurs de pertinence de l'offre de formation. Si les diplômés d'une filière se dirigent majoritairement vers des secteurs éloignés de la formation reçue, cela signale un décalage entre le programme et les besoins du marché. Le suivi alumni permet d'alimenter cette boucle de rétroaction entre la formation et l'emploi.
+
+**Enjeu managérial.** Le service des relations entreprises d'un établissement comme IONIS-STM a besoin de données structurées pour piloter les partenariats avec les entreprises, identifier les secteurs recrutant le plus de diplômés et préparer les événements de networking. Un réseau alumni vivant constitue aussi un levier de fidélisation et de recommandation auprès de futurs candidats.
+
+**Enjeu technique.** La collecte et le traitement des données personnelles des alumni sont soumis au RGPD. La conformité réglementaire impose des contraintes fortes sur le consentement, la durée de conservation, le droit d'accès et le droit à l'effacement. Un outil centralisé doit intégrer ces exigences dès la conception.
+
+### 1.6 Positionnement du projet Alumni CRM dans la stratégie de l'établissement
+
+[BROUILLON IA — À RÉÉCRIRE]
+
+Le projet Alumni CRM s'inscrit dans une démarche de professionnalisation du suivi des anciens élèves au sein d'IONIS-STM. Il vise à remplacer les processus manuels de collecte de données (emails ponctuels, formulaires papier, appels téléphoniques) par un système structuré et traçable, capable de produire automatiquement les indicateurs requis par les autorités de tutelle.
+
+Le système devait répondre à quatre objectifs fonctionnels définis dans le sujet de stage :
+
+- Créer une solution centralisée permettant de suivre le cycle de vie de l'étudiant, de son inscription administrative jusqu'à son évolution professionnelle post-diplôme.
+- Fournir des indicateurs d'insertion professionnelle exploitables par le service des relations entreprises.
+- Assurer la conformité RGPD de toutes les opérations de collecte et de traitement des données personnelles.
+- Produire un guide des processus d'animation du réseau alumni.
+
+[À COMPLÉTER : positionnement stratégique d'Ionis Education Group par rapport aux autres acteurs privés de l'enseignement supérieur — si information disponible dans les sources internes]
 
 ---
 
@@ -144,11 +212,11 @@ J'ai conçu un modèle de données relationnel couvrant cinq domaines fonctionne
 - *Questionnaires* : QUESTIONNAIRE, QUESTION, REPONSE_QUESTIONNAIRE
 - *Infrastructure* : otp_codes, schema_migrations
 
-Le passage du MCD au MLD a respecté les règles de transformation standard (entité forte → table, association N:M → table de jonction). J'ai versionné 15 migrations SQL, appliquées via un script maison (`run_migrations.py`) qui ne rejoue que les migrations non encore exécutées.
+Le passage du MCD au MLD a respecté les règles de transformation standard (entité forte → table, association N:M → table de jonction). J'ai versionné 16 migrations SQL, appliquées via un script maison (`run_migrations.py`) qui ne rejoue que les migrations non encore exécutées.
 
 **Mission 2 — Développement du backend API**
 
-J'ai développé une API REST complète avec FastAPI (Python). L'API comprend **16 routeurs** et **80 endpoints** couvrant :
+J'ai développé une API REST complète avec FastAPI (Python). L'API comprend **16 routeurs** et **85 endpoints** couvrant :
 
 - Authentification (OTP email + code à 6 chiffres, clé d'accès API admin, sessions JWT)
 - Gestion des promotions et des étudiants/alumni (CRUD complet)
@@ -167,7 +235,7 @@ J'ai développé une interface utilisateur complète avec React + Vite, structur
 - *Espace administrateur* : tableau de bord avec KPI et graphiques, annuaire filtrable, gestion des promotions, import/export Excel, gestion des questionnaires, traitement des demandes RGPD.
 - *Espace alumni* : inscription multi-étapes, vérification OTP, édition de profil, parcours professionnel (expériences et certifications, gérées par ajout/suppression — la modification directe d'une expérience existante n'est pas disponible à ce jour, limite assumée du prototype ; une route de mise à jour reste à créer), consentement RGPD, questionnaire annuel.
 
-Le frontend comprend **14 routes principales** et des composants partagés (thème clair/sombre, indicateurs, protection de routes par rôle). La couche de tests compte 14 fichiers (Vitest + Testing Library, dossier `src/__tests__`).
+Le frontend comprend **14 routes principales** et des composants partagés (thème clair/sombre, indicateurs, protection de routes par rôle). La validation des composants repose sur des tests manuels et la vérification du build de production (`vite build`) ainsi que du lint (`oxlint`) ; aucune suite de tests automatisés n'est conservée dans le dépôt à l'issue du stage.
 
 **Mission 4 — Conformité RGPD et audit de sécurité**
 
@@ -211,8 +279,8 @@ Le calcul du taux d'emploi à 6 mois a nécessité une **fiabilisation** : l'anc
 
 Le prototype résultant de ce stage couvre l'intégralité du périmètre fonctionnel défini dans le sujet officiel :
 
-- **14 tables** de base de données, validées par introspection et rejeu complet des 15 migrations sur une base vide (0 différence structurelle constatée).
-- **80 endpoints** API avec authentification OTP + JWT et protection admin, dont les 2 ajouts de fin de stage : `POST /newsletter/envoyer` (envoi de newsletter avec filtres de ciblage) et `POST /admin/questionnaires/notififier` (relance questionnaire : email générique aux non-répondants, filtre par promotion, sans lien direct vers le formulaire à ce jour).
+- **14 tables** de base de données, validées par introspection et rejeu complet des 16 migrations sur une base vide (0 différence structurelle constatée).
+- **85 endpoints** API avec authentification OTP + JWT et protection admin, dont les 2 ajouts de fin de stage : `POST /newsletter/envoyer` (envoi de newsletter avec filtres de ciblage) et `POST /admin/questionnaires/notififier` (relance questionnaire : email générique aux non-répondants, filtre par promotion, sans lien direct vers le formulaire à ce jour).
 - **14 routes** frontend couvrant les espaces admin et alumni.
 - **8 indicateurs** d'insertion professionnelle, dont 6 exposés via des endpoints dédiés (`/admin/indicateurs`, `/admin/indicateurs/secteurs`, `/admin/indicateurs/types-contrat`, `/admin/indicateurs/kpi-tag`, `/admin/indicateurs/kpi-tags`, `/admin/indicateurs/kpi-tags-actifs`).
 - **5 documents** de livraison complémentaires, couvrant les exigences « Management » du sujet : cartographie des données (exigence M1), charte RGPD (M2), analyse des indicateurs d'insertion (M4), stratégie de mise à jour des données — porteuse de l'exigence M3 (questionnaire annuel automatisé et newsletter) —, et guide des processus d'animation du réseau (livrable attendu du sujet).
@@ -232,17 +300,25 @@ Le système répond aux quatre problèmes identifiés dans la section 1.3 :
 
 ### 2.5 Organisation du travail en équipe et ressources à disposition
 
-J'ai réalisé ce stage **en solo** : il n'y avait pas d'équipe technique dédiée au projet. Le suivi régulier avec le tuteur pédagogique m'a fourni un cadre de validation des choix d'architecture et des priorités fonctionnelles.
+[BROUILLON IA — À RÉÉCRIRE]
 
-Le projet était stocké en local sous OneDrive avec synchronisation active, **sans dépôt Git**. Cette organisation a provoqué un incident : un conflit de synchronisation concurrente a entraîné le retour à une version antérieure de plusieurs fichiers frontend en cours de développement, et j'ai dû reprendre le travail concerné. Cet incident a conduit à l'initialisation du dépôt Git décrite en section 3.2 (difficulté 6).
+**Cadre du stage.** Ce stage de substitution a été proposé directement par IONIS-STM aux étudiants du programme Pré-MSc n'ayant pas trouvé de placement en entreprise. Il s'agit d'un cas de figure explicitement prévu par le programme. La structure d'accueil est IONIS-STM elle-même, et l'encadrement est assuré par un tuteur pédagogique interne.
 
-Les ressources techniques à disposition comprenaient : un poste de développement local, l'accès aux APIs (Resend pour l'envoi d'OTP email), et les polices système pour la mise en forme des documents.
+**Travail en solo.** Le projet a été réalisé en solo : aucune équipe technique n'était dédiée au développement de l'Alumni CRM. L'ensemble des responsabilités — modélisation du MCD/MLD, développement du backend FastAPI, développement du frontend React, intégration de la conformité RGPD, audit de sécurité, rédaction des livrables documentaires — reposait sur un seul développeur. Cette organisation a rendu le projet formateur sur le plan de l'autonomie et de la prise de décision technique, mais elle a aussi exposé à des risques spécifiques liés à l'absence de revue par les pairs et de partage de connaissance.
+
+**Encadrement pédagogique.** Le suivi régulier avec le tuteur pédagogique a fourni un cadre de validation des choix d'architecture et des priorités fonctionnelles. Les points de suivi ont permis de poser un regard extérieur sur les choix techniques et d'aligner le développement avec les attendus du sujet de stage. [À COMPLÉTER : fréquence des points de suivi, modalités de communication utilisées]
+
+**Migration OneDrive → Git.** Le projet était initialement stocké en local sous OneDrive avec synchronisation active, **sans dépôt Git**. Cette organisation a provoqué un incident : un conflit de synchronisation concurrente a entraîné le retour à une version antérieure de plusieurs fichiers frontend en cours de développement, et j'ai dû reprendre le travail concerné. Faute d'historique, il n'est pas possible de déterminer précisément quand le script de test E2E documenté dans le README a disparu du dépôt. Cet incident a conduit à l'initialisation d'un dépôt Git avec un `.gitignore` racine consolidé (couvrant `.env`, `node_modules/`, `venv/`). La leçon retenue est que le versionnement doit précéder la première ligne de code, pas suivre le premier incident.
+
+**Ressources techniques à disposition.** Les ressources techniques comprenaient un poste de développement local, l'accès aux APIs tierces — en particulier Resend pour l'envoi d'emails OTP en mode production (mode console en développement) — et les polices système pour la mise en forme des documents. La base de données PostgreSQL fonctionnait en local. Aucun environnement de staging cloud n'était prévu pour ce stage.
+
+[À COMPLÉTER : informations complémentaires sur les ressources matérielles (type de poste, configuration), accès réseau éventuels, ou tout autre élément pertinent à documenter]
 
 ### 2.6 Méthodes et stratégies mises en œuvre
 
 **Approche de développement.** J'ai suivi une démarche itérative : modélisation → backend → frontend → audit → documentation. Chaque fonctionnalité était développée, testée manuellement, puis consolidée avant de passer à la suivante. Cette approche m'a permis de détecter tôt des incohérences de modélisation (par exemple le drift de migration sur `reponse_questionnaire.id_etudiant` qui avait `ON DELETE CASCADE` en base réelle mais pas dans le fichier de migration d'origine).
 
-**Audit de fiabilité base/API.** J'ai réalisé un audit complet de la table ETUDIANT et des 9 autres tables : des champs acceptés en écriture mais jamais persistés, un endpoint `DELETE /entreprises/{id}` cassé (UPDATE sur colonne NOT NULL au lieu d'un DELETE avec CASCADE), et le drift de migration mentionné ci-dessus. J'ai utilisé le rejeu complet des 15 migrations sur une base vide comme test de validation. Cet audit relève aussi quelques points secondaires laissés ouverts et assumés comme tels : statut des consentements libre (ni `Literal` ni CHECK), date d'obtention des certifications non validée (une date future passe), messages trompeurs sur les associations étudiant/certification, filtres invalides ignorés silencieusement dans la liste admin des demandes RGPD, réponses de questionnaire stockées en JSONB sans vérification des clés, absence de purge des tables `otp_codes` et `AUDIT_LOG`. Tout est consigné dans `AUDIT_COHERENCE_TABLES.txt` pour guider la reprise du projet.
+**Audit de fiabilité base/API.** J'ai réalisé un audit complet de la table ETUDIANT et des 9 autres tables : des champs acceptés en écriture mais jamais persistés, un endpoint `DELETE /entreprises/{id}` cassé (UPDATE sur colonne NOT NULL au lieu d'un DELETE avec CASCADE), et le drift de migration mentionné ci-dessus. J'ai utilisé le rejeu complet des 16 migrations sur une base vide comme test de validation. Cet audit relève aussi quelques points secondaires laissés ouverts et assumés comme tels : statut des consentements libre (ni `Literal` ni CHECK), date d'obtention des certifications non validée (une date future passe), messages trompeurs sur les associations étudiant/certification, filtres invalides ignorés silencieusement dans la liste admin des demandes RGPD, réponses de questionnaire stockées en JSONB sans vérification des clés, absence de purge des tables `otp_codes` et `AUDIT_LOG`. Tout est consigné dans `AUDIT_COHERENCE_TABLES.txt` pour guider la reprise du projet.
 
 **Modélisation par introspection.** J'ai régénéré le schéma MCD/MLD par introspection réelle de la base (14 tables) plutôt qu'à partir du fichier de conception initial. Cette approche m'a permis de détecter un ancien fichier `mcd_corrige.md` dans le frontend qui s'est révélé obsolète (11 tables au lieu de 14, tables manquantes : DEMANDE_RGPD, OTP_CODES, SCHEMA_MIGRATIONS) ; il a été supprimé depuis.
 
@@ -262,7 +338,7 @@ Les ressources techniques à disposition comprenaient : un poste de développeme
 - *Gestion des sessions et des rôles* : séparation stricte des sessions admin et alumni côté navigateur (clés distinctes `admin_role` / `alumni_id`), vérification du rôle contenu dans le JWT avant chaque appel sensible, purge d'un token orphelin à la réception d'un 401. Ce dispositif fait suite à un bug concret (section 3.2) et est couvert par les tests.
 - *Conception de workflows concurrents* : statut intermédiaire `en_traitement` et verrou `prise_en_charge_par` dans le traitement des demandes RGPD, pour empêcher deux administrateurs de travailler en même temps sur la même demande.
 - *Indicateurs statistiques honnêtes* : exposition des hypothèses de calcul dans l'API elle-même (champ `hypothese`) et refus d'afficher un chiffre trompeur — les cohortes dont la fenêtre de six mois n'est pas écoulée renvoient `null` avec un statut `en_attente`.
-- *Tests automatisés* : suite Vitest côté frontend (14 fichiers / 118 tests : authentification OTP, consentements, import Excel, routes protégées). Une démarche de test E2E sans mocks (parcours alumni et parcours admin contre le vrai backend) a été conçue et documentée dans le README ; son script n'est en revanche plus présent dans le dépôt — le reconstituer fait partie des suites à donner au projet.
+- *Tests automatisés* : une démarche de validation par tests a été explorée (Vitest/Testing Library côté frontend, pytest côté backend) mais, pour des raisons de cadrage (absence de suite conservée et maintenue dans le dépôt à l'issue du stage), la validation finale du livrable repose sur des scripts ad hoc, le rejeu complet des migrations sur base vide et des tests manuels des parcours utilisateur. Le script de test E2E documenté dans le README n'est plus présent dans le dépôt — le reconstituer fait partie des suites à donner au projet.
 
 **Compétences transversales.**
 
@@ -274,67 +350,117 @@ Les ressources techniques à disposition comprenaient : un poste de développeme
 
 **Difficulté 1 — Bug d'authentification croisée entre les espaces admin et alumni**
 
-Le token admin et le token alumni partageaient la même clé de stockage dans le navigateur : un JWT administrateur pouvait partir sur les routes `/rgpd/*` réservées aux alumni, avec des erreurs 403 difficiles à comprendre.
+Le token admin et le token alumni partageaient la même clé de stockage dans le navigateur : un JWT administrateur pouvait partir sur les routes `/rgpd/*` réservées aux alumni, avec des erreurs 403 difficilement explicables.
 
-*Solution* : clés de stockage distinctes (`admin_role` / `alumni_id` avec nettoyage mutuel), vérification du rôle présent dans le payload du JWT avant chaque appel sensible (`ensureAlumniToken`), purge automatique du token en cas de session orpheline (intercepteur sur les réponses 401). Le correctif est couvert par des tests unitaires.
+*Solution* : clés de stockage distinctes (`admin_role` / `alumni_id`) avec nettoyage mutuel, vérification du rôle dans le JWT avant chaque appel sensible, et purge automatique du token en cas de session orpheline.
 
 **Difficulté 2 — Le modèle de données et la base réelle avaient divergé**
 
-Un audit d'introspection mené le 16 août a révélé plusieurs écarts. La clé étrangère `reponse_questionnaire.id_etudiant` était en `ON DELETE CASCADE` en base live mais pas dans le fichier de migration 003 : une base reconstruite aurait échoué au premier hard-delete d'un étudiant ayant répondu à un questionnaire. La route `DELETE /entreprises/{id}` renvoyait systématiquement une erreur dès qu'une expérience référençait l'entreprise (mise à jour vers NULL sur une colonne NOT NULL, alors que la clé étrangère est déjà en cascade). Des doublons de consentements s'étaient enfin accumulés faute de contrainte d'unicité.
+Un audit d'introspection a révélé des écarts entre les fichiers de migration et l'état réel de la base : clé étrangère en `ON DELETE CASCADE` sans contrepartie dans la migration, route `DELETE /entreprises/{id}` cassée, et doublons de consentements faute de contrainte d'unicité.
 
-*Solution* : migration corrective idempotente dédiée au drift (011), suppression directe pour les entreprises (la cascade fait le reste), migration 006 qui dédoublonne puis pose `UNIQUE (id_etudiant, type_consentement)` pour permettre un upsert propre côté API. Le script de rejeu complet des 15 migrations sur base vide est devenu mon test de validation de référence — cette démarche aurait évité un échec de déploiement basé sur un rejeu des migrations. Pratique retenue depuis : rejouer les migrations sur base vide à chaque évolution du schéma, le drift 003 étant resté quatre semaines indétecté. Deux leçons générales tirées de ces épisodes : introduire des tests backend automatisés — principal chantier technique restant avant une mise en production, quelques tests d'intégration auraient intercepté la route `DELETE /entreprises` cassée comme les endpoints renvoyant 200 OK avec un corps d'erreur —, et poser les contraintes de validation à la source (type contraint `Literal` côté API, CHECK côté base dès la création des colonnes énumérables — le statut des consentements reste libre à ce jour).
+*Solution* : migrations correctives dédiées au drift, et mise en place d'un rejeu complet des migrations sur base vide comme test de validation. Pratique retenue : rejouer les migrations à chaque évolution du schéma pour détecter les écarts rapidement.
 
 **Difficulté 3 — Deux administrateurs pouvaient traiter la même demande RGPD**
 
-Le cycle initial (`en_attente → traitée/rejetée`) ne laissait aucune trace d'une prise en charge en cours : deux admins pouvaient décider simultanément de la même demande.
+Le cycle initial (`en_attente → traitée/rejetée`) ne laissait aucune trace d'une prise en charge : deux admins pouvaient intervenir simultanément sur la même demande.
 
-*Solution* : refonte du cycle en `envoyée → en traitement → traitée/rejetée` (migration 009, avec contrainte CHECK) et verrou applicatif `prise_en_charge_par` : toute décision sur une demande déjà prise en charge par un autre administrateur est refusée.
+*Solution* : ajout d'un statut intermédiaire `en traitement` (migration 009, contrainte CHECK) et verrou applicatif `prise_en_charge_par` : toute décision sur une demande déjà prise en charge est refusée.
 
 **Difficulté 4 — Un indicateur d'insertion trompeur**
 
-Le calcul initial du taux d'emploi à 6 mois comptait des expériences déjà terminées, et produisait pour les promotions récentes un instantané sans valeur.
+Le calcul initial du taux d'emploi à 6 mois comptait des expériences déjà terminées, produisant des chiffres surestimés pour les promotions récentes.
 
-*Solution* : filtrage sur les expériences actives à la date de référence (1er décembre de l'année de diplôme, hypothèse explicitée dans la réponse API via le champ `hypothese`), exclusion explicite des cohortes immatures (`null` + statut `en_attente`).
+*Solution* : filtrage sur les expériences actives à la date de référence et exclusion des cohortes dont la fenêtre de six mois n'est pas écoulée (valeur `null` plutôt qu'un chiffre trompeur).
 
-**Difficulté 5 — Gestion de la conformité RGPD en contexte éducatif**
+**Difficulté 5 — Absence de versionning Git et incident de synchronisation**
 
-Le RGPD impose des contraintes fortes sur la collecte et le traitement des données personnelles, mais les outils disponibles (tutoriels, documentation) traitent majoritairement le cas des entreprises commerciales. Le contexte éducatif pose des questions spécifiques : durée de conservation des données d'anciens élèves, base légale du traitement (intérêt légitime vs consentement), distinction entre anonymisation et suppression.
+Le projet était stocké sous OneDrive sans dépôt Git. Un conflit de synchronisation a entraîné la perte de fichiers frontend en cours de développement, sans possibilité de récupération via un historique.
 
-*Solution* : j'ai modélisé un workflow de consentement à 4 niveaux avec traçabilité native (table CONSENTEMENT_RGPD), et documenté explicitement les limites assumées (pas de DPO identifié, pas de mécanisme de chiffrement spécifique, pas de notification de violation de données).
+*Solution* : récupération manuelle puis initialisation d'un dépôt Git avec `.gitignore` consolidé. La leçon : le versionnement doit précéder la première ligne de code, pas suivre le premier incident.
 
-**Difficulté 6 — Absence de versionning Git et incident de synchronisation**
+---
 
-Le projet était stocké sous OneDrive sans dépôt Git. Un conflit de synchronisation concurrente a entraîné le retour à une version antérieure de plusieurs fichiers frontend en cours de développement ; j'ai repris ce travail à la main. Faute d'historique, je ne peux d'ailleurs pas dire précisément quand le script de test E2E documenté dans le README a disparu du dépôt.
+## 4. Axes d'amélioration
 
-*Solution* : récupération manuelle des fichiers perdus, puis initialisation d'un dépôt Git avec `.gitignore` racine consolidé (couvrant `.env`, `node_modules/`, `venv/`). La leçon tient en une phrase : le versionnement doit précéder la première ligne de code, pas suivre le premier incident. Pratique retenue : commits réguliers, et rien d'important qui n'existe qu'en un seul exemplaire sur disque.
+[BROUILLON IA — À RÉÉCRIRE]
 
-**Difficulté 7 — Exposition d'une clé d'accès administrateur**
+Cette section recense les axes d'amélioration identifiés au cours du stage, hiérarchisés par horizon de réalisation. Certains relèvent de correctifs nécessaires avant toute mise en production, d'autres constituent des évolutions fonctionnelles à moyen terme, et d'autres encore relèvent de perspectives plus lointaines.
 
-La valeur de `ADMIN_API_KEY` est apparue dans une capture d'écran pendant une session de travail.
+### 4.1 Axes à traiter en priorité (court terme)
 
-*Solution* : rotation immédiate de la clé (l'ancienne valeur est obsolète) et note persistante dans ce rapport tant que l'environnement n'a pas été redéployé proprement. Depuis, règle personnelle : jamais de fichier de secrets ouvert à l'écran pendant un partage.
+Ces améliorations concernent des manques fonctionnels ou des risques techniques identifiés au cours du stage et à traiter avant toute mise en production.
 
-**Difficulté 8 — Salaire moyen : un indicateur d'abord non automatisable**
+**Tests automatisés.** Le principal chantier technique restant avant la mise en production est l'introduction durable d'une suite de tests automatisés (pytest côté backend, Vitest/Testing Library côté frontend), actuellement absente du dépôt : à l'issue du stage, la validation repose sur des scripts ad hoc, le rejeu complet des migrations sur base vide et des tests manuels des parcours. Quelques tests d'intégration auraient intercepté la route `DELETE /entreprises/{id}` cassée et les endpoints renvoyant 200 OK avec un corps d'erreur. Le script de test E2E documenté dans le README n'est plus présent dans le dépôt et doit être reconstitué. La mise en place de tests automatisés sur les routes critiques — authentification, opérations CRUD, workflow RGPD — est un prérequis à tout déploiement.
 
-Le champ `salary_range` était saisi en texte libre (ex. `"35k-45k EUR"`), ce qui rendait impossible le calcul automatisé du salaire moyen par filière — indicateur pourtant demandé par les organismes de tutelle.
+**Automatisation de l'envoi du questionnaire annuel (cron job).** L'activation des questionnaires reste manuelle dans l'interface admin. Un mécanisme de planification automatique (cron job) permettrait d'envoyer les relances email aux alumni n'ayant pas répondu au questionnaire actif, selon un calendrier défini par le service des relations entreprises. L'endpoint backend `POST /admin/questionnaires/notififier` est déjà implémenté (filtres de ciblage par promotion, envoi aux non-répondants) ; il manque le déclenchement automatique périodique et une interface dédiée côté frontend.
 
-*Solution* : ajout du champ numérique `salary_annuel` (NUMERIC, migration `012_salary_annuel.sql`), alimenté côté frontend par un select de 11 tranches chiffrées (+ option « Non renseigné »). Le backend calcule désormais moyenne, minimum et maximum sur les expériences en cours (`salary_annuel > 0`), avec repli sur l'ancien champ texte pour les données historiques et des moyennes exposées par promotion. Le calcul du salaire moyen par secteur d'activité reste ouvert.
+**Composant frontend d'envoi de newsletter.** L'endpoint backend `POST /newsletter/envoyer` est opérationnel avec filtres de ciblage (promotion, secteur, consentement newsletter actif), mais le composant frontend permettant à l'administrateur de rédiger et d'envoyer la newsletter depuis l'interface n'est pas encore développé. Le mécanisme de désinscription automatique (lien dans le gabarit HTML mettant le consentement à « refusé ») n'est pas non plus implémenté — des liens placeholder existent dans le gabarit HTML.
 
-Viennent enfin des perspectives sans épisode vécu associé, documentées dans le guide des processus mais issues d'aucun dysfonctionnement : calendrier automatique d'envoi du questionnaire annuel (cron job), module de mentorat (mise en relation alumni/étudiants actuels), application mobile pour mettre à jour son profil depuis un smartphone, et chiffrement applicatif au repos des données sensibles — ce dernier restant délégué à l'infrastructure PostgreSQL.
+**Standardisation des contraintes de validation.** Le statut des consentements dans la table `CONSENTEMENT_RGPD` reste libre (ni `Literal` côté API, ni `CHECK` côté base). La date d'obtention des certifications n'est pas validée (une date future passe sans erreur). La mise en place de contraintes de validation à la source — types énumérés côté API, contraintes CHECK côté base — est une bonne pratique à généraliser.
+
+### 4.2 Évolutions fonctionnelles à moyen terme
+
+Ces améliorations ne sont pas critiques pour la mise en production, mais enrichiraient significativement le système.
+
+**Module de mentorat.** Un module de mise en relation entre alumni seniors et étudiants actuels permettrait d'exploiter le réseau alumni à des fins pédagogiques. Ce module n'existe pas à ce jour ; les mises en relation s'appuient actuellement sur l'annuaire filtrable. Il pourrait prendre la forme d'un système de candidatures et de parrainage, avec matching par secteur d'activité ou par compétences.
+
+**Chiffrement applicatif des données sensibles.** Les données de consentement et les données personnelles ne font l'objet d'aucun chiffrement spécifique au niveau applicatif. Leur protection repose actuellement sur les mécanismes standard de l'infrastructure PostgreSQL. L'ajout d'un chiffrement au repos au niveau applicatif (par exemple au moyen d'une bibliothèque de chiffrement symétrique) renforcerait la protection des données, notamment en cas d'accès non autorisé à la base de données.
+
+**Route de mise à jour d'une expérience professionnelle.** La modification directe d'une expérience existante n'est pas disponible dans l'interface alumni. L'alumni doit supprimer puis recréer l'expérience. Une route PUT/PATCH dédiée côté backend et un formulaire de modification côté frontend permettraient d'améliorer l'expérience utilisateur.
+
+### 4.3 Perspectives à plus long terme
+
+Ces améliorations nécessitent des ressources ou des compétences spécifiques qui n'étaient pas mobilisables durant ce stage.
+
+**Application mobile.** Une application mobile dédiée permettrait aux alumni de mettre à jour leur profil et leur parcours professionnel depuis un smartphone, améliorant ainsi la fraîcheur des données collectées. Cette évolution suppose des compétences en développement mobile (React Native, Flutter ou équivalent) et un choix stratégique entre une application native et une progressive web app (PWA).
+
+**Tests end-to-end complets.** Le script de test E2E documenté dans le README (parcours alumni + parcours admin contre le vrai backend) a disparu du dépôt. Sa reconstitution et son exécution automatisée dans un pipeline d'intégration continue constitueraient un filet de sécurité essentiel avant la mise en production.
+
+**Notification de violation de données.** La notification de violation de données (article 33 du RGPD) n'est pas couverte par une fonctionnalité dédiée du système. En cas de violation, cette notification doit être effectuée manuellement par le DPO. L'ajout d'un mécanisme d'alerte automatisé et de documentation de incident pourrait être envisagé.
 
 ---
 
 ## Références bibliographiques
 
+### Cadre réglementaire
+
 1. Règlement (UE) 2016/679 du Parlement européen et du Conseil du 27 avril 2016 relatif à la protection des personnes physiques à l'égard du traitement des données à caractère personnel et à la libre circulation de ces données (RGPD).
-2. FastAPI — Documentation officielle : https://fastapi.tiangolo.com/
-3. React — Documentation officielle : https://react.dev/
-4. PostgreSQL — Documentation : https://www.postgresql.org/docs/
-5. Vite — Documentation officielle : https://vitejs.dev/
-6. IONIS Education Group — Site officiel : https://www.ionis-group.com/
-7. Commission des Titres d'Ingénieur (CTI) — Référentiel d'accréditation.
-8. Haute Autorité pour l'Évaluation de la Recherche et l'Enseignement Supérieur (HCERES) — Référentiel d'évaluation.
-9. Resend — API email : https://resend.com/
+2. Commission Nationale de l'Informatique et des Libertés (CNIL) — Guide pratique du RGPD pour les établissements d'enseignement supérieur : [À COMPLÉTER : URL ou référence exacte si utilisé].
+
+### Documentation technique — Backend
+
+3. FastAPI — Documentation officielle : https://fastapi.tiangolo.com/
+4. Pydantic — Documentation officielle : https://docs.pydantic.dev/ [À VÉRIFIER si utilisé comme source]
+5. pg8000 — Documentation : [À COMPLÉTER : URL si référencé]
+6. Python — Documentation officielle : https://docs.python.org/3/ [À COMPLÉTER si référencé]
+
+### Documentation technique — Frontend
+
+7. React — Documentation officielle : https://react.dev/
+8. Vite — Documentation officielle : https://vitejs.dev/
+9. Vitest — Documentation : https://vitest.dev/ [À COMPLÉTER si référencé]
+
+### Documentation technique — Base de données
+
+10. PostgreSQL — Documentation : https://www.postgresql.org/docs/
+
+### Référentiels et organismes de certification
+
+11. Commission des Titres d'Ingénieur (CTI) — Référentiel d'accréditation : [À COMPLÉTER : URL ou référence exacte].
+12. Haute Autorité pour l'Évaluation de la Recherche et l'Enseignement Supérieur (HCERES) — Référentiel d'évaluation : [À COMPLÉTER : URL ou référence exacte].
+
+### Services tierces
+
+13. Resend — API email : https://resend.com/
+
+### Référence au groupe
+
+14. IONIS Education Group — Site officiel : https://www.ionis-group.com/
+
+### Sources internes
+
+15. Cahier des charges du sujet de stage — « Conception et développement d'un système de suivi du parcours étudiant et de valorisation du réseau des anciens (Alumni CRM) » — IONIS-STM, 2026.
+16. Instructions Livrables & Soutenance 2026 v4 — IONIS-STM.
 
 ---
 
@@ -356,7 +482,7 @@ Le schéma ci-dessous a été **régénéré par introspection directe de la bas
 | Parcours professionnel | ENTREPRISE, EXPERIENCE_PRO, CERTIFICATION, OBTIENT | EXPERIENCE_PRO → ETUDIANT et ENTREPRISE (N:1, avec `salary_annuel NUMERIC`) ; OBTIENT = association N:M ETUDIANT ↔ CERTIFICATION |
 | RGPD | CONSENTEMENT_RGPD, DEMANDE_RGPD, AUDIT_LOG | CONSENTEMENT_RGPD → ETUDIANT ; DEMANDE_RGPD → ETUDIANT en SET NULL pour préserver l'historique après anonymisation ; AUDIT_LOG journalise anonymisations, purges et nettoyages |
 | Questionnaires | QUESTIONNAIRE, QUESTION, REPONSE_QUESTIONNAIRE | QUESTION → QUESTIONNAIRE (N:1, avec tags KPI) ; REPONSE_QUESTIONNAIRE → ETUDIANT + QUESTIONNAIRE (réponses stockées en JSON) |
-| Infrastructure | otp_codes, schema_migrations | otp_codes : codes OTP hachés identifiés par l'email ; schema_migrations : suivi des 15 migrations versionnées |
+| Infrastructure | otp_codes, schema_migrations | otp_codes : codes OTP hachés identifiés par l'email ; schema_migrations : suivi des 16 migrations versionnées |
 
 **Règles d'intégrité** : clés étrangères avec CASCADE sur les données dépendant d'un étudiant (expériences, certifications obtenues, consentements, réponses), SET NULL sur les demandes RGPD, contraintes d'unicité (ex. email étudiant), contraintes CHECK sur les énumérations (statuts de demande RGPD, types de consentement).
 
@@ -376,8 +502,8 @@ Le schéma ci-dessous a été **régénéré par introspection directe de la bas
 
 ### Annexe E — Liste des endpoints API
 
-[À COMPLÉTER : liste complète des 80 endpoints avec méthode HTTP, chemin et description]
+[À COMPLÉTER : liste complète des 85 endpoints avec méthode HTTP, chemin et description]
 
 ### Annexe F — Différentiel de migration et audit de conformité
 
-[À COMPLÉTER : tableau du drift de migration corrigé et résultats du rejeu des 15 migrations]
+[À COMPLÉTER : tableau du drift de migration corrigé et résultats du rejeu des 16 migrations]

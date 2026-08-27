@@ -10,7 +10,7 @@ export default function KPICard({ title, value, subtitle, icon, highlighted = fa
     : '';
 
   const Wrapper = href ? 'a' : 'div';
-  const wrapperProps = href ? { href } : onClick ? { onClick, role: 'button', tabIndex: 0 } : {};
+  const wrapperProps = href ? { href } : onClick ? { onClick, role: 'button', tabIndex: 0, onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(e); } } } : {};
 
   // Barre de progression optionnelle (0-100) : donne une lecture visuelle
   // immediate du pourcentage principal sans remplacer le chiffre.

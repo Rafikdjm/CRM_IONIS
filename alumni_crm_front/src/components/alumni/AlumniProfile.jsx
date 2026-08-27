@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { alumniAPI } from '../../services/api';
-import { SECTORS } from '../../constants';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import ErrorMessage from '../shared/ErrorMessage';
 
@@ -28,7 +27,6 @@ export default function AlumniProfile() {
     linkedin: '',
     availability_status: '',
     sector: '',
-    custom_sector: '',
     id_promotion: null,
     date_naissance: '',
     email_academique: '',
@@ -46,9 +44,6 @@ export default function AlumniProfile() {
         if (storedId) {
           setAlumniId(storedId);
           const res = await alumniAPI.getById(storedId);
-          const knownSectors = SECTORS.filter((s) => s !== 'Autre');
-          const rawSector = res.data.sector || '';
-          const isCustom = rawSector && !knownSectors.includes(rawSector);
           setProfile({
             first_name: res.data.first_name || '',
             last_name: res.data.last_name || '',
@@ -59,8 +54,7 @@ export default function AlumniProfile() {
             country: res.data.country || '',
             linkedin: res.data.linkedin || '',
             availability_status: res.data.availability_status || '',
-            sector: isCustom ? 'Autre' : rawSector,
-            custom_sector: isCustom ? rawSector : '',
+            sector: res.data.sector || '',
             id_promotion: res.data.id_promotion || null,
             date_naissance: res.data.date_naissance || '',
             email_academique: res.data.email_academique || '',
@@ -119,15 +113,12 @@ export default function AlumniProfile() {
     setError(null);
     setSuccess(false);
     try {
-      const { custom_sector: _, sector: _s, ...profileData } = profile;
+      const { ...profileData } = profile;
       await alumniAPI.partialUpdate(alumniId, {
         ...profileData,
         skills,
       });
       const refreshed = await alumniAPI.getById(alumniId);
-      const knownSectors = SECTORS.filter((s) => s !== 'Autre');
-      const rawSector = refreshed.data.sector || '';
-      const isCustom = rawSector && !knownSectors.includes(rawSector);
       setProfile({
         first_name: refreshed.data.first_name || '',
         last_name: refreshed.data.last_name || '',
@@ -138,8 +129,7 @@ export default function AlumniProfile() {
         country: refreshed.data.country || '',
         linkedin: refreshed.data.linkedin || '',
         availability_status: refreshed.data.availability_status || '',
-        sector: isCustom ? 'Autre' : rawSector,
-        custom_sector: isCustom ? rawSector : '',
+        sector: refreshed.data.sector || '',
         id_promotion: refreshed.data.id_promotion || null,
         date_naissance: refreshed.data.date_naissance || '',
         email_academique: refreshed.data.email_academique || '',
@@ -167,7 +157,7 @@ export default function AlumniProfile() {
 
   if (loading) return <LoadingSpinner text="Chargement de votre profil..." />;
 
-  const inputClass = 'w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100';
+  const inputClass = 'w-full max-w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 sm:px-4';
   const labelClass = 'mb-1 block text-sm font-medium text-gray-700 dark:text-slate-300';
 
   return (
@@ -198,7 +188,7 @@ export default function AlumniProfile() {
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 min-h-[44px]"
           >
             {saving ? (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -210,7 +200,7 @@ export default function AlumniProfile() {
             Sauvegarder
           </button>
         </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 [&>*]:min-w-0">
           <div>
             <label className={labelClass}>Prénom</label>
             <input type="text" name="first_name" value={profile.first_name} onChange={handleProfileChange} className={inputClass} />
@@ -263,38 +253,25 @@ export default function AlumniProfile() {
             />
           </div>
           {profile.availability_status === 'en_poste' && (
-            <>
-              <div className="md:col-span-2">
-                <label className={labelClass}>Secteur d'activité (déduit de votre poste actuel)</label>
-                <select
-                  name="sector"
-                  value={profile.sector}
-                  disabled
-                  className={inputClass + ' bg-gray-50 cursor-not-allowed dark:bg-slate-900'}
-                >
-                  <option value="">Sélectionner un secteur</option>
-                  {SECTORS.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-                <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">
-                  Le secteur est automatiquement défini par votre expérience professionnelle actuelle.
-                </p>
-              </div>
-              {profile.sector === 'Autre' && (
-                <div className="md:col-span-2">
-                  <label className={labelClass}>Précisez votre secteur</label>
-                  <input
-                    type="text"
-                    name="custom_sector"
-                    value={profile.custom_sector}
-                    disabled
-                    className={inputClass + ' bg-gray-50 cursor-not-allowed dark:bg-slate-900'}
-                    placeholder="Veuillez préciser votre secteur..."
-                  />
+            <div className="md:col-span-2">
+              <label className={labelClass}>Secteur d'activité</label>
+              {profile.sector ? (
+                <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                  {profile.sector}
+                </div>
+              ) : (
+                <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-3 dark:border-slate-600 dark:bg-slate-800/50">
+                  <p className="text-sm text-gray-500 dark:text-slate-400">
+                    Non renseigné — ajoutez un poste actuel dans votre{' '}
+                    <span className="font-medium text-gray-700 dark:text-slate-300">parcours professionnel</span>{' '}
+                    pour que le secteur soit déduit automatiquement.
+                  </p>
                 </div>
               )}
-            </>
+              <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">
+                Le secteur est automatiquement défini par votre expérience professionnelle actuelle.
+              </p>
+            </div>
           )}
         </div>
       </form>

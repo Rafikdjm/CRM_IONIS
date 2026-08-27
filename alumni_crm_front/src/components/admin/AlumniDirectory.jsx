@@ -100,18 +100,8 @@ export default function AlumniDirectory() {
       result = result.filter((a) => a.is_anonymised);
     }
 
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (a) =>
-          `${a.first_name} ${a.last_name}`.toLowerCase().includes(q) ||
-          (a.email || '').toLowerCase().includes(q) ||
-          (a.current_company || '').toLowerCase().includes(q)
-      );
-    }
-
     return result;
-  }, [alumni, filterSector, filterCustomSector, filterCompany, filterAvailability, filterSkill, searchQuery, filterAnonymise]);
+  }, [alumni, filterSector, filterCustomSector, filterCompany, filterAvailability, filterSkill, filterAnonymise]);
 
   const sortedAlumni = useMemo(() => {
     return [...filteredAlumni].sort((a, b) => {

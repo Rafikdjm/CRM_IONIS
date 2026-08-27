@@ -216,11 +216,11 @@ def modifier_questionnaire(id_questionnaire: int, data: schemas.QuestionnaireCre
         ids_to_delete = existing_ids - submitted_ids
 
         if ids_to_delete:
-            placeholders = ",".join(["%s"] * len(ids_to_delete))
+            array_literal = "{" + ",".join(str(i) for i in sorted(ids_to_delete)) + "}"
             cursor.execute(
-                f"SELECT COUNT(*) FROM REPONSE_QUESTIONNAIRE "
-                f"WHERE id_questionnaire = %s AND reponses ?| array[{placeholders}];",
-                [id_questionnaire] + list(ids_to_delete),
+                "SELECT COUNT(*) FROM REPONSE_QUESTIONNAIRE "
+                "WHERE id_questionnaire = %s AND reponses ?| %s::text[];",
+                (id_questionnaire, array_literal),
             )
             has_responses = cursor.fetchone()[0] > 0
             if has_responses:
@@ -437,6 +437,40 @@ def repondre_questionnaire(
         db.rollback()
         logger.exception("Erreur lors de l'enregistrement de la reponse")
         raise HTTPException(status_code=400, detail="Impossible d'enregistrer la reponse.")
+    finally:
+        cursor.close()
+
+
+@router.delete(
+    "/{id_questionnaire}/repondre",
+    status_code=status.HTTP_200_OK,
+    tags=["Interface Etudiant / Alumni"],
+)
+def supprimer_reponse(
+    id_questionnaire: int,
+    id_etudiant: int,
+    db=Depends(get_db),
+    _auth=Depends(require_owner_or_admin),
+):
+    cursor = db.cursor()
+    try:
+        refuser_compte_anonymise(cursor, id_etudiant)
+        cursor.execute(
+            "DELETE FROM REPONSE_QUESTIONNAIRE "
+            "WHERE id_questionnaire = %s AND id_etudiant = %s;",
+            (id_questionnaire, id_etudiant),
+        )
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Aucune reponse trouvee pour ce questionnaire.")
+        db.commit()
+        return {"message": "Reponse supprimee avec succes."}
+    except HTTPException:
+        db.rollback()
+        raise
+    except Exception:
+        db.rollback()
+        logger.exception("Erreur lors de la suppression de la reponse")
+        raise HTTPException(status_code=400, detail="Impossible de supprimer la reponse.")
     finally:
         cursor.close()
 

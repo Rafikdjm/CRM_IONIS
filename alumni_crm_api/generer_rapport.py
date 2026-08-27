@@ -189,7 +189,7 @@ def generer_document():
         "Développement complet de l'API avec FastAPI, comprenant :"
     )
     api_features = [
-        "80 endpoints RESTful couvrant toutes les entités métier",
+        "85 endpoints RESTful couvrant toutes les entités métier",
         "Authentification double : API Key pour l'admin + OTP par email pour les alumni (JWT)",
         "Rate limiting en mémoire sur les endpoints d'authentification",
         "Pagination systématique sur tous les endpoints de listing",
@@ -252,7 +252,7 @@ def generer_document():
     )
     status_items = [
         "Schéma de BDD terminé : 14 tables (12 métier + 2 techniques), toutes les relations et contraintes en place",
-        "API fonctionnelle : 80 endpoints testables via Swagger UI (/docs)",
+        "API fonctionnelle : 85 endpoints testables via Swagger UI (/docs)",
         "Authentification opérationnelle : OTP par email (mode console en dev, mode Resend en production) + auth admin par code",
         "Workflow RGPD opérationnel : demandes d'export/suppression avec prise en charge admin, anonymisation, purge différée (script purge.py)",
         "Import/Export Excel fonctionnel avec template personnalisé",
@@ -341,7 +341,7 @@ def generer_document():
         [
             [
                 "Centralisation des données",
-                "Base de données PostgreSQL relationnelle avec 14 tables, API REST FastAPI avec 80 endpoints, import/export Excel",
+                "Base de données PostgreSQL relationnelle avec 14 tables, API REST FastAPI avec 85 endpoints, import/export Excel",
                 "database.py, main.py, routers/*.py"
             ],
             [

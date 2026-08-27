@@ -168,7 +168,7 @@ def ajouter_certification_etudiant(
             )
 
         cursor.execute(
-            "SELECT id_certification FROM CERTIFICATION WHERE nom_certification ILIKE %s LIMIT 1",
+            "SELECT id_certification FROM CERTIFICATION WHERE nom_certification ILIKE %s ORDER BY id_certification LIMIT 1",
             (data.nom,),
         )
         row = cursor.fetchone()

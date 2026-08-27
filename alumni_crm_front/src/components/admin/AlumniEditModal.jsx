@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { alumniAPI, promotionsAPI, apiErrorMessage } from '../../services/api';
-import { SECTORS } from '../../constants';
 import LoadingSpinner from '../shared/LoadingSpinner';
 
 const AVAILABILITY_STATUSES = [
@@ -15,7 +14,6 @@ export default function AlumniEditModal({ alumniId, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [promotions, setPromotions] = useState([]);
   const [form, setForm] = useState(null);
-  const [customSector, setCustomSector] = useState('');
 
   useEffect(() => {
     if (!alumniId) return;
@@ -30,11 +28,7 @@ export default function AlumniEditModal({ alumniId, onClose, onSaved }) {
         ]);
         if (cancelled) return;
         const profile = profileRes.data;
-        const currentSector = profile.sector || '';
         setPromotions(promoRes.data || []);
-        if (currentSector && !SECTORS.includes(currentSector)) {
-          setCustomSector(currentSector);
-        }
         setForm({
           last_name: profile.last_name || '',
           first_name: profile.first_name || '',
@@ -49,7 +43,7 @@ export default function AlumniEditModal({ alumniId, onClose, onSaved }) {
           city: profile.city || '',
           country: profile.country || '',
           linkedin: profile.linkedin || '',
-          sector: SECTORS.includes(currentSector) ? currentSector : (currentSector ? 'Autre' : ''),
+          sector: profile.sector || '',
           availability_status: profile.availability_status || 'en_poste',
           skills: Array.isArray(profile.skills) ? profile.skills.join(', ') : '',
         });
@@ -100,7 +94,6 @@ export default function AlumniEditModal({ alumniId, onClose, onSaved }) {
         last_name,
         first_name,
         email: email.toLowerCase(),
-        sector: form.sector === 'Autre' ? customSector : form.sector,
         skills,
         id_promotion: Number(form.id_promotion),
       });
@@ -115,7 +108,7 @@ export default function AlumniEditModal({ alumniId, onClose, onSaved }) {
 
   if (!alumniId) return null;
 
-  const inputClass = 'w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
+  const inputClass = 'w-full max-w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none';
   const labelClass = 'block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1';
 
   return (
@@ -127,7 +120,7 @@ export default function AlumniEditModal({ alumniId, onClose, onSaved }) {
           <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100">Modifier l&apos;étudiant</h2>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-200 hover:text-gray-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-200 hover:text-gray-600 dark:hover:bg-slate-700 dark:hover:text-slate-300"
             aria-label="Fermer"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
@@ -148,7 +141,7 @@ export default function AlumniEditModal({ alumniId, onClose, onSaved }) {
                   {error}
                 </div>
               )}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 [&>*]:min-w-0">
                 <div>
                   <label className={labelClass}>Nom *</label>
                   <input type="text" value={form.last_name} onChange={(e) => setField('last_name', e.target.value)} className={inputClass} />
@@ -196,21 +189,15 @@ export default function AlumniEditModal({ alumniId, onClose, onSaved }) {
                     ))}
                   </select>
                 </div>
-                <div>
+                <div className="md:col-span-2">
                   <label className={labelClass}>Secteur d'activité</label>
-                  <select value={form.sector} onChange={(e) => setField('sector', e.target.value)} className={inputClass}>
-                    <option value="">Sélectionner...</option>
-                    {SECTORS.map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </div>
-                {form.sector === 'Autre' && (
-                  <div>
-                    <label className={labelClass}>Précisez le secteur</label>
-                    <input type="text" value={customSector} onChange={(e) => setCustomSector(e.target.value)} className={inputClass} />
+                  <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300">
+                    {form.sector || <span className="text-gray-400 dark:text-slate-500 italic">Non renseigné</span>}
                   </div>
-                )}
+                  <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">
+                    Déduit automatiquement de l'expérience professionnelle actuelle.
+                  </p>
+                </div>
                 <div>
                   <label className={labelClass}>Compétences (séparées par des virgules)</label>
                   <input type="text" value={form.skills} onChange={(e) => setField('skills', e.target.value)} className={inputClass} placeholder="Ex : Python, SQL, Data Analysis" />
@@ -231,7 +218,7 @@ export default function AlumniEditModal({ alumniId, onClose, onSaved }) {
                   <label className={labelClass}>Adresse</label>
                   <input type="text" value={form.address} onChange={(e) => setField('address', e.target.value)} className={inputClass} />
                 </div>
-                <div className="sm:col-span-2">
+                <div className="md:col-span-2">
                   <label className={labelClass}>Parcours antérieur</label>
                   <input type="text" value={form.parcours_anterieur} onChange={(e) => setField('parcours_anterieur', e.target.value)} className={inputClass} />
                 </div>

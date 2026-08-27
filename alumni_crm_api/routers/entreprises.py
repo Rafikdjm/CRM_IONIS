@@ -144,8 +144,16 @@ def delete_entreprise(id_entreprise: int, db=Depends(get_db)):
         return
     except HTTPException:
         raise
-    except Exception:
+    except Exception as exc:
         db.rollback()
+        msg = str(exc)
+        if "experien" in msg.lower() or "23503" in msg:
+            raise HTTPException(
+                status_code=409,
+                detail="Impossible de supprimer cette entreprise : "
+                       "des expériences professionnelles y font encore référence. "
+                       "Supprimez d'abord les expériences liées.",
+            )
         logger.exception("Erreur lors de la suppression de l'entreprise %s", id_entreprise)
         raise HTTPException(status_code=400, detail="Impossible de supprimer l'entreprise.")
     finally:

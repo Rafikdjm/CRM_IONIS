@@ -190,7 +190,6 @@ def supprimer_orphelins(db=Depends(get_db)):
         db.commit()
 
         # Consentements RGPD orphelins
-        cursor.execute("BEGIN;")
         cursor.execute(
             "DELETE FROM CONSENTEMENT_RGPD "
             "WHERE id_etudiant NOT IN (SELECT id_etudiant FROM ETUDIANT);"
@@ -202,7 +201,6 @@ def supprimer_orphelins(db=Depends(get_db)):
         logger.info("Supprimé %s consentements RGPD orphelins", n)
 
         # Expériences sans étudiant
-        cursor.execute("BEGIN;")
         cursor.execute(
             "DELETE FROM EXPERIENCE_PRO "
             "WHERE id_etudiant NOT IN (SELECT id_etudiant FROM ETUDIANT);"
@@ -214,7 +212,6 @@ def supprimer_orphelins(db=Depends(get_db)):
         logger.info("Supprimé %s expériences orphelines (sans étudiant)", n)
 
         # Expériences sans entreprise
-        cursor.execute("BEGIN;")
         cursor.execute(
             "DELETE FROM EXPERIENCE_PRO "
             "WHERE id_entreprise NOT IN (SELECT id_entreprise FROM ENTREPRISE);"
@@ -226,7 +223,6 @@ def supprimer_orphelins(db=Depends(get_db)):
         logger.info("Supprimé %s expériences orphelines (sans entreprise)", n)
 
         # Étudiants sans promotion
-        cursor.execute("BEGIN;")
         cursor.execute(
             "DELETE FROM ETUDIANT "
             "WHERE id_promotion NOT IN (SELECT id_promotion FROM PROMOTION);"
@@ -315,7 +311,6 @@ def supprimer_doublons(db=Depends(get_db)):
 
             for eid in ids_to_delete:
                 # Supprimer les données liées avant l'étudiant
-                cursor.execute("BEGIN;")
 
                 cursor.execute(
                     "DELETE FROM OBTIENT WHERE id_etudiant = %s;", (eid,)
@@ -394,6 +389,12 @@ def archiver_consentement_refuse(db=Depends(get_db)):
                     telephone = 'ANONYMISE',
                     date_naissance = '1900-01-01',
                     parcours_anterieur = 'ANONYMISE',
+                    address = NULL,
+                    city = NULL,
+                    country = NULL,
+                    linkedin = NULL,
+                    availability_status = '',
+                    skills = '[]'::jsonb,
                     date_anonymisation = NOW()
                 WHERE id_etudiant = %s;
             """, (eid,))

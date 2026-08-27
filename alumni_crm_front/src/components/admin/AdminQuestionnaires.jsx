@@ -73,7 +73,7 @@ function OptionsEditor({ options, onChange }) {
         </button>
       </div>
       {(!options || options.length === 0) && (
-        <p className="text-xs text-gray-400 dark:text-slate-500">Aucune option ajoutee. Cliquez "+" ou tapez et appuyez Entree.</p>
+        <p className="text-xs text-gray-400 dark:text-slate-500">Aucune option ajoutée. Cliquez "+" ou tapez et appuyez Entrée.</p>
       )}
     </div>
   );
@@ -89,6 +89,7 @@ export default function AdminQuestionnaires() {
   const [responsesData, setResponsesData] = useState(null);
   const [loadingResponses, setLoadingResponses] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const [form, setForm] = useState({ titre: '', description: '', questions: [{ ...EMPTY_QUESTION }] });
 
@@ -190,7 +191,13 @@ export default function AdminQuestionnaires() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Supprimer ce questionnaire et toutes ses reponses ?')) return;
+    setConfirmDeleteId(id);
+  };
+
+  const confirmDeleteAction = async () => {
+    const id = confirmDeleteId;
+    setConfirmDeleteId(null);
+    if (!id) return;
     try {
       await questionnaireAPI.supprimer(id);
       await fetchQuestionnaires();
@@ -204,7 +211,7 @@ export default function AdminQuestionnaires() {
       await questionnaireAPI.desactiver(id);
       await fetchQuestionnaires();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Erreur lors de la desactivation.');
+      setError(err.response?.data?.detail || 'Erreur lors de la désactivation.');
     }
   };
 
@@ -213,7 +220,7 @@ export default function AdminQuestionnaires() {
       await questionnaireAPI.reactiver(id);
       await fetchQuestionnaires();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Erreur lors de la reactivation.');
+      setError(err.response?.data?.detail || 'Erreur lors de la réactivation.');
     }
   };
 
@@ -225,7 +232,7 @@ export default function AdminQuestionnaires() {
       const res = await questionnaireAPI.getReponses(q.id_questionnaire);
       setResponsesData(res.data);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Erreur lors du chargement des reponses.');
+      setError(err.response?.data?.detail || 'Erreur lors du chargement des réponses.');
     } finally {
       setLoadingResponses(false);
     }
@@ -238,7 +245,7 @@ export default function AdminQuestionnaires() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Questionnaires annuels</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Creez et gérez les enquetes envoyées aux alumni</p>
+          <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Créez et gérez les enquêtes envoyées aux alumni</p>
         </div>
         {!showCreate && (
           <button
@@ -250,8 +257,45 @@ export default function AdminQuestionnaires() {
             </svg>
             Nouveau questionnaire
           </button>
-        )}
-      </div>
+      )}
+
+      {confirmDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setConfirmDeleteId(null)}>
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900">
+                <svg className="h-5 w-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-slate-100">Supprimer le questionnaire</h3>
+                <p className="text-sm text-gray-500 dark:text-slate-400">Cette action est irréversible.</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-slate-300 mb-5">
+              Voulez-vous vraiment supprimer ce questionnaire et toutes ses réponses ?
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteId(null)}
+                className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 min-h-[44px]"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteAction}
+                className="inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-700 min-h-[44px]"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
 
       {error && <ErrorMessage message={error} onRetry={() => setError(null)} />}
 
@@ -260,7 +304,7 @@ export default function AdminQuestionnaires() {
         <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100">
-              {editingId ? 'Modifier le questionnaire' : 'Creer un questionnaire'}
+              {editingId ? 'Modifier le questionnaire' : 'Créer un questionnaire'}
             </h2>
             <button onClick={resetForm} className="inline-flex items-center rounded-lg px-3 py-1.5 text-sm text-gray-500 dark:text-slate-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-slate-700 dark:hover:text-slate-200 min-h-[44px]">
               Annuler
@@ -274,7 +318,7 @@ export default function AdminQuestionnaires() {
                 type="text"
                 value={form.titre}
                 onChange={(e) => setForm((p) => ({ ...p, titre: e.target.value }))}
-                placeholder="Ex: Enquete annuelle 2026"
+                placeholder="Ex: Enquête annuelle 2026"
                 className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
               />
             </div>
@@ -379,7 +423,7 @@ export default function AdminQuestionnaires() {
               <button
                 onClick={handleCreate}
                 disabled={creating}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {creating ? (
                   <>
@@ -387,7 +431,7 @@ export default function AdminQuestionnaires() {
                     Sauvegarde...
                   </>
                 ) : (
-                  editingId ? 'Enregistrer les modifications' : 'Creer le questionnaire'
+                  editingId ? 'Enregistrer les modifications' : 'Créer le questionnaire'
                 )}
               </button>
             </div>
@@ -402,7 +446,7 @@ export default function AdminQuestionnaires() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
           </svg>
           <h3 className="mt-4 text-sm font-semibold text-gray-900 dark:text-slate-100">Aucun questionnaire</h3>
-          <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Creez votre premier questionnaire pour interroger vos alumni.</p>
+          <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Créez votre premier questionnaire pour interroger vos alumni.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -422,7 +466,7 @@ export default function AdminQuestionnaires() {
                   </div>
                   {q.description && <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">{q.description}</p>}
                   <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">
-                    Cree le {new Date(q.date_creation).toLocaleDateString('fr-FR')}
+                    Créé le {new Date(q.date_creation).toLocaleDateString('fr-FR')}
                   </p>
                   {q.nb_questions > 0 && (
                     <p className="mt-1 text-xs text-gray-400 dark:text-slate-500">
@@ -452,7 +496,7 @@ export default function AdminQuestionnaires() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                     </svg>
-                    Voir reponses
+                    Voir réponses
                   </button>
                   <button
                     onClick={() => startEdit(q)}
@@ -468,14 +512,14 @@ export default function AdminQuestionnaires() {
                       onClick={() => handleDesactiver(q.id_questionnaire)}
                       className="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950 px-3 py-2 text-xs font-medium text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950 min-h-[44px]"
                     >
-                      Desactiver
+                      Désactiver
                     </button>
                   ) : (
                     <button
                       onClick={() => handleReactiver(q.id_questionnaire)}
                       className="inline-flex items-center gap-1 rounded-lg border border-green-200 bg-green-50 dark:bg-green-950 px-3 py-2 text-xs font-medium text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-950 min-h-[44px]"
                     >
-                      Reactiver
+                      Réactiver
                     </button>
                   )}
                   <button
@@ -497,12 +541,12 @@ export default function AdminQuestionnaires() {
           <div className="w-full max-w-3xl max-h-[80vh] overflow-auto rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100">Reponses - {viewingResponses.titre}</h2>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100">Réponses - {viewingResponses.titre}</h2>
                 {responsesData && (
-                  <p className="text-sm text-gray-500 dark:text-slate-400">{responsesData.total} reponse(s) recue(s)</p>
+                  <p className="text-sm text-gray-500 dark:text-slate-400">{responsesData.total} réponse(s) reçue(s)</p>
                 )}
               </div>
-              <button onClick={() => setViewingResponses(null)} className="rounded-lg p-2 text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-700">
+              <button onClick={() => setViewingResponses(null)} className="rounded-lg p-2 text-gray-400 dark:text-slate-500 hover:bg-gray-100 dark:hover:bg-slate-700 min-h-[44px] min-w-[44px] inline-flex items-center justify-center">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
                 </svg>
@@ -510,9 +554,9 @@ export default function AdminQuestionnaires() {
             </div>
 
             {loadingResponses ? (
-              <LoadingSpinner text="Chargement des reponses..." />
+              <LoadingSpinner text="Chargement des réponses..." />
             ) : responsesData?.reponses?.length === 0 ? (
-              <p className="text-center text-sm text-gray-500 dark:text-slate-400 py-8">Aucune reponse pour le moment.</p>
+              <p className="text-center text-sm text-gray-500 dark:text-slate-400 py-8">Aucune réponse pour le moment.</p>
             ) : (
               <div className="space-y-3">
                 {responsesData?.reponses?.map((r) => (
@@ -543,6 +587,44 @@ export default function AdminQuestionnaires() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CONFIRMATION SUPPRESSION */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setConfirmDeleteId(null)}>
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900">
+                <svg className="h-5 w-5 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-slate-100">Supprimer le questionnaire</h3>
+                <p className="text-sm text-gray-500 dark:text-slate-400">Cette action est irréversible.</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-slate-300 mb-5">
+              Voulez-vous vraiment supprimer ce questionnaire et toutes ses réponses ?
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteId(null)}
+                className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 min-h-[44px]"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteAction}
+                className="inline-flex items-center justify-center rounded-lg bg-red-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-700 min-h-[44px]"
+              >
+                Supprimer
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -1,6 +1,11 @@
 -- ============================================================================
 -- LDD COMPLET — CRM Alumni (PostgreSQL)
--- État final après migrations 000 → 014
+-- État final après migrations 000 → 015
+-- Re-audité le 27/08/2026 contre le schéma réel (introspection PostgreSQL) :
+--   - consentement_rgpd.canal : NULLABLE
+--   - reponse_questionnaire.id_questionnaire : FK en NO ACTION (pas CASCADE)
+--   - reponse_questionnaire : UNIQUE (id_etudiant, id_questionnaire)
+--   - otp_codes.email : index non-unique (idx_otp_email), pas de contrainte UNIQUE
 -- ============================================================================
 
 -- ============================================================================
@@ -88,10 +93,10 @@ CREATE TABLE otp_codes(
    created_at TIMESTAMP DEFAULT NOW(),
    expires_at TIMESTAMP NOT NULL,
    used BOOLEAN DEFAULT FALSE,
-   ip_address TEXT DEFAULT '',
-   PRIMARY KEY(id),
-   UNIQUE(email)
+    ip_address TEXT DEFAULT '',
+    PRIMARY KEY(id)
 );
+-- Index non-unique sur email (idx_otp_email, migration 013) — pas de contrainte UNIQUE
 
 -- ============================================================================
 -- 8. SCHEMA_MIGRATIONS
@@ -184,8 +189,8 @@ CREATE TABLE CONSENTEMENT_RGPD(
    date_consentement DATE NOT NULL,
    type_consentement VARCHAR(100) NOT NULL,
    statut VARCHAR(50) NOT NULL,
-   canal VARCHAR(50) NOT NULL,
-   id_etudiant INTEGER NOT NULL,
+    canal VARCHAR(50),
+    id_etudiant INTEGER NOT NULL,
    PRIMARY KEY(id_consentement),
    CONSTRAINT uq_consentement_etudiant_type UNIQUE (id_etudiant, type_consentement)
 );
@@ -199,7 +204,8 @@ CREATE TABLE REPONSE_QUESTIONNAIRE(
    date_reponse TIMESTAMP DEFAULT NOW(),
    id_questionnaire INTEGER NOT NULL,
    id_etudiant INTEGER NOT NULL,
-   PRIMARY KEY(id_reponse)
+   PRIMARY KEY(id_reponse),
+   CONSTRAINT uq_reponse_etudiant_questionnaire UNIQUE (id_etudiant, id_questionnaire)
 );
 
 
@@ -245,4 +251,4 @@ ALTER TABLE REPONSE_QUESTIONNAIRE
 
 ALTER TABLE REPONSE_QUESTIONNAIRE
     ADD CONSTRAINT fk_reponse_questionnaire
-    FOREIGN KEY (id_questionnaire) REFERENCES QUESTIONNAIRE(id_questionnaire) ON DELETE CASCADE;
+    FOREIGN KEY (id_questionnaire) REFERENCES QUESTIONNAIRE(id_questionnaire) ON DELETE NO ACTION;

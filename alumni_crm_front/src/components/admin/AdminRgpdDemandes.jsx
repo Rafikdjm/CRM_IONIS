@@ -440,7 +440,7 @@ export default function AdminRgpdDemandes() {
         <button
           onClick={openPurgeModal}
           disabled={clotureesCount === 0}
-          className="rounded-lg border border-orange-300 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-700 hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-300 dark:hover:bg-orange-900"
+          className="min-h-[44px] rounded-lg border border-orange-300 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-700 hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-300 dark:hover:bg-orange-900"
         >
           Purger les demandes traitées/rejetées ({clotureesCount})
         </button>
@@ -455,31 +455,31 @@ export default function AdminRgpdDemandes() {
           </span>
           <button
             onClick={() => openBulkAction('traitee')}
-            className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
+            className="min-h-[44px] rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
           >
             Marquer comme traitée
           </button>
           <button
             onClick={() => openBulkAction('rejetee')}
-            className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600"
+            className="min-h-[44px] rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600"
           >
             Rejeter
           </button>
           <button
             onClick={() => openBulkAction('export')}
-            className="rounded-lg bg-gray-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-700"
+            className="min-h-[44px] rounded-lg bg-gray-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-700"
           >
             Exporter ({labelFormat(exportFormat)})
           </button>
           <button
             onClick={() => openBulkAction('delete')}
-            className="rounded-lg bg-red-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-800"
+            className="min-h-[44px] rounded-lg bg-red-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-800"
           >
             Supprimer
           </button>
           <button
             onClick={() => setSelectedIds(new Set())}
-            className="ml-auto text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400"
+            className="min-h-[44px] ml-auto text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400"
           >
             Tout désélectionner
           </button>
@@ -577,7 +577,7 @@ export default function AdminRgpdDemandes() {
                     {d.statut === 'envoyee' ? (
                       <button
                         onClick={() => openModal(d, 'prendre')}
-                        className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+                        className="min-h-[44px] rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
                       >
                         Prendre en charge
                       </button>
@@ -585,13 +585,13 @@ export default function AdminRgpdDemandes() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => openModal(d, 'traiter')}
-                          className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
+                          className="min-h-[44px] rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
                         >
                           Traiter
                         </button>
                         <button
                           onClick={() => openModal(d, 'rejeter')}
-                          className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600"
+                          className="min-h-[44px] rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600"
                         >
                           Rejeter
                         </button>
@@ -600,7 +600,7 @@ export default function AdminRgpdDemandes() {
                       <button
                         onClick={() => handleExport(d.id_demande)}
                         disabled={exportingId === d.id_demande}
-                        className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                        className="min-h-[44px] rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                       >
                         {exportingId === d.id_demande ? 'Export...' : `Exporter (${labelFormat(exportFormat)})`}
                       </button>
@@ -666,7 +666,7 @@ export default function AdminRgpdDemandes() {
                 <button
                   onClick={() => handleTraiter('rejetee')}
                   disabled={submitting}
-                  className="w-full rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                  className="w-full min-h-[44px] rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
                 >
                   {submitting ? 'Traitement...' : 'Rejeter la demande'}
                 </button>
@@ -674,7 +674,7 @@ export default function AdminRgpdDemandes() {
                 <button
                   onClick={() => handleTraiter('traitee')}
                   disabled={submitting}
-                  className="w-full rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                  className="w-full min-h-[44px] rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
                 >
                   {submitting ? 'Traitement...' : 'Valider le traitement'}
                 </button>
@@ -682,14 +682,14 @@ export default function AdminRgpdDemandes() {
                 <button
                   onClick={handlePrendreEnCharge}
                   disabled={submitting}
-                  className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="w-full min-h-[44px] rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
                 >
                   {submitting ? 'Traitement...' : 'Confirmer la prise en charge'}
                 </button>
               )}
               <button
                 onClick={() => setTraitementModal(null)}
-                className="w-full rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-slate-700 dark:text-slate-200"
+                className="w-full min-h-[44px] rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-slate-700 dark:text-slate-200"
               >
                 Fermer
               </button>
@@ -733,7 +733,7 @@ export default function AdminRgpdDemandes() {
               <button
                 onClick={handleBulkConfirm}
                 disabled={bulkSubmitting}
-                className={`w-full rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50 ${
+                className={`w-full min-h-[44px] rounded-lg px-4 py-2 text-sm font-medium text-white disabled:opacity-50 ${
                   confirmModal.type === 'bulk-delete' || confirmModal.type === 'purge' || confirmModal.type === 'bulk-rejetee'
                     ? 'bg-red-600 hover:bg-red-700'
                     : confirmModal.type === 'bulk-traitee'
@@ -745,7 +745,7 @@ export default function AdminRgpdDemandes() {
               </button>
               <button
                 onClick={() => setConfirmModal(null)}
-                className="w-full rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-slate-700 dark:text-slate-200"
+                className="w-full min-h-[44px] rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-slate-700 dark:text-slate-200"
               >
                 Annuler
               </button>

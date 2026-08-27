@@ -59,7 +59,13 @@ export const apiErrorMessage = (err, fallback = 'Une erreur est survenue.') => {
 const decodeJwtPayload = (token) => {
   try {
     const base64 = token.split('.')[1];
-    return JSON.parse(atob(base64.replace(/-/g, '+').replace(/_/g, '/')));
+    const decoded = decodeURIComponent(
+      atob(base64.replace(/-/g, '+').replace(/_/g, '/'))
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join(''),
+    );
+    return JSON.parse(decoded);
   } catch {
     return null;
   }
@@ -104,7 +110,6 @@ const mapBackendAlumni = (e) => {
     date_anonymisation: e.date_anonymisation || null,
     is_anonymised: e.date_anonymisation != null,
   };
-  console.log('[mapBackendAlumni] raw:', JSON.stringify(e), '-> email:', mapped.email, 'type:', typeof e.email);
   return mapped;
 };
 
@@ -115,6 +120,7 @@ const mapAlumniToBackend = (a) => ({
   telephone: a.phone || a.telephone || '',
   date_naissance: a.date_of_birth || a.date_naissance || '2000-01-01',
   parcours_anterieur: (a.previous_education || a.parcours_anterieur || '').substring(0, 255),
+  etablissement_precedent: a.previous_school || a.etablissement_precedent || null,
   date_inscription: a.date_inscription || new Date().toISOString().split('T')[0],
   id_promotion: a.id_promotion || 1,
   email_academique: a.email_academique || null,
@@ -122,7 +128,6 @@ const mapAlumniToBackend = (a) => ({
   city: a.city || '',
   country: a.country || '',
   linkedin: a.linkedin || '',
-  secteur_activite: a.sector || a.secteur_activite || '',
   availability_status: a.availability_status || '',
   skills: a.skills || [],
 });
@@ -694,6 +699,11 @@ export const questionnaireAPI = {
     return res.data;
   },
 
+  supprimerReponse: async (questionnaireId, alumniId) => {
+    const res = await api.delete(`/questionnaires/${questionnaireId}/repondre?id_etudiant=${alumniId}`);
+    return res.data;
+  },
+
   listAll: async () => {
     const res = await api.get('/admin/questionnaires/');
     return { data: Array.isArray(res.data) ? res.data : [] };
@@ -763,24 +773,8 @@ export const loginAPI = {
   requestOTP: async (email) => {
     const normalizedEmail = email.trim().toLowerCase();
     const url = '/auth/otp/request';
-    console.log('[loginAPI.requestOTP] POST', url, { email: normalizedEmail });
-    try {
-      const res = await api.post(url, { email: normalizedEmail });
-      console.log('[loginAPI.requestOTP] SUCCESS', res.status, res.data);
-      return res.data;
-    } catch (err) {
-      console.error('[loginAPI.requestOTP] FAILED', {
-        message: err.message,
-        code: err.code,
-        config_url: err.config?.url,
-        config_baseURL: err.config?.baseURL,
-        response_status: err.response?.status,
-        response_data: err.response?.data,
-        request_readyState: err.request?.readyState,
-        request_status: err.request?.status,
-      });
-      throw err;
-    }
+    const res = await api.post(url, { email: normalizedEmail });
+    return res.data;
   },
 
   verifyOTP: async (email, code) => {

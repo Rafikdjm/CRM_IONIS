@@ -9,6 +9,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional
 
+import bleach
 import pg8000.dbapi
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
@@ -37,6 +38,27 @@ class NewsletterResponse(BaseModel):
     cibles: int
 
 
+ALLOWED_TAGS = list(bleach.ALLOWED_TAGS) + [
+    "h1", "h2", "h3", "p", "br", "hr", "ul", "ol", "li", "strong", "em",
+    "a", "img", "table", "thead", "tbody", "tr", "th", "td", "div", "span",
+    "blockquote", "pre", "code",
+]
+ALLOWED_ATTRS = {
+    **bleach.ALLOWED_ATTRIBUTES,
+    "a": ["href", "title", "target"],
+    "img": ["src", "alt", "width", "height"],
+    "div": ["style"],
+    "span": ["style"],
+    "p": ["style"],
+    "td": ["style"],
+    "th": ["style"],
+}
+
+
+def _sanitize_html(raw_html: str) -> str:
+    return bleach.clean(raw_html, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS, strip=True)
+
+
 # ── Fonction d'envoi email ──────────────────────────────────────
 def _send_newsletter_email(email: str, prenom: str, sujet: str, corps_html: str) -> bool:
     mode = getattr(settings, "otp_mode", "console")
@@ -55,6 +77,7 @@ def _send_newsletter_email(email: str, prenom: str, sujet: str, corps_html: str)
             return False
 
         resend.api_key = settings.resend_api_key
+        safe_html = _sanitize_html(corps_html)
 
         full_html = f"""
         <!DOCTYPE html>
@@ -73,7 +96,7 @@ def _send_newsletter_email(email: str, prenom: str, sujet: str, corps_html: str)
                             <td style="padding:40px;">
                                 <p style="color:#4b5563;line-height:1.6;">Bonjour {prenom},</p>
                                 <div style="color:#1f2937;line-height:1.8;margin-top:20px;">
-                                    {corps_html}
+                                    {safe_html}
                                 </div>
                                 <div style="margin-top:30px;text-align:center;">
                                     <a href="#" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">

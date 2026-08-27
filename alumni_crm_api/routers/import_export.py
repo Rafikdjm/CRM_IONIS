@@ -16,6 +16,7 @@ from routers.etudiants import (
 )
 from security import require_admin_api_key
 from utils import normalize_academic_slug
+from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -126,7 +127,7 @@ def _resolve_promotion(cursor, promotion_name: str | None, annee_diplome: int | 
             return row[0]
     if annee_diplome:
         cursor.execute(
-            "SELECT id_promotion FROM PROMOTION WHERE annee_diplome = %s LIMIT 1",
+            "SELECT id_promotion FROM PROMOTION WHERE annee_diplome = %s ORDER BY id_promotion LIMIT 1",
             (annee_diplome,),
         )
         row = cursor.fetchone()
@@ -205,7 +206,13 @@ async def import_excel(file: UploadFile = File(...), db=Depends(get_db)):
     if not file.filename or not file.filename.endswith((".xlsx", ".xls", ".csv")):
         raise HTTPException(status_code=400, detail="Format de fichier non supporté. Utilisez .xlsx ou .csv.")
 
+    max_bytes = settings.max_upload_size_mb * 1024 * 1024
     content = await file.read()
+    if len(content) > max_bytes:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Fichier trop volumineux. Taille maximale : {settings.max_upload_size_mb} Mo.",
+        )
     try:
         if file.filename.lower().endswith(".csv"):
             text = content.decode("utf-8-sig")
@@ -237,6 +244,7 @@ async def import_excel(file: UploadFile = File(...), db=Depends(get_db)):
 
     try:
         for row_num, row in enumerate(rows[1:], start=2):
+            cursor.execute("SAVEPOINT sp_row;")
             try:
                 def get_val(col_name):
                     idx = col_map.get(col_name)
@@ -348,9 +356,10 @@ async def import_excel(file: UploadFile = File(...), db=Depends(get_db)):
                 continue
             except Exception:
                 errors.append({"row": row_num, "message": "Erreur inattendue lors du traitement de la ligne."})
-                db.rollback()
-                cursor.close()
-                cursor = db.cursor()
+                try:
+                    cursor.execute("ROLLBACK TO SAVEPOINT sp_row;")
+                except Exception:
+                    pass
                 continue
 
         db.commit()

@@ -1,5 +1,4 @@
 export const SECTORS = [
-  'Technologie',
   'Informatique',
   'Finance',
   'Santé',
@@ -8,7 +7,6 @@ export const SECTORS = [
   'Commerce',
   'Marketing',
   'Juridique',
-  'Construction',
   'Transport',
   'Énergie',
   'Média',
@@ -28,12 +26,10 @@ export const SECTORS = [
   'Hôtellerie / Restauration',
   'Automobile',
   'Aéronautique / Spatial',
-  'Telecom',
-  'Banque',
-  'BTP',
+  'Télécom',
+  'Construction',
   'Audiovisuel / Cinéma',
   'Commerce de détail',
-  'Secteur public',
   'Freelance / Entrepreneur',
   'Autre',
 ];

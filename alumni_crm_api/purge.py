@@ -85,10 +85,18 @@ def purge_comptes_anonymises(cursor, delay_months=None, acteur="system", commit=
     )
     _write_audit_log(cursor, "PURGE_COMPTES_ANONYMISES", details, nb_supprimes, acteur=acteur)
 
-    if commit:
-        cursor.connection.commit()
-    else:
-        cursor.connection.rollback()
+    try:
+        if commit:
+            cursor.connection.commit()
+        else:
+            cursor.connection.rollback()
+    except Exception:
+        logger.exception("Erreur lors du commit/rollback de la purge")
+        try:
+            cursor.connection.rollback()
+        except Exception:
+            pass
+        raise
 
     return {
         "delay_months": delay_months,

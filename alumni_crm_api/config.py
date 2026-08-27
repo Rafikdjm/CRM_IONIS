@@ -71,3 +71,9 @@ if not settings.jwt_secret or len(settings.jwt_secret) < 32:
         "JWT_SECRET n'est pas défini ou est trop court (< 32 caractères). "
         "Générez une clé avec : python -c \"import secrets; print(secrets.token_hex(32))\""
     )
+
+if not settings.admin_access_code:
+    raise RuntimeError(
+        "ADMIN_ACCESS_CODE n'est pas défini. Ce code protège la connexion "
+        "administrateur : il est obligatoire."
+    )

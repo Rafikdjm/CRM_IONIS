@@ -12,9 +12,9 @@ Alumni CRM est une application web 3-tiers qui permet à un établissement d'ens
 
 | Couche | Technologie |
 |---|---|
-| Backend | Python / FastAPI (16 routeurs montés dans 14 fichiers, 80 endpoints REST documentés via Swagger) |
+| Backend | Python / FastAPI (16 routeurs montés dans 14 fichiers, 85 endpoints REST documentés via Swagger) |
 | Frontend | React + Vite (espace admin + espace alumni) |
-| Base de données | PostgreSQL (14 tables, 15 migrations versionnées) |
+| Base de données | PostgreSQL (14 tables, 16 migrations versionnées) |
 | Emails | Resend (OTP + newsletter), mode console en développement |
 
 ## Fonctionnalités
@@ -29,7 +29,7 @@ Alumni CRM est une application web 3-tiers qui permet à un établissement d'ens
 
 ```
 alumni_crm_api/     Backend FastAPI (+ README détaillé : routes, sécurité, corrections)
-alumni_crm_front/   Frontend React/Vite (tests Vitest dans src/__tests__)
+alumni_crm_front/   Frontend React/Vite (config Vitest présente, pas de suite de tests conservée)
 Rapport/            Livrables PDF générés par generate_reports.py
                     (rapport de stage, cartographie des données, charte RGPD,
                      stratégie de mise à jour, indicateurs d'insertion,
@@ -37,7 +37,7 @@ Rapport/            Livrables PDF générés par generate_reports.py
 MCD_MLD V2.loo      Modèle Looping (conception MCD/MLD initiale)
 alumni_crm_api/
   docs/             erd_alumni_crm.mmd / .docx (MLD régénéré par introspection)
-  migrations/       Migrations SQL numérotées 000 → 014
+  migrations/       Migrations SQL numérotées 000 → 015
 Rapport/
   methodologie_indicateurs_dashboard.md   (méthodologie indicateurs, version simplifiée)
 ```
@@ -82,7 +82,7 @@ Variables d'environnement attendues (fichier `.env`) :
 cd alumni_crm_front
 npm install
 npm run dev      # http://localhost:5173
-npm test         # suite Vitest
+npm test         # config Vitest (aucune suite de tests fournie)
 ```
 
 ## Documentation complémentaire

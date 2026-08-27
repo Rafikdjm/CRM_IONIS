@@ -7,13 +7,19 @@
 %% 010_email_academique_unique.sql) : DEMANDE_RGPD complétée (009) et
 %% CONSENTEMENT_RGPD enrichi (006).
 %%
-%% Mis à jour le 25/08/2026 : renumérotation continue des migrations (000→014),
+%% Mis à jour le 25/08/2026 : renumérotation continue des migrations (000→015),
 %% l'ancien trou « 003 absent » est comblé), puis :
 %%   - 011 : REPONSE_QUESTIONNAIRE.id_etudiant passe en ON DELETE CASCADE
 %%     (harmonisation avec la base live, fix du drift de la migration 003)
 %%   - 012 : EXPERIENCE_PRO.salary_annuel NUMERIC(10,2) DEFAULT 0
 %%   - 013 : OTP_CODES formalisée dans le versionnage (CREATE TABLE IF NOT EXISTS)
 %%   - 014 : QUESTIONNAIRE.actif BOOLEAN DEFAULT TRUE (formalisé)
+%%   - 015 : QUESTION.texte — correction d'encodage (fix data, pas de DDL)
+%%
+%% Re-audité le 27/08/2026 contre la base réelle (introspection PostgreSQL) :
+%%   - CONSENTEMENT_RGPD.canal est NULLABLE (l'API renseigne le canal si dispo)
+%%   - REPONSE_QUESTIONNAIRE porte une contrainte UNIQUE (id_etudiant,
+%%     id_questionnaire) : un étudiant ne peut répondre qu'une fois par questionnaire
 %%
 %% Convention : le MLD est la traduction directe du MCD. Chaque entité du MCD
 %% devient une table, chaque relation 1-N devient une colonne FK, et la relation
@@ -54,7 +60,7 @@ erDiagram
         string city "DEFAULT ''"
         string country "DEFAULT ''"
         string linkedin "DEFAULT ''"
-        string availability_status "en_poste | a_lecoute | en_recherche"
+        string availability_status "DEFAULT '' en base; valeurs API : en_poste | a_lecoute | en_recherche"
         jsonb skills "DEFAULT '[]'"
         timestamp date_anonymisation "RGPD, NULL si actif"
     }
@@ -93,7 +99,7 @@ erDiagram
         date date_consentement "NOT NULL"
         string type_consentement "NOT NULL, ex: PROFIL_ALUMNI; UNIQUE (id_etudiant, type_consentement)"
         string statut "NOT NULL, ACCORD | REFUS"
-        string canal "NOT NULL"
+        string canal "NULL si non renseigné"
     }
     QUESTIONNAIRE {
         int id_questionnaire PK "SERIAL"
@@ -115,7 +121,7 @@ erDiagram
     REPONSE_QUESTIONNAIRE {
         int id_reponse PK "SERIAL"
         int id_etudiant FK "NOT NULL, ON DELETE CASCADE"
-        int id_questionnaire FK "NOT NULL, NO ACTION"
+        int id_questionnaire FK "NOT NULL, NO ACTION; UNIQUE (id_etudiant, id_questionnaire)"
         jsonb reponses "NOT NULL, DEFAULT '{}'"
         timestamp date_reponse "DEFAULT NOW()"
     }

@@ -178,7 +178,7 @@ def ajouter_experience(
         refuser_compte_anonymise(cursor, id_etudiant)
 
         cursor.execute(
-            "SELECT id_entreprise FROM ENTREPRISE WHERE nom_entreprise ILIKE %s LIMIT 1",
+            "SELECT id_entreprise FROM ENTREPRISE WHERE nom_entreprise ILIKE %s ORDER BY id_entreprise LIMIT 1",
             (experience.nom_entreprise,),
         )
         row = cursor.fetchone()
