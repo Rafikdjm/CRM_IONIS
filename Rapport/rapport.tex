@@ -189,7 +189,7 @@ Ce stage, réalisé au sein d'IONIS-STM dans le cadre du programme Pré-MSc 2026
 
 La problématique identifiée était l'absence d'un outil centralisé permettant à un établissement d'enseignement supérieur de suivre le cycle de vie de ses étudiants --- de l'inscription administrative à l'évolution professionnelle post-diplôme --- et de disposer d'indicateurs d'insertion fiables pour le pilotage de la formation. Les données d'insertion étaient dispersées, les indicateurs calculés manuellement, le réseau alumni inactif et la conformité RGPD non formalisée.
 
-La démarche a consisté à concevoir et développer une application complète --- backend, base de données, frontend et conformité réglementaire --- en suivant une approche itérative~: modélisation, développement backend, développement frontend, audit de sécurité et documentation. Le système repose sur une architecture 3-tiers (FastAPI, React/Vite, PostgreSQL) avec 14 tables de base de données, 85 endpoints API, 14 routes frontend et 8 indicateurs d'insertion professionnelle.
+La démarche a consisté à concevoir et développer une application complète --- backend, base de données, frontend et conformité réglementaire --- en suivant une approche itérative~: modélisation, développement backend, développement frontend, audit de sécurité et documentation. Le système repose sur une architecture 3-tiers (FastAPI, React/Vite, PostgreSQL) avec 14 tables de base de données, 82 endpoints API, 14 routes frontend et 8 indicateurs d'insertion professionnelle.
 
 Le projet a abouti à un prototype fonctionnel couvrant l'intégralité du périmètre fonctionnel défini dans le sujet de stage. La conformité RGPD a été intégrée dès la conception~: consentements traçables, workflow de demandes de suppression et d'anonymisation, journal d'audit et durée de conservation affichée. Un audit de sécurité a permis de corriger des failles d'authentification et de protéger des routes initialement ouvertes. Les livrables documentaires complémentaires (cartographie des données, charte RGPD, stratégie de mise à jour, analyse des indicateurs d'insertion et guide des processus d'animation du réseau) couvrent les exigences du volet Management du sujet de stage.
 
@@ -344,7 +344,7 @@ Le passage du MCD au MLD a respecté les règles de transformation standard (ent
 
 \subsection{Mission 2 --- Développement du backend API}
 
-J'ai développé une API REST complète avec FastAPI (Python). L'API comprend \textbf{16 routeurs} et \textbf{85 endpoints} couvrant~:
+J'ai développé une API REST complète avec FastAPI (Python). L'API comprend \textbf{16 routeurs} et \textbf{82 endpoints} couvrant~:
 
 \begin{itemize}
   \item Authentification (OTP email + code à 6 chiffres, clé d'accès API admin, sessions JWT)
@@ -379,7 +379,7 @@ J'ai intégré la conformité RGPD à toutes les étapes du système~:
   \item Exports de données (droit d'accès et portabilité) téléchargeables aux formats JSON, Excel (.xlsx) ou CSV~: auto-service côté alumni (\texttt{GET /rgpd/export}), unitaire et groupé côté admin, avec une section «~Erreurs~» dans l'export groupé pour les comptes introuvables ou anonymisés.
   \item Distinction entre anonymisation (RGPD, réversible) et suppression définitive (hard delete, réservée aux doublons).
   \item Purge différée configurable (\texttt{PURGE\_DELAY\_MONTHS}, défaut 6 mois).
-  \item Information de l'alumni dans l'interface de consentement~: durée de conservation des données (suppression 6 mois après anonymisation) et contact DPO (\texttt{dpo@ionis-stm.com}).
+  \item Information de l'alumni dans l'interface de consentement~: durée de conservation des données (suppression 6 mois après anonymisation) et contact DPO (\texttt{contact@ionis-stm.com}).
 \end{itemize}
 
 Un audit de sécurité m'a permis de corriger des failles critiques~:
@@ -429,9 +429,9 @@ Le prototype résultant de ce stage couvre l'intégralité du périmètre foncti
 
 \begin{itemize}
   \item \textbf{14 tables} de base de données, validées par introspection et rejeu complet des 16 migrations sur une base vide (0 différence structurelle constatée).
-  \item \textbf{85 endpoints} API avec authentification OTP + JWT et protection admin, dont les 2 ajouts de fin de stage~: \texttt{POST /newsletter/envoyer} (envoi de newsletter avec filtres de ciblage) et \texttt{POST /admin/questionnaires/notififier} (relance questionnaire~: email générique aux non-répondants, filtre par promotion, sans lien direct vers le formulaire à ce jour).
+  \item \textbf{82 endpoints} API avec authentification OTP + JWT et protection admin, dont les 3 ajouts de fin de stage~: \texttt{POST /newsletter/envoyer} (envoi de newsletter avec filtres de ciblage), \texttt{POST /admin/questionnaires/notififier} (relance questionnaire~: email générique aux non-répondants, filtre par promotion, exclusion des alumni ayant refusé le consentement «~enquetes~» ou «~prise_de_contact~» - RGPD, sans lien direct vers le formulaire à ce jour) et \texttt{GET /admin/indicateurs/partenaires} (indicateurs agrégés anonymisés restreints aux alumni ayant accepté le partage de données).
   \item \textbf{14 routes} frontend couvrant les espaces admin et alumni.
-  \item \textbf{8 indicateurs} d'insertion professionnelle, dont 6 exposés via des endpoints dédiés (\texttt{/admin/indicateurs}, \texttt{/admin/indicateurs/secteurs}, \texttt{/admin/indicateurs/types-contrat}, \texttt{/admin/indicateurs/kpi-tag}, \texttt{/admin/indicateurs/kpi-tags}, \texttt{/admin/indicateurs/kpi-tags-actifs}).
+  \item \textbf{8 indicateurs} d'insertion professionnelle, dont 6 exposés via des endpoints dédiés (\texttt{/admin/indicateurs}, \texttt{/admin/indicateurs/secteurs}, \texttt{/admin/indicateurs/types-contrat}, \texttt{/admin/indicateurs/kpi-tag}, \texttt{/admin/indicateurs/kpi-tags}, \texttt{/admin/indicateurs/kpi-tags-actifs}), complétés d'un endpoint agrégé partenaire (\texttt{/admin/indicateurs/partenaires}, périmètre \texttt{partage\_donnees} actif).
   \item \textbf{5 documents} de livraison complémentaires, couvrant les exigences «~Management~» du sujet~: cartographie des données (exigence M1), charte RGPD (M2), analyse des indicateurs d'insertion (M4), stratégie de mise à jour des données --- porteuse de l'exigence M3 (questionnaire annuel automatisé et newsletter) ---, et guide des processus d'animation du réseau (livrable attendu du sujet).
 \end{itemize}
 
@@ -566,9 +566,9 @@ Ces améliorations concernent des manques fonctionnels ou des risques techniques
 
 \textbf{Tests automatisés.} Le principal chantier technique restant avant la mise en production est l'introduction durable d'une suite de tests automatisés (pytest côté backend, Vitest/Testing Library côté frontend), actuellement absente du dépôt~: à l'issue du stage, la validation repose sur des scripts ad hoc, le rejeu complet des migrations sur base vide et des tests manuels des parcours. Quelques tests d'intégration auraient intercepté la route \texttt{DELETE /entreprises/\{id\}} cassée et les endpoints renvoyant 200 OK avec un corps d'erreur. Le script de test E2E documenté dans le README n'est plus présent dans le dépôt et doit être reconstitué. La mise en place de tests automatisés sur les routes critiques --- authentification, opérations CRUD, workflow RGPD --- est un prérequis à tout déploiement.
 
-\textbf{Automatisation de l'envoi du questionnaire annuel (cron job).} L'activation des questionnaires reste manuelle dans l'interface admin. Un mécanisme de planification automatique (cron job) permettrait d'envoyer les relances email aux alumni n'ayant pas répondu au questionnaire actif, selon un calendrier défini par le service des relations entreprises. L'endpoint backend \texttt{POST /admin/questionnaires/notififier} est déjà implémenté (filtres de ciblage par promotion, envoi aux non-répondants)~; il manque le déclenchement automatique périodique et une interface dédiée côté frontend.
+\textbf{Automatisation de l'envoi du questionnaire annuel (cron job).} L'activation des questionnaires reste manuelle dans l'interface admin. Un mécanisme de planification automatique (cron job) permettrait d'envoyer les relances email aux alumni n'ayant pas répondu au questionnaire actif, selon un calendrier défini par le service des relations entreprises. L'endpoint backend \texttt{POST /admin/questionnaires/notififier} est déjà implémenté (filtres de ciblage par promotion, envoi aux non-répondants, exclusion des alumni ayant refusé les consentements «~enquetes~» ou «~prise_de_contact~»)~; il manque le déclenchement automatique périodique et une interface dédiée côté frontend.
 
-\textbf{Composant frontend d'envoi de newsletter.} L'endpoint backend \texttt{POST /newsletter/envoyer} est opérationnel avec filtres de ciblage (promotion, secteur, consentement newsletter actif), mais le composant frontend permettant à l'administrateur de rédiger et d'envoyer la newsletter depuis l'interface n'est pas encore développé. Le mécanisme de désinscription automatique (lien dans le gabarit HTML mettant le consentement à «~refusé~») n'est pas non plus implémenté --- des liens placeholder existent dans le gabarit HTML.
+\textbf{Composant frontend d'envoi de newsletter.} L'endpoint backend \texttt{POST /newsletter/envoyer} est opérationnel avec filtres de ciblage (promotion, secteur, consentement «~newsletter~» actif et «~prise_de_contact~» non refusé), mais le composant frontend permettant à l'administrateur de rédiger et d'envoyer la newsletter depuis l'interface n'est pas encore développé. Le mécanisme de désinscription automatique (lien dans le gabarit HTML mettant le consentement à «~refusé~») n'est pas non plus implémenté --- des liens placeholder existent dans le gabarit HTML.
 
 \textbf{Standardisation des contraintes de validation.} Le statut des consentements dans la table \texttt{CONSENTEMENT\_RGPD} reste libre (ni \texttt{Literal} côté API, ni \texttt{CHECK} côté base). La date d'obtention des certifications n'est pas validée (une date future passe sans erreur). La mise en place de contraintes de validation à la source --- types énumérés côté API, contraintes CHECK côté base --- est une bonne pratique à généraliser.
 
@@ -707,10 +707,11 @@ Infrastructure & otp\_codes, schema\_migrations & otp\_codes~: codes OTP hachés
 
 \chapter{Liste des endpoints API}
 
-[À COMPLÉTER~: liste complète des 85 endpoints avec méthode HTTP, chemin et description]
+[À COMPLÉTER~: liste complète des 82 endpoints avec méthode HTTP, chemin et description]
 
 \chapter{Différentiel de migration et audit de conformité}
 
 [À COMPLÉTER~: tableau du drift de migration corrigé et résultats du rejeu des 16 migrations]
 
 \end{document}
+

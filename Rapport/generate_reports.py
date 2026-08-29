@@ -239,7 +239,7 @@ def generate_cartographie():
     pdf.bullet("L'alumni peut modifier ses preferences a tout moment via l'interface de consentement.")
     pdf.bullet("Le retrait du consentement est modelise par un nouveau vote 'refuse' avec la date courante.")
     pdf.bullet("Enregistrement de la date exacte du recueil et identification du canal de collecte pour tout audit de conformite.")
-    pdf.bullet("Information de l'alumni dans l'interface de consentement (AlumniConsent.jsx) : duree de conservation des donnees (suppression 6 mois apres anonymisation) et contact du DPO (dpo@ionis-stm.com).")
+    pdf.bullet("Information de l'alumni dans l'interface de consentement (AlumniConsent.jsx) : duree de conservation des donnees (suppression 6 mois apres anonymisation) et contact du DPO (contact@ionis-stm.com).")
 
     pdf.section_title("5.4 Droits RGPD Implementes")
     pdf.bullet("Droit d'acces a vos donnees personnelles : page de profil en lecture seule, suivi des demandes via GET /rgpd/demandes/moi et export json/Excel/CSV auto-service via GET /rgpd/export.")
@@ -305,7 +305,7 @@ def generate_rgpd():
     pdf.bullet("Canal secondaire prevu : questionnaire annuel (AlumniSurvey.jsx) ; a ce jour seul le canal 'web' est reellement emis par le frontend.")
     pdf.bullet("Chaque consentement est enregistre avec : type_consentement, statut (actif/refuse), date_consentement, canal, id_etudiant.")
     pdf.bullet("L'endpoint POST /consentements/ cree ou met a jour le consentement pour chaque type.")
-    pdf.bullet("L'interface de consentement informe l'alumni de la duree de conservation des donnees (suppression 6 mois apres anonymisation) et affiche le contact du DPO (dpo@ionis-stm.com).")
+    pdf.bullet("L'interface de consentement informe l'alumni de la duree de conservation des donnees (suppression 6 mois apres anonymisation) et affiche le contact du DPO (contact@ionis-stm.com).")
 
     pdf.section_title("3.2 Modification et retrait")
     pdf.bullet("L'alumni peut modifier ses preferences a tout moment via l'interface de consentement.")
@@ -317,6 +317,19 @@ def generate_rgpd():
     pdf.bullet("Enregistrement de la date exacte du recueil (date_consentement).")
     pdf.bullet("Identification formelle du canal de collecte (formulaire inscription, questionnaire).")
     pdf.bullet("Historique complet des votes de consentement dans la base de donnees.")
+
+    pdf.section_title("3.4 Consommation des consentements (relations fonctionnelles)")
+    pdf.body_text(
+        "Chaque consentement est reellement consomme par une fonctionnalite du systeme : un refus "
+        "(statut 'refuse') desactive l'usage correspondant. Un alumni sans vote sur un type reste "
+        "eligible ('inconnu' tolere), par coherence avec l'emission du consentement. Le vote le plus "
+        "recent est determine par une sous-requete correlee identique partout (ORDER BY "
+        "date_consentement DESC, id_consentement DESC LIMIT 1)."
+    )
+    pdf.bullet("'newsletter' : recevoir les newsletters (POST /newsletter/envoyer, ciblage par promotion / secteur / consents actifs).")
+    pdf.bullet("'enquetes' : acceder au questionnaire actif (GET /questionnaires/actif) et recevoir les relances (POST /admin/questionnaires/notififier). Un refus bloque la restitution du questionnaire (HTTP 403) et masque le lien 'Enquete annuelle' dans la navigation alumni (AlumniLayout.jsx).")
+    pdf.bullet("'prise_de_contact' : recevoir newsletter et relances questionnaire ; un refus exclut l'alumni des deux envois (newsletter.py et questionnaires.py). C'est le seul consentement dont le refus declenche l'anonymisation du profil via cleanup.py (CONSENTEMENT_ARCHIVE_TYPE = 'prise_de_contact').")
+    pdf.bullet("'partage_donnees' : seul ce perimetre (alumni ayant accepte le partage) alimente les indicateurs partenaires GET /admin/indicateurs/partenaires (comptages et moyennes d'insertion anonymises, aucune donnee personnelle avec le partenaire).")
 
     # 4. Droits RGPD
     pdf.chapter_title("4", "Droits RGPD Implementes dans l'Interface")
@@ -408,7 +421,7 @@ def generate_strategie():
     pdf.bullet("Consultation des reponses avec affichage nom, prenom, email, date et details.")
 
     pdf.section_title("3.2 Cote alumni (AlumniSurvey.jsx)")
-    pdf.bullet("L'alumni accede au questionnaire actif depuis le menu lateral.")
+    pdf.bullet("L'alumni accede au questionnaire actif depuis le menu lateral ; un refus du consentement 'enquetes' bloque la restitution (HTTP 403) et masque le menu lateral, RGPD.")
     pdf.bullet("Les reponses precedentes sont pre-remplies pour faciliter la mise a jour ; le pre-remplissage s'appuie sur le dernier questionnaire renseigne, sans historique complet des reponses dans l'interface.")
     pdf.bullet("Les questions non applicables (conditionnees au statut) sont automatiquement masquees et enregistrees comme 'Non applicable'.")
     pdf.bullet("Possibilite de modifier ses reponses a tout moment.")
@@ -421,7 +434,7 @@ def generate_strategie():
     pdf.bullet("Le service cree et administre les questionnaires via l'interface AdminQuestionnaires.")
     pdf.bullet("Les questions avec le tag 'adequation_formation' alimentent automatiquement l'indicateur d'adequation formation/emploi du tableau de bord.")
     pdf.bullet("Activation/desactivation des questionnaires selon le calendrier de collecte ; l'activation reste manuelle, sans declenchement automatique planifie a ce jour.")
-    pdf.bullet("Relances automatiques : l'endpoint POST /admin/questionnaires/notififier envoie des relances email aux alumni n'ayant pas repondu au questionnaire actif (filtre par promotion), sans interface admin dediee pour cet envoi a ce jour.")
+    pdf.bullet("Relances automatiques : l'endpoint POST /admin/questionnaires/notififier envoie des relances email aux alumni n'ayant pas repondu au questionnaire actif (filtre par promotion ; RGPD : exclusion des alumni ayant refuse le consentement 'enquetes' OU 'prise_de_contact', sur le vote le plus recent), sans interface admin dediee pour cet envoi a ce jour.")
 
     pdf.section_title("4.2 Valorisation du reseau")
     pdf.bullet("Utilisation du tableau de bord admin pour filtrer les alumni par entreprise, secteur, promotion.")
@@ -440,7 +453,7 @@ def generate_strategie():
     pdf.bullet("Personnalisation : le ciblage peut etre affine par promotion, secteur d'activite, geographie ou disponibilite (en_poste / en_recherche).")
     pdf.bullet("Suivi des metriques : taux d'ouverture, taux de clic sur le CTA, taux de mise a jour du profil suite a l'envoi.")
     pdf.bullet("Integration RGPD : chaque enquete est precedee d'un rappel du droit de desabonnement. Le mecanisme de desinscription automatique (lien mettant le consentement a 'refuse') n'est pas encore implemente — liens placeholder dans le gabarit HTML (manque encore ouvert).")
-    pdf.bullet("Implementation technique : l'endpoint backend POST /newsletter/envoyer a ete implemente (filtres de ciblage promotion/secteur, ciblage sur consentement newsletter actif, mode console en dev / Resend en prod). Le composant d'envoi cote frontend n'est pas encore developpe (manque encore ouvert).")
+    pdf.bullet("Implementation technique : l'endpoint backend POST /newsletter/envoyer a ete implemente (filtres de ciblage promotion/secteur, ciblage sur consentement newsletter actif ET 'prise_de_contact' non refuse, mode console en dev / Resend en prod). Le composant d'envoi cote frontend n'est pas encore developpe (manque encore ouvert).")
     pdf.bullet("Calendrier automatique : prevision d'un mecanisme de planification (cron job) pour l'envoi recurrent, avec notification admin avant envoi pour validation du contenu.")
 
     pdf.output(os.path.join(OUTPUT_DIR, "Strategie de Mise a Jour des Donnees - Alumni CRM.pdf"))
@@ -504,6 +517,7 @@ def generate_indicateurs():
         ["GET /admin/indicateurs/kpi-tag?tag=X", "Valeur d'un indicateur KPI calcule a partir des reponses taggees.", "valeur, unite (% ou moyenne), total_repondants, question_texte, distribution."],
         ["GET /admin/indicateurs/kpi-tags", "Tous les tags KPI des questionnaires actifs, calcules automatiquement ; un echec sur un tag ne fait pas echouer la route.", "[{tag, libelle, pourcentage, nb_repondants, valeur, unite, distribution}, ...]"],
         ["GET /admin/indicateurs/kpi-tags-actifs", "Liste des tags DISTINCT utilises par les questions des questionnaires actifs.", "{tags: [...]}"],
+        ["GET /admin/indicateurs/partenaires", "Indicateurs d'insertion agregees et anonymisees restreints aux alumni ayant accepte le partage de donnees ('partage_donnees' actif) : perimetre transmissible aux partenaires.", "nb_consentants, taux_emploi_pourcentage, en_emploi, salaire_moyen, par_promotion, top_secteurs, perimetre."],
     ]
     for i, r in enumerate(rows2):
         pdf.table_row(r, widths2, fill=(i % 2 == 0))
@@ -723,7 +737,7 @@ def generate_rapport_stage():
     pdf.bullet("Mise en place des règles d'intégrité (clés étrangères, cascade, contraintes UNIQUE).")
     pdf.bullet("Prototype du schéma API (endpoints REST, authentification OTP + JWT).")
     pdf.section_title("3.3 Phase de développement (Semaines 5-10)")
-    pdf.bullet("Développement itératif du backend (API REST complète, 85 endpoints).")
+    pdf.bullet("Développement itératif du backend (API REST complète, 82 endpoints).")
     pdf.bullet("Développement du frontend React (14 pages, composants partagés).")
     pdf.bullet("Intégration de la conformité RGPD (consentement, export, suppression, audit).")
     pdf.bullet("Validation fonctionnelle par tests manuels des parcours, scripts ad hoc d'exercice des routes réelles et rejeu complet des migrations sur base vide (aucune suite de tests automatisés conservée dans le dépôt).")
@@ -794,7 +808,7 @@ def generate_rapport_stage():
     )
 
     pdf.section_title("4.3 Backend API (FastAPI)")
-    pdf.body_text("L'API expose 85 endpoints REST organisés en 16 routeurs montés (14 fichiers) :")
+    pdf.body_text("L'API expose 82 endpoints REST organisés en 16 routeurs montés (14 fichiers) :")
     pdf.bullet("Authentification : OTP send/verify, admin login, API key validation.")
     pdf.bullet("Gestion des promotions : CRUD complet.")
     pdf.bullet("Gestion des étudiants/alumni : CRUD + profil enrichi (jointures promotion, entreprise, expériences, certifications).")
@@ -804,7 +818,7 @@ def generate_rapport_stage():
     pdf.bullet("Questionnaires : CRUD admin + soumission alumni avec validation des clés.")
     pdf.bullet("Dashboard admin : indicateurs, stats, filtrage alumni, évolution temporelle.")
     pdf.bullet("Import/Export : template Excel, import alumni protégé par clé API admin, export complet.")
-    pdf.bullet("Newsletter et relances : envoi ciblé via POST /newsletter/envoyer (filtres promotion, secteur, consentement newsletter actif) et rappels de questionnaire via POST /admin/questionnaires/notififier (ciblage des non-répondants).")
+    pdf.bullet("Newsletter et relances : envoi ciblé via POST /newsletter/envoyer (filtres promotion, secteur, consentement 'newsletter' actif ET 'prise_de_contact' non refusé) et rappels de questionnaire via POST /admin/questionnaires/notififier (ciblage des non-répondants, hors alumni ayant refusé 'enquetes' OU 'prise_de_contact', RGPD). Indicateurs partenaires : GET /admin/indicateurs/partenaires, périmètre restreint aux alumni ayant accepté 'partage_donnees' (données agrégées anonymisées).")
     pdf.bullet("Nettoyage : orphelins, doublons, archivage, purge différée.")
 
     pdf.section_title("4.4 Frontend React")
@@ -1009,7 +1023,7 @@ def generate_guide_animation():
     pdf.bullet("Cycle de vie : creation -> activation -> desactivation -> reactivation. Un seul questionnaire peut etre actif a la fois.")
     pdf.bullet("Outil CRM : page AdminQuestionnaires.jsx -> endpoint POST /admin/questionnaires/.")
     pdf.section_title("4.2 Reponse par l'alumni")
-    pdf.bullet("Declencheur : l'alumni recoit une notification (email ou rappel) l'invitant a repondre ; les relances email sont envoyees cote backend via POST /admin/questionnaires/notififier (ciblage des non-repondants du questionnaire actif, filtre par promotion), sans interface admin dediee pour cet envoi a ce jour.")
+    pdf.bullet("Declencheur : l'alumni recoit une notification (email ou rappel) l'invitant a repondre ; les relances email sont envoyees cote backend via POST /admin/questionnaires/notififier (ciblage des non-repondants du questionnaire actif, filtre par promotion ; RGPD : exclusion des alumni ayant refuse 'enquetes' OU 'prise_de_contact', sur le vote le plus recent), sans interface admin dediee pour cet envoi a ce jour.")
     pdf.bullet("Etapes : acces a la page Questionnaire (/alumni/survey), lecture des questions, pre-remplissage des reponses precedentes, soumission.")
     pdf.bullet("Validation : les questions non applicables (conditionnees au statut) sont masquees et enregistrees comme 'Non applicable'. Toutes les questions visibles doivent etre repondues.")
     pdf.bullet("Outil CRM : page AlumniSurvey.jsx -> endpoint POST /questionnaires/{id}/repondre -> table REPONSE_QUESTIONNAIRE.")
@@ -1025,7 +1039,7 @@ def generate_guide_animation():
     pdf.bullet("Calendrier : mensuel ou bimestrielle, selon la capacite du service.")
     pdf.bullet("Contenu : actualites alumni, offres d'emploi partenaires, evenements, call-to-action (mise a jour du profil).")
     pdf.section_title("5.2 Envoi")
-    pdf.bullet("Envoi : l'endpoint backend POST /newsletter/envoyer a ete implemente avec filtres de ciblage (promotion, secteur, consentement newsletter actif) ; mode console en dev, Resend en prod. Le composant d'envoi cote frontend n'est pas encore developpe (manque encore ouvert).")
+    pdf.bullet("Envoi : l'endpoint backend POST /newsletter/envoyer a ete implemente avec filtres de ciblage (promotion, secteur, consentement newsletter actif ET 'prise_de_contact' non refuse) ; mode console en dev, Resend en prod. Le composant d'envoi cote frontend n'est pas encore developpe (manque encore ouvert).")
     pdf.bullet("Personnalisation possible par promotion, secteur, geographie, disponibilite.")
     pdf.section_title("5.3 Suivi")
     pdf.bullet("Metriques : taux d'ouverture, taux de clic sur le CTA, taux de mise a jour du profil suite a l'envoi.")
@@ -1090,3 +1104,4 @@ if __name__ == "__main__":
     generate_rapport_stage()
     generate_guide_animation()
     print("\nTous les rapports ont ete generes dans :", OUTPUT_DIR)
+

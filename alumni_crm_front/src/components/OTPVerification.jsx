@@ -100,6 +100,7 @@ export default function OTPVerification({
   const [sourceDigits, setSourceDigits] = useState(() => Array(length).fill(''));
   const [ghosts, setGhosts] = useState([]);
   const [errorActive, setErrorActive] = useState(false);
+  const [popIndex, setPopIndex] = useState(-1);
 
   const inputRefs = useRef([]);
   const slotRefs = useRef([]);
@@ -125,6 +126,7 @@ export default function OTPVerification({
     setDigits(Array(length).fill(''));
     setSourceDigits(Array(length).fill(''));
     setGhosts([]);
+    setPopIndex(-1);
     inputRefs.current[0]?.focus();
   }, [resetKey, length]);
 
@@ -134,6 +136,7 @@ export default function OTPVerification({
     setDigits(Array(length).fill(''));
     setSourceDigits(Array(length).fill(''));
     setGhosts([]);
+    setPopIndex(-1);
     if (errorTimerRef.current) window.clearTimeout(errorTimerRef.current);
     errorTimerRef.current = window.setTimeout(() => setErrorActive(false), ERROR_FLASH_MS);
     inputRefs.current[0]?.focus();
@@ -232,6 +235,7 @@ export default function OTPVerification({
       const next = [...digits];
       next[index] = cleaned;
       setDigits(next);
+      if (!reducedMotion) setPopIndex(index);
 
       if (index < length - 1) {
         inputRefs.current[index + 1]?.focus();
@@ -241,7 +245,7 @@ export default function OTPVerification({
         onCompleteRef.current(next.join(''));
       }
     },
-    [disabled, success, ghosts.length, digits, length, fillCode],
+    [disabled, success, ghosts.length, digits, length, fillCode, reducedMotion],
   );
 
   const handleKeyDown = useCallback(
@@ -335,6 +339,7 @@ export default function OTPVerification({
         {digits.map((d, i) => (
           <div key={i} ref={(el) => { slotRefs.current[i] = el; }} className="otp-slot">
             <input
+              key={popIndex === i ? `pop-${popIndex}` : `static-${i}`}
               ref={(el) => { inputRefs.current[i] = el; }}
               type="text"
               inputMode="numeric"
@@ -346,7 +351,7 @@ export default function OTPVerification({
               onChange={(e) => handleChange(i, e)}
               onKeyDown={(e) => handleKeyDown(i, e)}
               onPaste={handlePaste}
-              className={`otp-input h-12 w-11 rounded-xl text-center text-lg font-bold outline-none disabled:opacity-40 sm:h-14 sm:w-12 ${isDark ? 'border border-white/[0.08] bg-white/[0.06] text-white' : 'border border-gray-300 bg-white text-gray-900'}`}
+              className={`otp-input${popIndex === i ? ' is-pop' : ''} h-12 w-11 rounded-xl text-center text-lg font-bold outline-none disabled:opacity-40 sm:h-14 sm:w-12 ${isDark ? 'border border-white/[0.08] bg-white/[0.06] text-white' : 'border border-gray-300 bg-white text-gray-900'}`}
             />
           </div>
         ))}

@@ -399,6 +399,102 @@ def calculer_indicateurs(db=Depends(get_db)):
         cursor.close()
 
 
+# Condition de perimetre "partenaires" : le dernier consentement
+# 'partage_donnees' de l'alumni (alias e) est un ACCEPT (statut 'actif').
+# C'est la definition de la relation RGPD de ce consentement : les donnees
+# d'un alumni ne sont partagees (agregees/anonymisees) qu'avec son accord
+# explicite. Refus explicite ET absence de vote excluent donc l'alumni.
+_PARTAGE_DONNEES_ACTIF_WHERE = """
+    COALESCE((
+        SELECT c.statut FROM CONSENTEMENT_RGPD c
+        WHERE c.id_etudiant = e.id_etudiant
+          AND c.type_consentement = 'partage_donnees'
+        ORDER BY c.date_consentement DESC, c.id_consentement DESC
+        LIMIT 1
+    ), 'inconnu') = 'actif'
+"""
+
+
+@router.get("/indicateurs/partenaires", tags=["Analyse des indicateurs d'insertion"])
+def indicateurs_partenaires(db=Depends(get_db)):
+    """
+    Indicateurs d'insertion AMAGRÉGÉS et ANONYMISÉS, restreints aux alumni
+    ayant accepté le partage de données ('partage_donnees' = 'actif').
+
+    C'est la consommation du consentement 'partage_donnees' : seul ce
+    périmètre peut être transmis à des partenaires (entreprises, écoles...).
+    Aucune donnée personnelle n'est exposée : uniquement des comptages et
+    moyennes (conformément à la charte RGPD - partage anonymisé).
+    """
+    cursor = db.cursor()
+    try:
+        emploi_en_cours = _condition_emploi_en_cours("exp")
+
+        cursor.execute(
+            f"""
+            SELECT
+                COUNT(DISTINCT e.id_etudiant) AS nb_consentants,
+                COUNT(DISTINCT CASE WHEN {emploi_en_cours} THEN e.id_etudiant END) AS en_emploi,
+                ROUND(AVG(CASE
+                    WHEN {emploi_en_cours} AND (exp.salary_annuel > 0 OR exp.salaire > 0)
+                    THEN CASE WHEN exp.salary_annuel > 0 THEN exp.salary_annuel ELSE exp.salaire END
+                END), 2) AS salaire_moyen
+            FROM ETUDIANT e
+            LEFT JOIN EXPERIENCE_PRO exp ON e.id_etudiant = exp.id_etudiant
+            WHERE e.date_anonymisation IS NULL AND {_PARTAGE_DONNEES_ACTIF_WHERE};
+            """
+        )
+        row = cursor.fetchone()
+        nb_consentants = int(row[0] or 0)
+        en_emploi = int(row[1] or 0)
+        salaire_moyen = float(row[2]) if row[2] is not None else None
+        taux_emploi = round((en_emploi / nb_consentants * 100), 2) if nb_consentants > 0 else 0.0
+
+        cursor.execute(
+            f"""
+            SELECT p.nom_promotion, COUNT(DISTINCT e.id_etudiant) AS nb
+            FROM ETUDIANT e
+            JOIN PROMOTION p ON e.id_promotion = p.id_promotion
+            WHERE e.date_anonymisation IS NULL AND {_PARTAGE_DONNEES_ACTIF_WHERE}
+            GROUP BY p.nom_promotion, p.annee_diplome
+            ORDER BY p.annee_diplome DESC;
+            """
+        )
+        par_promotion = rows_to_dicts(cursor, cursor.fetchall())
+
+        cursor.execute(
+            f"""
+            SELECT ent.secteur_activite, COUNT(DISTINCT e.id_etudiant) AS nb
+            FROM ETUDIANT e
+            JOIN EXPERIENCE_PRO exp ON e.id_etudiant = exp.id_etudiant AND {emploi_en_cours}
+            JOIN ENTREPRISE ent ON exp.id_entreprise = ent.id_entreprise
+            WHERE e.date_anonymisation IS NULL
+              AND ent.secteur_activite IS NOT NULL
+              AND ent.secteur_activite != ''
+              AND {_PARTAGE_DONNEES_ACTIF_WHERE}
+            GROUP BY ent.secteur_activite
+            ORDER BY nb DESC, ent.secteur_activite
+            LIMIT 10;
+            """
+        )
+        top_secteurs = rows_to_dicts(cursor, cursor.fetchall())
+
+        return {
+            "perimetre": "alumni dont le consentement 'partage_donnees' est actif (donnees agregees anonymisees)",
+            "nb_consentants": nb_consentants,
+            "en_emploi": en_emploi,
+            "taux_emploi_pourcentage": taux_emploi,
+            "salaire_moyen": salaire_moyen,
+            "par_promotion": par_promotion,
+            "top_secteurs": top_secteurs,
+        }
+    except Exception:
+        logger.exception("Erreur lors du calcul des indicateurs partenaires")
+        raise HTTPException(status_code=400, detail="Impossible de calculer les indicateurs partenaires.")
+    finally:
+        cursor.close()
+
+
 @router.get("/indicateurs/secteurs", tags=["Analyse des indicateurs d'insertion"])
 def indicateurs_par_secteur(db=Depends(get_db)):
     cursor = db.cursor()

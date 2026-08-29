@@ -23,6 +23,7 @@ export default function AlumniSurvey() {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [refused, setRefused] = useState(false);
   const [questionnaire, setQuestionnaire] = useState(null);
   const [answers, setAnswers] = useState({});
   const [previousAnswers, setPreviousAnswers] = useState([]);
@@ -37,7 +38,7 @@ export default function AlumniSurvey() {
       setError(null);
       try {
         const [qRes, prevRes, profileRes] = await Promise.all([
-          questionnaireAPI.getActif(),
+          questionnaireAPI.getActif(alumniId),
           alumniId ? questionnaireAPI.getMesReponses(alumniId).catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
           alumniId ? alumniAPI.getById(alumniId).catch(() => ({ data: null })) : Promise.resolve({ data: null }),
         ]);
@@ -59,6 +60,7 @@ export default function AlumniSurvey() {
         }
       } catch (err) {
         const detail = err.response?.data?.detail;
+        if (err.response?.status === 403) setRefused(true);
         setError(detail || 'Aucun questionnaire actif pour le moment.');
       } finally {
         setLoading(false);
@@ -150,7 +152,17 @@ export default function AlumniSurvey() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Enquête annuelle</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Participez à l'enquête de suivi des parcours alumni</p>
         </div>
-        <ErrorMessage message={error} />
+        {refused ? (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 dark:border-amber-800 dark:bg-amber-950">
+            <h2 className="text-base font-semibold text-amber-900 dark:text-amber-200">Consentement aux enquêtes refusé</h2>
+            <p className="mt-1 text-sm text-amber-800 dark:text-amber-300">
+              Vous avez indiqué ne pas souhaiter participer aux enquêtes alumni.
+              Le questionnaire n'est donc pas accessible.
+            </p>
+          </div>
+        ) : (
+          <ErrorMessage message={error} />
+        )}
       </div>
     );
   }

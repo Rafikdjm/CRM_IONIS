@@ -317,9 +317,28 @@ def reactiver_questionnaire(id_questionnaire: int, db=Depends(get_db)):
 
 
 @router.get("/actif", response_model=schemas.QuestionnaireDetail)
-def get_questionnaire_actif(db=Depends(get_db)):
+def get_questionnaire_actif(id_etudiant: int = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
+        # RGPD : un alumni ayant REFUSE la participation aux enquetes
+        # ('enquetes' = 'refuse') n'a pas acces au questionnaire actif,
+        # meme dans l'interface (pas seulement par email). Un alumni sans
+        # consentement vote reste eligible (idem notifier_questionnaire).
+        if id_etudiant is not None:
+            cursor.execute(
+                "SELECT statut FROM CONSENTEMENT_RGPD "
+                "WHERE id_etudiant = %s AND type_consentement = 'enquetes' "
+                "ORDER BY date_consentement DESC, id_consentement DESC LIMIT 1;",
+                (id_etudiant,),
+            )
+            statut = cursor.fetchone()
+            if statut and statut[0] == "refuse":
+                raise HTTPException(
+                    status_code=403,
+                    detail="Vous avez refuse la participation aux enquetes : "
+                    "le questionnaire n'est pas disponible.",
+                )
+
         cursor.execute(
             "SELECT id_questionnaire, titre, description, date_creation, actif "
             "FROM QUESTIONNAIRE WHERE actif = TRUE "
@@ -492,6 +511,11 @@ def notifier_questionnaire(body: NotificationQuestionnaireRequest, db=Depends(ge
     """
     Envoie une notification email aux alumni n'ayant pas encore répondu
     au questionnaire spécifié. Filtre optionnel par promotion.
+
+    RGPD : les alumni dont le consentement le plus récent de type
+    'enquetes' est un refus sont exclus (pas de relance questionnaire).
+    Idem pour 'prise_de_contact' : un refus explicite du contact exclut
+    aussi l'alumni de la relance.
     """
     cursor = db.cursor()
     try:
@@ -514,6 +538,20 @@ def notifier_questionnaire(body: NotificationQuestionnaireRequest, db=Depends(ge
                   WHERE r.id_etudiant = e.id_etudiant
                     AND r.id_questionnaire = %s
               )
+              AND COALESCE((
+                  SELECT c.statut FROM CONSENTEMENT_RGPD c
+                  WHERE c.id_etudiant = e.id_etudiant
+                    AND c.type_consentement = 'enquetes'
+                  ORDER BY c.date_consentement DESC, c.id_consentement DESC
+                  LIMIT 1
+              ), 'inconnu') <> 'refuse'
+              AND COALESCE((
+                  SELECT c.statut FROM CONSENTEMENT_RGPD c
+                  WHERE c.id_etudiant = e.id_etudiant
+                    AND c.type_consentement = 'prise_de_contact'
+                  ORDER BY c.date_consentement DESC, c.id_consentement DESC
+                  LIMIT 1
+              ), 'inconnu') <> 'refuse'
         """
         params: list = [body.id_questionnaire]
 

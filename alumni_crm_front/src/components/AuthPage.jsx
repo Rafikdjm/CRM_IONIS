@@ -6,11 +6,14 @@ import OTPVerification from './OTPVerification';
 import ionisStmLogo from '../assets/ionis-stm-logo.png';
 
 const OTP_LENGTH = 6;
+const OTP_MODE = import.meta.env.VITE_OTP_MODE || 'console';
+const IS_CONSOLE_MODE = OTP_MODE === 'console';
+const IS_RESEND_MODE = OTP_MODE === 'resend';
 // Doit rester aligné sur le rate-limit serveur (60 s entre deux demandes OTP)
 // pour que le bouton « Renvoyer le code » ne se réactive pas avant que le
 // serveur n'autorise réellement un nouvel envoi.
 const RESEND_COOLDOWN = 60;
-const OTP_SUCCESS_DURATION = 1800;
+const OTP_SUCCESS_DURATION = 3000;
 
 function AbstractBackground() {
   return (
@@ -398,11 +401,7 @@ export default function AuthPage() {
                       </>
                     )}
                   </button>
-                  {import.meta.env.DEV && (
-                    <p className={`mt-3 text-center text-xs ${isDark ? 'text-blue-200/30' : 'text-gray-400'}`}>
-                      Mode dev : le code s'affiche dans les logs du serveur (terminal)
-                    </p>
-                  )}
+                  
                 </form>
               </>
             ) : (
@@ -429,9 +428,14 @@ export default function AuthPage() {
                     resetKey={otpResetKey}
                     success={otpSuccess}
                   />
-                  {!otpSuccess && import.meta.env.DEV && (
+                  {!otpSuccess && import.meta.env.DEV && IS_CONSOLE_MODE && (
                     <p className={`mt-3 text-center text-xs ${isDark ? 'text-blue-200/30' : 'text-gray-400'}`}>
-                      Mode dev : le code s'affiche dans les logs du serveur (terminal)
+                      (En mode développement, le code correct est affiché dans la console du navigateur)
+                    </p>
+                  )}
+                  {!otpSuccess && IS_RESEND_MODE && (
+                    <p className={`mt-3 text-center text-xs ${isDark ? 'text-blue-200/50' : 'text-gray-500'}`}>
+                      Vérifier votre email
                     </p>
                   )}
                 </div>

@@ -107,6 +107,12 @@ export default function AdminRgpdDemandes() {
   const [bulkSubmitting, setBulkSubmitting] = useState(false);
   const [bulkResult, setBulkResult] = useState(null);
 
+  // Purge définitive différée des comptes anonymisés
+  const [purgePreview, setPurgePreview] = useState(null);
+  const [purgeLoading, setPurgeLoading] = useState(false);
+  const [purgeConfirm, setPurgeConfirm] = useState(false);
+  const [purgeResult, setPurgeResult] = useState(null);
+
   const loadDemandes = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -343,6 +349,39 @@ export default function AdminRgpdDemandes() {
     setError(null);
   };
 
+  const openPurgeAnonymises = async () => {
+    setPurgeLoading(true);
+    setError(null);
+    setPurgeResult(null);
+    setPurgeConfirm(false);
+    try {
+      setPurgePreview(await adminRgpdAPI.previewPurgeAnonymises());
+    } catch (err) {
+      const d = err.response?.data?.detail;
+      setError(typeof d === 'string' ? d : "Erreur de chargement de l'aperçu de purge.");
+    } finally {
+      setPurgeLoading(false);
+    }
+  };
+
+  const launchPurge = async () => {
+    setPurgeLoading(true);
+    setError(null);
+    try {
+      const result = await adminRgpdAPI.purgeAnonymises();
+      setPurgeResult(result);
+      setPurgeConfirm(false);
+      setPurgePreview(null);
+      await loadDemandes();
+    } catch (err) {
+      const d = err.response?.data?.detail;
+      setError(typeof d === 'string' ? d : 'Erreur lors de la purge des comptes anonymisés.');
+      setPurgeConfirm(false);
+    } finally {
+      setPurgeLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -353,6 +392,12 @@ export default function AdminRgpdDemandes() {
       </div>
 
       {error && <ErrorMessage message={error} onRetry={() => setError(null)} />}
+      {purgeResult && (
+        <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-200">
+          {purgeResult.message ||
+            `✓ Purge terminée : ${purgeResult.purges ?? 0} compte(s) supprimé(s) définitivement.`}
+        </div>
+      )}
       {bulkResult && (
         <>
           <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-900 dark:bg-green-950 dark:text-green-200">
@@ -443,6 +488,14 @@ export default function AdminRgpdDemandes() {
           className="min-h-[44px] rounded-lg border border-orange-300 bg-orange-50 px-3 py-2 text-sm font-medium text-orange-700 hover:bg-orange-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-300 dark:hover:bg-orange-900"
         >
           Purger les demandes traitées/rejetées ({clotureesCount})
+        </button>
+
+        <button
+          onClick={openPurgeAnonymises}
+          disabled={purgeLoading}
+          className="min-h-[44px] rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-800 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900"
+        >
+          {purgeLoading ? 'Chargement...' : 'Comptes anonymisés à purger'}
         </button>
       </div>
 
@@ -555,8 +608,19 @@ export default function AdminRgpdDemandes() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    {d.type_demande === 'suppression' && d.compte_active === false ? (
-                      <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-slate-700 dark:text-slate-300">Anonymisé</span>
+                    {d.id_etudiant == null ? (
+                      <span className="text-xs text-gray-400 dark:text-slate-500">—</span>
+                    ) : d.compte_active === false ? (
+                      <div className="space-y-0.5">
+                        <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-slate-700 dark:text-slate-300">Anonymisé</span>
+                        {d.purge_dans_jours != null && (
+                          <div className={`text-xs ${d.purge_dans_jours === 0 || d.eligible_purge ? 'text-orange-600 dark:text-orange-400' : 'text-gray-500 dark:text-slate-400'}`}>
+                            {d.purge_dans_jours > 0
+                              ? `Purge dans ${d.purge_dans_jours} j`
+                              : 'Éligible à la purge définitive'}
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-xs text-gray-400 dark:text-slate-500">—</span>
                     )}
@@ -570,7 +634,17 @@ export default function AdminRgpdDemandes() {
                     ) : d.type_demande === 'export' && d.statut === 'traitee' && !d.traitee_par ? (
                       <span className="text-xs text-gray-400 dark:text-slate-500">Automatique</span>
                     ) : (
-                      d.traitee_par || '—'
+                      <div className="text-xs">
+                        <span className="font-medium text-gray-900 dark:text-slate-100">{d.traitee_par || '—'}</span>
+                        {d.statut === 'rejetee' && d.motif_refus ? (
+                          <div
+                            className="mt-0.5 max-w-[240px] truncate text-gray-500 dark:text-slate-400"
+                            title={d.motif_refus}
+                          >
+                            Motif : {d.motif_refus}
+                          </div>
+                        ) : null}
+                      </div>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -692,6 +766,135 @@ export default function AdminRgpdDemandes() {
                 className="w-full min-h-[44px] rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-slate-700 dark:text-slate-200"
               >
                 Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal aperçu purge des comptes anonymisés */}
+      {purgePreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-xl dark:bg-slate-800">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
+              Purge des comptes anonymisés
+            </h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
+              {purgePreview.candidats} compte(s) anonymisé(s) éligible(s) à la purge définitive (délai de
+              conservation de {purgePreview.delay_months} mois). Les données liées (expériences,
+              certifications, consentements, réponses aux questionnaires) seront supprimées également.
+            </p>
+
+            {purgePreview.comptes?.length > 0 ? (
+              <ul className="mt-3 max-h-56 space-y-1 overflow-y-auto rounded-lg border border-gray-200 p-3 text-sm dark:border-slate-700">
+                {purgePreview.comptes.map((c) => (
+                  <li
+                    key={c.id_etudiant}
+                    className="flex items-center justify-between gap-2 text-gray-700 dark:text-slate-200"
+                  >
+                    <span className="font-medium">Compte alumni n° {c.id_etudiant}</span>
+                    <span className="text-xs text-gray-500 dark:text-slate-400">
+                      anonymisé le{' '}
+                      {c.date_anonymisation
+                        ? new Date(c.date_anonymisation).toLocaleDateString('fr-FR')
+                        : '—'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-3 rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm text-gray-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+                Aucun compte éligible pour le moment.
+              </p>
+            )}
+
+            <div className="mt-3 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 text-sm dark:border-slate-600 dark:bg-slate-900">
+              <details>
+                <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+                  Exemples illustratifs — comprendre l'éligibilité à la purge
+                </summary>
+                <ul className="mt-2 space-y-1.5 text-gray-700 dark:text-slate-200">
+                  <li className="flex items-center justify-between gap-2">
+                    <span>Compte n°12 — anonymisé le 20/03/2026 (<em>5 mois</em>)</span>
+                    <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-slate-700 dark:text-slate-300">
+                      Purge dans ~30 jours
+                    </span>
+                  </li>
+                  <li className="flex items-center justify-between gap-2">
+                    <span>Compte n°45 — anonymisé le 10/02/2026 (<em>6 mois révolus</em>)</span>
+                    <span className="inline-flex rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-700 dark:bg-orange-900 dark:text-orange-200">
+                      Éligible à la purge définitive
+                    </span>
+                  </li>
+                  <li className="flex items-center justify-between gap-2">
+                    <span>Compte n°78 — anonymisé le 01/12/2025 (<em>9 mois</em>)</span>
+                    <span className="inline-flex rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-700 dark:bg-orange-900 dark:text-orange-200">
+                      Éligible (en attente de purge)
+                    </span>
+                  </li>
+                  <li className="flex items-center justify-between gap-2">
+                    <span>Compte n°30 — actif, jamais anonymisé</span>
+                    <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-slate-700 dark:text-slate-300">
+                      Jamais concerné
+                    </span>
+                  </li>
+                  <li className="flex items-center justify-between gap-2">
+                    <span>Compte n°5 — déjà purgé en juillet 2026</span>
+                    <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-slate-700 dark:text-slate-300">
+                      Invisible (journal d'audit seul)
+                    </span>
+                  </li>
+                </ul>
+                <p className="mt-2 text-[11px] text-gray-400 dark:text-slate-500">
+                  Données fictives affichées pour illustrer le fonctionnement ; non incluses dans la
+                  purge.
+                </p>
+              </details>
+            </div>
+
+            <div className="mt-5 flex flex-col gap-2">
+              <button
+                onClick={() => setPurgeConfirm(true)}
+                disabled={purgePreview.candidats === 0 || purgeLoading}
+                className="w-full min-h-[44px] rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                Lancer la purge définitive
+              </button>
+              <button
+                onClick={() => setPurgePreview(null)}
+                className="w-full min-h-[44px] rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-slate-700 dark:text-slate-200"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal confirmation purge définitive */}
+      {purgeConfirm && purgePreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl dark:bg-slate-800">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
+              Confirmer la purge définitive
+            </h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
+              Cette action supprime définitivement {purgePreview.candidats} compte(s) anonymisé(s) et
+              toutes leurs données personnelles. Elle est irréversible et tracée dans le journal d'audit.
+            </p>
+            <div className="mt-5 flex flex-col gap-2">
+              <button
+                onClick={launchPurge}
+                disabled={purgeLoading}
+                className="w-full min-h-[44px] rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {purgeLoading ? 'Purge en cours...' : 'Confirmer la purge'}
+              </button>
+              <button
+                onClick={() => setPurgeConfirm(false)}
+                className="w-full min-h-[44px] rounded-lg bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-slate-700 dark:text-slate-200"
+              >
+                Annuler
               </button>
             </div>
           </div>

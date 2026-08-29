@@ -143,6 +143,11 @@ def envoyer_newsletter(body: NewsletterRequest, db=Depends(get_db)):
     """
     Envoie une newsletter aux alumni ayant le consentement newsletter actif.
     Filtres optionnels : id_promotion, secteur_activite.
+
+    RGPD : en plus du consentement 'newsletter' actif, un refus explicite
+    du consentement 'prise_de_contact' exclut l'alumni de l'envoi (le
+    contact est refusé). Un alumni sans vote 'prise_de_contact' reste
+    éligible, comme pour les relances questionnaire.
     """
     cursor = db.cursor()
     try:
@@ -153,6 +158,13 @@ def envoyer_newsletter(body: NewsletterRequest, db=Depends(get_db)):
             JOIN CONSENTEMENT_RGPD c ON e.id_etudiant = c.id_etudiant
             WHERE c.type_consentement = 'newsletter'
               AND c.statut = 'actif'
+              AND COALESCE((
+                  SELECT pd.statut FROM CONSENTEMENT_RGPD pd
+                  WHERE pd.id_etudiant = e.id_etudiant
+                    AND pd.type_consentement = 'prise_de_contact'
+                  ORDER BY pd.date_consentement DESC, pd.id_consentement DESC
+                  LIMIT 1
+              ), 'inconnu') <> 'refuse'
               AND e.date_anonymisation IS NULL
               AND e.email IS NOT NULL
               AND e.email != ''

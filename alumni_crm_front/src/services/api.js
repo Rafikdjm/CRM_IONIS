@@ -432,6 +432,10 @@ export const mapBackendConsent = (items) => {
     if (!latest || b.date > latest) latest = b.date;
   }
   defaults.last_updated = latest;
+  defaults.contact_status = best['contact_allowed']?.statut ?? 'inconnu';
+  defaults.data_sharing_status = best['data_sharing']?.statut ?? 'inconnu';
+  defaults.survey_participation_status = best['survey_participation']?.statut ?? 'inconnu';
+  defaults.newsletter_status = best['newsletter']?.statut ?? 'inconnu';
   return defaults;
 };
 
@@ -581,6 +585,18 @@ export const adminRgpdAPI = {
     const res = await api.post('/admin/demandes-rgpd/purge-cloturees');
     return res.data;
   },
+
+  /** Aperçu des comptes anonymisés éligibles à la purge définitive (lecture seule). */
+  previewPurgeAnonymises: async () => {
+    const res = await api.get('/admin/demandes-rgpd/purge-anonymises');
+    return res.data;
+  },
+
+  /** Lance la purge définitive des comptes anonymisés éligibles (confirm: true requis). */
+  purgeAnonymises: async () => {
+    const res = await api.post('/admin/demandes-rgpd/purge-anonymises', { confirm: true });
+    return res.data;
+  },
 };
 
 export const statsAPI = {
@@ -684,8 +700,11 @@ export const statsAPI = {
 };
 
 export const questionnaireAPI = {
-  getActif: async () => {
-    const res = await api.get('/questionnaires/actif');
+  getActif: async (alumniId = null) => {
+    // RGPD : le backend bloque la restitution si l'alumni a refuse les
+    // enquetes (403). On transmet son id pour activer ce controle.
+    const params = alumniId ? { id_etudiant: alumniId } : undefined;
+    const res = await api.get('/questionnaires/actif', { params });
     return { data: res.data };
   },
 

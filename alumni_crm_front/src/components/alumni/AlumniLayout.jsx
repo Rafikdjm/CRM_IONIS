@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { loginAPI } from '../../services/api';
+import { loginAPI, consentAPI } from '../../services/api';
 import ThemeToggle from '../shared/ThemeToggle';
 import ionisStmLogo from '../../assets/ionis-stm-logo.png';
 
@@ -46,6 +46,23 @@ const navItems = [
 export default function AlumniLayout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [surveyRefused, setSurveyRefused] = useState(false);
+
+  useEffect(() => {
+    const alumniId = localStorage.getItem('alumni_id');
+    if (!alumniId) return;
+    // RGPD : l'accès au questionnaire est masqué côté navigation si le
+    // consentement 'enquetes' est un refus explicite. L''inconnu' (aucun
+    // vote) reste éligible, comme côté API.
+    consentAPI
+      .get(alumniId)
+      .then(({ data }) => setSurveyRefused(data.survey_participation_status === 'refuse'))
+      .catch(() => {});
+  }, []);
+
+  const visibleNavItems = surveyRefused
+    ? navItems.filter((item) => item.to !== '/alumni/survey')
+    : navItems;
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: 'var(--bg-page)' }}>
@@ -75,7 +92,7 @@ export default function AlumniLayout() {
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

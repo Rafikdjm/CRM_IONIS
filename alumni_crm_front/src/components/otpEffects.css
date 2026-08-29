@@ -42,6 +42,57 @@
   box-shadow: 0 0 0 3px var(--otp-accent-soft);
 }
 
+/* Halo « breathing » : anneau lumineux qui pulse autour de la case active */
+.otp-slot:has(input:focus)::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border-radius: 1rem;
+  border: 2px solid var(--otp-accent);
+  box-shadow: 0 0 0 0 var(--otp-accent-soft);
+  opacity: 0;
+  transform: scale(0.9);
+  pointer-events: none;
+  z-index: 1;
+  animation: otp-halo 1.7s ease-in-out infinite;
+}
+
+.otp-verification[data-status='error'] .otp-slot:has(input:focus)::after {
+  animation: none;
+  opacity: 0;
+}
+
+@keyframes otp-halo {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 var(--otp-accent-soft);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 24px 4px var(--otp-accent-soft);
+  }
+  70% {
+    opacity: 0.55;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.08);
+    box-shadow: 0 0 34px 10px var(--otp-accent-soft);
+  }
+}
+
+@keyframes otp-pop {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+.otp-input.is-pop {
+  animation: otp-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+}
+
 .otp-verification[data-status='error'] .otp-input {
   border-color: var(--otp-error);
   box-shadow: 0 0 0 3px var(--otp-error-soft);
@@ -168,5 +219,7 @@
   .otp-particle { animation: none; opacity: 0; }
   .otp-check-circle { animation: none; stroke-dashoffset: 0; }
   .otp-check-path { animation: none; stroke-dashoffset: 0; }
+  .otp-input.is-pop { animation: none; }
+  .otp-slot::after { animation: none; opacity: 0; }
   .otp-verification[data-status='error'] .otp-slot { animation: none; }
 }

@@ -282,7 +282,7 @@ export default function AlumniConsent() {
           <p className="mt-2 font-medium">Délégué à la Protection des Données (DPO)</p>
           <p className="mt-1">
             Pour toute question relative à vos données personnelles, contactez le DPO :
-            <a href="mailto:dpo@ionis-stm.com" className="ml-1 font-medium underline">dpo@ionis-stm.com</a>
+            <a href="mailto:contact@ionis-stm.com" className="ml-1 font-medium underline">contact@ionis-stm.com</a>
           </p>
         </div>
       </div>
