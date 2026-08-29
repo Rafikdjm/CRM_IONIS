@@ -25,7 +25,7 @@ En dev, Vite proxifie les appels vers `/api` vers le backend :
 
 | Réglage | Valeur (vite.config.js) |
 |---|---|
-| Cible | `http://127.0.0.1:8000` |
+| Cible | `VITE_API_URL` (défaut `http://localhost:8000`) |
 | Rewrite | le préfixe `/api` est retiré (`/api/admin/indicateurs` → `/admin/indicateurs`) |
 
 Aucune configuration CORS n'est donc nécessaire en développement.
@@ -36,6 +36,7 @@ Copier `.env.example` vers `.env` puis ajuster :
 
 | Variable | Rôle | Défaut |
 |---|---|---|
+| `VITE_API_URL` | URL de base de l'API backend (cible du proxy Vite, et base des appels axios hors dev). Laisser absente en dev : le proxy vise `http://localhost:8000`. | `http://localhost:8000` |
 | `VITE_SHOW_DEV_PREVIEW` | Affiche l'aperçu du code OTP à l'écran (bloc « Code de connexion / Aperçu de l'e-mail reçu »). Mettre à `false` pour masquer ce bloc (démonstration/production). | affiché sauf si `false` |
 
 ## Scripts
