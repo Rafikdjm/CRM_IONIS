@@ -1,15 +1,12 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
 const api = axios.create({
-  // En dev (variable absente) : baseURL relatif '/api', routé par le proxy
-  // Vite (vite.config.js) vers le backend qui retire le préfixe '/api'.
-  // Si VITE_API_URL est défini, on cible directement cet hôte en conservant
-  // le montage '/api' retiré par le même contrat que le proxy de dev.
-  baseURL: import.meta.env.VITE_API_URL
-    ? `${API_BASE_URL.replace(/\/$/, '')}/api`
-    : '/api',
+  // Le backend FastAPI (alumni_crm_api/main.py) n'utilise AUCUN préfixe
+  // '/api' sur ses routes : en production, VITE_API_URL pointe donc
+  // directement dessus, sans suffixe.
+  // En dev (variable absente), on passe par le proxy Vite '/api'
+  // (vite.config.js) qui retire le préfixe et route vers localhost:8000.
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
   },
