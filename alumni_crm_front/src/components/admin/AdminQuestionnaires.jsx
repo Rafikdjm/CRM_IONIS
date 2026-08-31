@@ -73,7 +73,7 @@ function OptionsEditor({ options, onChange }) {
         </button>
       </div>
       {(!options || options.length === 0) && (
-        <p className="text-xs text-gray-400 dark:text-slate-500">Aucune option ajoutée. Cliquez "+" ou tapez et appuyez Entrée.</p>
+        <p className="text-xs text-gray-400 dark:text-slate-500">Aucune option. Tapez une option puis Entrée.</p>
       )}
     </div>
   );
@@ -244,7 +244,8 @@ export default function AdminQuestionnaires() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Questionnaires annuels</h1>
+          <div className="mb-3 inline-flex h-1 w-12 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500" />
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-slate-100 sm:text-3xl">Questionnaires annuels</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Créez et gérez les enquêtes envoyées aux alumni</p>
         </div>
         {!showCreate && (
@@ -274,7 +275,7 @@ export default function AdminQuestionnaires() {
               </div>
             </div>
             <p className="text-sm text-gray-600 dark:text-slate-300 mb-5">
-              Voulez-vous vraiment supprimer ce questionnaire et toutes ses réponses ?
+              Supprimer ce questionnaire et toutes ses réponses ?
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
               <button
@@ -412,7 +413,7 @@ export default function AdminQuestionnaires() {
                       className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600"
                     />
                     <span className="text-xs text-gray-600 dark:text-slate-400">
-                      Conditionner au statut emploi — masquer si l&apos;alumni est en recherche active
+                      Masquer si l&apos;alumni est en recherche active
                     </span>
                   </label>
                 </div>
@@ -607,7 +608,7 @@ export default function AdminQuestionnaires() {
               </div>
             </div>
             <p className="text-sm text-gray-600 dark:text-slate-300 mb-5">
-              Voulez-vous vraiment supprimer ce questionnaire et toutes ses réponses ?
+              Supprimer ce questionnaire et toutes ses réponses ?
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
               <button

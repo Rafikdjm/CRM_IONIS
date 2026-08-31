@@ -179,9 +179,10 @@ export default function AlumniDirectory() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Annuaire des Alumni</h1>
+        <div className="mb-3 inline-flex h-1 w-12 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500" />
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-slate-100 sm:text-3xl">Annuaire des Alumni</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-          Recherchez et filtrez les anciens élèves par promotion, secteur ou entreprise
+          Recherchez et filtrez les anciens élèves
         </p>
       </div>
 
@@ -615,12 +616,7 @@ export default function AlumniDirectory() {
                   Confirmer la suppression définitive de <span className="font-semibold">{deleteTarget.name}</span> ?
                 </p>
                 <div className="mt-3 rounded-lg bg-red-50 dark:bg-red-950/60 p-3 text-sm text-red-700 dark:text-red-300">
-                  <span className="font-semibold">Action irréversible</span> — à réserver aux erreurs de saisie ou
-                  doublons, pas aux demandes de suppression RGPD normales. Cette opération supprime <span className="font-semibold">définitivement</span>
-                  l&apos;alumni et toutes ses données liées (expériences professionnelles, certifications, consentements RGPD,
-                  réponses aux questionnaires) de la base de données. Le processus d&apos;anonymisation RGPD (droit à
-                  l&apos;effacement) est géré par le bouton <span className="font-semibold">Anonymiser</span> et est
-                  <span className="font-semibold"> totalement distinct</span>.
+                  <span className="font-semibold">Action irréversible</span> réservée aux erreurs de saisie ou doublons. Pour les demandes RGPD, utilisez <span className="font-semibold">Anonymiser</span>.
                 </div>
               </div>
             </div>
@@ -671,10 +667,9 @@ export default function AlumniDirectory() {
                   Confirmer l&apos;anonymisation RGPD de <span className="font-semibold">{anonymiseTarget.name}</span> ?
                 </p>
                 <div className="mt-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 p-3 text-sm text-emerald-700 dark:text-emerald-300">
-                  L&apos;anonymisation masque les données personnelles (nom, prénom, email, téléphone, expériences…)
-                  et marque le compte comme anonymisé. Les lignes sont conservées pour les indicateurs agrégés. La
-                  purge définitive différée reste gérée par le workflow RGPD existant. Cette action est différente de
-                  la <span className="font-semibold">suppression définitive</span> (réservée aux erreurs de saisie ou doublons).
+                  Masque les données personnelles (nom, email, téléphone, expériences…) et conserve le compte anonymisé
+                  pour les indicateurs agrégés. La purge définitive reste gérée par le workflow RGPD. Distincte de la
+                  <span className="font-semibold"> suppression définitive</span> (réservée aux erreurs de saisie ou doublons).
                 </div>
               </div>
             </div>

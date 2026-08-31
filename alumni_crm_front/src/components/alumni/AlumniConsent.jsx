@@ -144,25 +144,25 @@ export default function AlumniConsent() {
     {
       key: 'contact_allowed',
       title: 'Autoriser la prise de contact',
-      description: 'Permettre à l\'école et aux partenaires de vous contacter pour des opportunités professionnelles, des événements ou des enquêtes.',
+      description: 'Être contacté pour des opportunités, des événements ou des enquêtes.',
       critical: true,
     },
     {
       key: 'data_sharing',
       title: 'Partage des données avec les partenaires',
-      description: 'Autoriser le partage anonymisé de vos données statistiques (secteur, poste) avec les entreprises partenaires pour des études et recrutements.',
+      description: 'Partage anonymisé de vos statistiques (secteur, poste) pour les études et recrutements.',
       critical: false,
     },
     {
       key: 'survey_participation',
       title: 'Participation aux enquêtes',
-      description: 'Accepter de recevoir et de répondre aux enquêtes alumni sur votre évolution professionnelle et votre satisfaction.',
+      description: 'Recevoir et répondre aux enquêtes alumni.',
       critical: false,
     },
     {
       key: 'newsletter',
       title: 'Bulletin d\'information',
-      description: 'Recevoir la newsletter alumni avec les actualités de l\'établissement, les événements et les offres d\'emploi.',
+      description: 'Recevoir la newsletter : actualités, événements et offres d\'emploi.',
       critical: false,
     },
   ];
@@ -172,7 +172,7 @@ export default function AlumniConsent() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">RGPD & Consentement</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-          Gérez vos préférences de confidentialité et consentez au traitement de vos données personnelles
+          Gérez vos consentements et vos demandes relatives à vos données personnelles
         </p>
       </div>
 
@@ -184,9 +184,7 @@ export default function AlumniConsent() {
           <div className="text-sm text-blue-800 dark:text-blue-200">
             <p className="font-medium">Protection de vos données</p>
             <p className="mt-1">
-              Conformément au Règlement Général sur la Protection des Données (RGPD), vous avez le droit de
-              consulter, modifier et supprimer vos données personnelles. Vos choix de consentement peuvent
-              être modifiés à tout moment.
+              Vos données sont protégées par le RGPD : vous pouvez à tout moment les consulter, modifier ou demander leur suppression.
             </p>
           </div>
         </div>
@@ -275,13 +273,11 @@ export default function AlumniConsent() {
         <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
           <p className="font-medium">Durée de conservation</p>
           <p className="mt-1">
-            Vos données personnelles sont conservées tant que votre compte est actif. En cas de demande d'anonymisation,
-            vos données sont rendues irréversiblement anonymes et conservées 6 mois avant purge définitive.
-            Les données de consentement sont conservées à des fins de traçabilité même après anonymisation.
+            Vos données sont conservées tant que votre compte est actif. Après anonymisation, elles sont purgées dans un délai de 6 mois.
           </p>
-          <p className="mt-2 font-medium">Délégué à la Protection des Données (DPO)</p>
+          <p className="mt-2 font-medium">Questions ?</p>
           <p className="mt-1">
-            Pour toute question relative à vos données personnelles, contactez le DPO :
+            Contactez le DPO :
             <a href="mailto:contact@ionis-stm.com" className="ml-1 font-medium underline">contact@ionis-stm.com</a>
           </p>
         </div>
@@ -290,7 +286,7 @@ export default function AlumniConsent() {
       <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Vos demandes RGPD</h2>
         <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-          Exportez vos données personnelles (droit d'accès) ou demandez la suppression de votre compte (droit à l'oubli).
+          Exportez vos données ou demandez la suppression de votre compte.
         </p>
 
         {demandeError && <ErrorMessage message={demandeError} onRetry={() => setDemandeError(null)} />}
@@ -335,8 +331,7 @@ export default function AlumniConsent() {
         {showDeleteConfirm && (
           <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950">
             <p className="text-sm text-red-800 dark:text-red-200">
-              Confirmez-vous la demande de suppression de votre compte ? Cette action est irréversible après validation
-              par un administrateur.
+              Supprimer définitivement votre compte ? Action irréversible après validation par un administrateur.
             </p>
             <div className="mt-3 flex gap-3">
               <button

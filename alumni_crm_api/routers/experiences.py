@@ -192,6 +192,19 @@ def ajouter_experience(
                     "WHERE id_entreprise = %s",
                     (experience.pays, experience.ville, id_entreprise),
                 )
+            # Le secteur est saisi par l'alumni dans « Mon Parcours » et le
+            # frontend recrée l'expérience à chaque sauvegarde. On applique
+            # donc la dernière valeur saisie : si l'entreprise existait déjà
+            # avec un autre secteur, il est mis à jour. Sans cela, modifier
+            # le secteur dans « Mon Parcours » n'aurait aucun effet sur une
+            # entreprise déjà connue. Le secteur reste néanmoins partagé
+            # entre tous les alumni liés à cette entreprise.
+            if experience.secteur_activite:
+                cursor.execute(
+                    "UPDATE ENTREPRISE SET secteur_activite = %s "
+                    "WHERE id_entreprise = %s",
+                    (experience.secteur_activite, id_entreprise),
+                )
         else:
             cursor.execute(
                 "INSERT INTO ENTREPRISE (nom_entreprise, secteur_activite, pays, ville) "

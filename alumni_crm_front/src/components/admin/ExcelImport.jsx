@@ -188,9 +188,10 @@ export default function ExcelImport() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Import / Export</h1>
+          <div className="mb-3 inline-flex h-1 w-12 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500" />
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-slate-100 sm:text-3xl">Import / Export</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-            Importez une liste d'admis depuis un fichier Excel ou exportez les données existantes
+            Importez une liste d'admis ou exportez les données
           </p>
         </div>
         <button
@@ -309,7 +310,7 @@ export default function ExcelImport() {
               </table>
             </div>
             <p className="mt-2 text-xs text-gray-500 dark:text-slate-400">
-              Les colonnes en vert correspondent au format attendu. Les colonnes en orange ne sont pas reconnues mais seront ignorées.
+              Vert : colonne attendue · Orange : colonne non reconnue (ignorée)
             </p>
           </div>
         )}

@@ -44,7 +44,7 @@ from security import (
     current_identity,
     require_admin_api_key,
 )
-from utils import rows_to_dicts
+from utils import refuser_compte_anonymise, rows_to_dicts
 
 logger = logging.getLogger(__name__)
 
@@ -360,6 +360,9 @@ def creer_demande(
         etudiant = _get_student(cursor, id_etudiant)
         if not etudiant:
             raise HTTPException(status_code=404, detail="Compte alumni introuvable.")
+        # RGPD : un compte déjà supprimé (anonymisé) ne peut plus formuler
+        # de nouvelle demande ni ré-exporter ses données.
+        refuser_compte_anonymise(cursor, id_etudiant)
 
         # Une seule demande active par type (envoyée ou en cours de traitement).
         cursor.execute(
@@ -510,6 +513,8 @@ def exporter_mes_donnees(
         etudiant = _get_student(cursor, id_etudiant)
         if not etudiant:
             raise HTTPException(status_code=404, detail="Compte alumni introuvable.")
+        # RGPD : un compte supprimé (anonymisé) ne peut plus ré-exporter.
+        refuser_compte_anonymise(cursor, id_etudiant)
 
         payload = _build_export(cursor, id_etudiant)
         payload["date_generation"] = None  # JSON via FastAPI (datetime) ; None évite une date figée
@@ -776,14 +781,17 @@ def bulk_export(
         ids = list(dict.fromkeys(body.ids))
         placeholders = ",".join(["%s"] * len(ids))
         cursor.execute(
-            f"SELECT id_demande, id_etudiant FROM DEMANDE_RGPD "
+            f"SELECT id_demande, id_etudiant, type_demande, statut FROM DEMANDE_RGPD "
             f"WHERE id_demande IN ({placeholders}) ORDER BY id_demande;",
             tuple(ids),
         )
         exports = {}
         erreurs = {}
-        for id_demande, id_etudiant in cursor.fetchall():
+        for id_demande, id_etudiant, type_demande, statut in cursor.fetchall():
             key = str(id_demande)
+            if statut != "traitee":
+                erreurs[key] = "Demande non traitée (rejetée ou en cours), export impossible."
+                continue
             if id_etudiant is None:
                 erreurs[key] = "Compte supprimé/anonymisé, export impossible."
                 continue
@@ -930,7 +938,17 @@ def export_admin(
         row = cursor.fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Demande introuvable.")
-        id_etudiant = row[0]
+        id_etudiant, type_demande, statut = row
+        # RGPD : seul un droit d'accès validé (demande traitée) autorise
+        # l'export. Une demande rejetée ne donne pas droit aux données.
+        if statut != "traitee":
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Cet export n'est disponible que pour une demande traitée. "
+                    "La demande n'a pas été validée (rejetée ou en cours)."
+                ),
+            )
         if id_etudiant is None:
             raise HTTPException(status_code=410, detail="Compte supprimé/anonymisé, export impossible.")
         payload = _build_export(cursor, id_etudiant)

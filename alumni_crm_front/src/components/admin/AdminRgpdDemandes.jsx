@@ -259,7 +259,7 @@ export default function AdminRgpdDemandes() {
       setConfirmModal({
         type: 'bulk-delete',
         title: 'Suppression définitive',
-        message: `Vous allez supprimer définitivement ${selectedIds.size} demande(s) RGPD. Cette action est irréversible et ne touche que la table des demandes (les profils alumni ne sont pas modifiés).`,
+        message: `Supprimer définitivement ${selectedIds.size} demande(s) RGPD ? Seule la table des demandes est touchée, pas les profils alumni.`,
       });
     } else if (action === 'rejetee') {
       setConfirmModal({
@@ -272,7 +272,7 @@ export default function AdminRgpdDemandes() {
       setConfirmModal({
         type: 'bulk-traitee',
         title: 'Traitement groupé',
-        message: `Marquer ${selectedIds.size} demande(s) comme traitée(s) ? Les demandes encore « Envoyées » seront prises en charge automatiquement au nom de l'administrateur indiqué. Les demandes de suppression déclencheront l'anonymisation des comptes concernés (irréversible).`,
+        message: `Marquer ${selectedIds.size} demande(s) comme traitée(s) ? Les demandes de suppression déclenchent l'anonymisation des comptes (irréversible).`,
       });
     } else if (action === 'export') {
       setConfirmModal({
@@ -343,7 +343,7 @@ export default function AdminRgpdDemandes() {
     setConfirmModal({
       type: 'purge',
       title: 'Purger les demandes clôturées',
-      message: `Supprimer définitivement les ${clotureesCount} demande(s) dont le statut est « Traitée » ou « Rejetée » ? Les demandes « Envoyées » et « En cours de traitement » ne seront pas touchées.`,
+      message: `Supprimer définitivement les ${clotureesCount} demande(s) « Traitées » ou « Rejetées » ? Les autres demandes ne seront pas touchées.`,
     });
     setBulkResult(null);
     setError(null);
@@ -385,9 +385,10 @@ export default function AdminRgpdDemandes() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Demandes RGPD</h1>
+        <div className="mb-3 inline-flex h-1 w-12 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500" />
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-slate-100 sm:text-3xl">Demandes RGPD</h1>
         <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-          Traitez les demandes d'export et de suppression de compte des alumni.
+          Traitez les demandes d'export et de suppression
         </p>
       </div>
 
@@ -670,7 +671,7 @@ export default function AdminRgpdDemandes() {
                           Rejeter
                         </button>
                       </div>
-                    ) : (
+                    ) : d.statut === 'traitee' ? (
                       <button
                         onClick={() => handleExport(d.id_demande)}
                         disabled={exportingId === d.id_demande}
@@ -678,6 +679,8 @@ export default function AdminRgpdDemandes() {
                       >
                         {exportingId === d.id_demande ? 'Export...' : `Exporter (${labelFormat(exportFormat)})`}
                       </button>
+                    ) : (
+                      <span className="text-xs text-gray-400 dark:text-slate-500">—</span>
                     )}
                   </td>
                 </tr>
@@ -700,14 +703,13 @@ export default function AdminRgpdDemandes() {
             </h2>
             {modalAction === 'prendre' ? (
               <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-                Vous réservez cette demande pour vous. Aucun autre administrateur ne pourra la
-                traiter tant qu'une décision finale n'est pas prise.
+                Vous réservez cette demande pour vous. Aucun autre administrateur ne pourra la traiter.
               </p>
             ) : (
               <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
                 {traitementModal.type_demande === 'suppression'
-                  ? 'Demande de suppression de compte : le profil sera anonymisé (données personnelles masquées) de façon irréversible.'
-                  : 'Demande d\'export de données : valider pour clôturer la demande.'}
+                  ? 'Demande de suppression : le profil sera anonymisé de façon irréversible.'
+                  : "Demande d'export : valider pour clôturer."}
               </p>
             )}
 
@@ -780,9 +782,8 @@ export default function AdminRgpdDemandes() {
               Purge des comptes anonymisés
             </h2>
             <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-              {purgePreview.candidats} compte(s) anonymisé(s) éligible(s) à la purge définitive (délai de
-              conservation de {purgePreview.delay_months} mois). Les données liées (expériences,
-              certifications, consentements, réponses aux questionnaires) seront supprimées également.
+              {purgePreview.candidats} compte(s) anonymisé(s) éligible(s) à la purge définitive
+              (délai de conservation de {purgePreview.delay_months} mois). Toutes les données liées seront supprimées.
             </p>
 
             {purgePreview.comptes?.length > 0 ? (
@@ -807,50 +808,6 @@ export default function AdminRgpdDemandes() {
                 Aucun compte éligible pour le moment.
               </p>
             )}
-
-            <div className="mt-3 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 text-sm dark:border-slate-600 dark:bg-slate-900">
-              <details>
-                <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-slate-400">
-                  Exemples illustratifs — comprendre l'éligibilité à la purge
-                </summary>
-                <ul className="mt-2 space-y-1.5 text-gray-700 dark:text-slate-200">
-                  <li className="flex items-center justify-between gap-2">
-                    <span>Compte n°12 — anonymisé le 20/03/2026 (<em>5 mois</em>)</span>
-                    <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-slate-700 dark:text-slate-300">
-                      Purge dans ~30 jours
-                    </span>
-                  </li>
-                  <li className="flex items-center justify-between gap-2">
-                    <span>Compte n°45 — anonymisé le 10/02/2026 (<em>6 mois révolus</em>)</span>
-                    <span className="inline-flex rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-700 dark:bg-orange-900 dark:text-orange-200">
-                      Éligible à la purge définitive
-                    </span>
-                  </li>
-                  <li className="flex items-center justify-between gap-2">
-                    <span>Compte n°78 — anonymisé le 01/12/2025 (<em>9 mois</em>)</span>
-                    <span className="inline-flex rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-700 dark:bg-orange-900 dark:text-orange-200">
-                      Éligible (en attente de purge)
-                    </span>
-                  </li>
-                  <li className="flex items-center justify-between gap-2">
-                    <span>Compte n°30 — actif, jamais anonymisé</span>
-                    <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-slate-700 dark:text-slate-300">
-                      Jamais concerné
-                    </span>
-                  </li>
-                  <li className="flex items-center justify-between gap-2">
-                    <span>Compte n°5 — déjà purgé en juillet 2026</span>
-                    <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-slate-700 dark:text-slate-300">
-                      Invisible (journal d'audit seul)
-                    </span>
-                  </li>
-                </ul>
-                <p className="mt-2 text-[11px] text-gray-400 dark:text-slate-500">
-                  Données fictives affichées pour illustrer le fonctionnement ; non incluses dans la
-                  purge.
-                </p>
-              </details>
-            </div>
 
             <div className="mt-5 flex flex-col gap-2">
               <button
@@ -879,8 +836,7 @@ export default function AdminRgpdDemandes() {
               Confirmer la purge définitive
             </h2>
             <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-              Cette action supprime définitivement {purgePreview.candidats} compte(s) anonymisé(s) et
-              toutes leurs données personnelles. Elle est irréversible et tracée dans le journal d'audit.
+              Supprimer définitivement {purgePreview.candidats} compte(s) anonymisé(s) et toutes leurs données. Action irréversible et tracée.
             </p>
             <div className="mt-5 flex flex-col gap-2">
               <button

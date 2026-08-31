@@ -130,9 +130,10 @@ export default function AdminPromotions() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Promotions</h1>
+          <div className="mb-3 inline-flex h-1 w-12 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500" />
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-slate-100 sm:text-3xl">Promotions</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-            Gérez les promotions, filières et années de diplôme des alumni
+            Gérez promotions, filières et années de diplôme
           </p>
         </div>
         <button
@@ -251,9 +252,10 @@ export default function AdminPromotions() {
                   <span className="font-semibold">{cascade.nb_etudiants}</span> étudiant(s) rattaché(s).
                 </p>
                 <div className="mt-3 rounded-lg bg-red-50 dark:bg-red-950/60 p-3 text-sm text-red-700 dark:text-red-300">
-                  La supprimer entraînera la suppression <span className="font-semibold">DÉFINITIVE</span> de{' '}
-                  {cascade.nb_etudiants === 1 ? 'cet étudiant' : 'ces étudiants'} et de toutes {cascade.nb_etudiants === 1 ? 'ses' : 'leurs'} données
-                  liées : expériences professionnelles, certifications, consentements RGPD et réponses aux questionnaires.
+                  La promotion <span className="font-semibold">{cascade.name}</span> compte{' '}
+                  <span className="font-semibold">{cascade.nb_etudiants}</span> étudiant(s) rattaché(s).
+                  La supprimer supprimera <span className="font-semibold">définitivement</span>{' '}
+                  {cascade.nb_etudiants === 1 ? 'cet étudiant' : 'ces étudiants'} et toutes leurs données liées.
                   Cette action est <span className="font-semibold">irréversible</span>.
                 </div>
               </div>

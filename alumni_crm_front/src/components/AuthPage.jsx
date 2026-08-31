@@ -251,19 +251,11 @@ export default function AuthPage() {
       <div className="relative z-10 w-full max-w-[420px]">
         <div className={`rounded-3xl p-8 backdrop-blur-xl sm:p-10 ${isDark ? 'border border-white/[0.08] bg-[#0d1f3c]/80 shadow-[0_25px_60px_-12px_rgba(0,0,0,0.5)]' : 'border border-gray-200 bg-white/80 shadow-xl'}`}>
           <div className="mb-8 flex flex-col items-center text-center">
-            {adminMode ? (
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 shadow-lg shadow-blue-500/20">
-                <svg className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
-                </svg>
-              </div>
-            ) : (
-              <img
-                src={ionisStmLogo}
-                alt="Logo IONIS STM"
-                className="mb-4 h-14 w-auto max-w-[220px] object-contain"
-              />
-            )}
+            <img
+              src={ionisStmLogo}
+              alt="Logo IONIS STM"
+              className="mb-4 h-14 w-auto max-w-[220px] object-contain"
+            />
             <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Alumni CRM</h1>
             <p className={`mt-1 text-sm ${isDark ? 'text-blue-200/60' : 'text-gray-500'}`}>
               {adminMode ? 'Espace administrateur' : 'Réseau des anciens'}

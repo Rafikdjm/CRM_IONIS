@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { SECTORS } from '../constants';
 
 const api = axios.create({
   // Le backend FastAPI (alumni_crm_api/main.py) n'utilise AUCUN préfixe
@@ -187,20 +188,32 @@ const toMonthInput = (v) => {
   return '';
 };
 
-const mapExperienceToCareer = (exp) => ({
-  id: exp.id_experience,
-  company: exp.nom_entreprise || '',
-  position: exp.intitule_poste || '',
-  sector: exp.secteur_activite || '',
-  start_date: toMonthInput(exp.date_debut),
-  end_date: toMonthInput(exp.date_fin),
-  salary_range: exp.salaire != null ? String(exp.salaire) : '',
-  is_current: !!exp.poste_actuel,
-  description: '',
-  type_contrat: exp.type_contrat || '',
-  pays: exp.pays || '',
-  ville: exp.ville || '',
-});
+const mapExperienceToCareer = (exp) => {
+  const rawSector = exp.secteur_activite || '';
+  let sector = rawSector;
+  let custom_sector = '';
+  // Valeur libre non listée (secteur saisi via « Autre ») : on rétablit le
+  // choix « Autre » et on conserve le texte pour pouvoir l'afficher / l'éditer.
+  if (rawSector && rawSector !== 'Non renseigné' && !SECTORS.includes(rawSector)) {
+    sector = 'Autre';
+    custom_sector = rawSector;
+  }
+  return {
+    id: exp.id_experience,
+    company: exp.nom_entreprise || '',
+    position: exp.intitule_poste || '',
+    sector,
+    custom_sector,
+    start_date: toMonthInput(exp.date_debut),
+    end_date: toMonthInput(exp.date_fin),
+    salary_range: exp.salaire != null ? String(exp.salaire) : '',
+    is_current: !!exp.poste_actuel,
+    description: '',
+    type_contrat: exp.type_contrat || '',
+    pays: exp.pays || '',
+    ville: exp.ville || '',
+  };
+};
 
 /**
  * Sélectionne l'expérience à afficher dans l'annuaire pour un alumni.

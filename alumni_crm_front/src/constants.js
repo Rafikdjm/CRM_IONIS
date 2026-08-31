@@ -23,13 +23,11 @@ export const SECTORS = [
   'Arts / Design',
   'Environnement',
   'Logistique',
-  'Hôtellerie / Restauration',
   'Automobile',
   'Aéronautique / Spatial',
   'Télécom',
   'Construction',
   'Audiovisuel / Cinéma',
-  'Commerce de détail',
   'Freelance / Entrepreneur',
   'Autre',
 ];

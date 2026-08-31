@@ -391,18 +391,6 @@ function Sparkline({ value, points }) {
           animation: 'spark-draw 1.1s cubic-bezier(0.16, 1, 0.3, 1) both',
         }}
       />
-      <circle cx={last[0]} cy={last[1]} r="4" fill="#10b981" />
-      <circle
-        cx={last[0]}
-        cy={last[1]}
-        r="8"
-        fill="none"
-        stroke="#10b981"
-        strokeWidth="1.5"
-        opacity="0.5"
-        className="animate-ping"
-        style={{ transformOrigin: `${last[0]}px ${last[1]}px` }}
-      />
     </svg>
   );
 }
@@ -510,7 +498,7 @@ function RatingVisual({ valeur, unite }) {
 // fourchette codée en dur, aucune référence de marché externe : le sujet
 // de stage exige des indicateurs d'insertion calculés uniquement à partir
 // des données collectées par le CRM (voir aussi
-// Rapport/methodologie_indicateurs_dashboard.docx).
+// Rapport/methodologie_indicateurs_insertion.md).
 //
 // Règles de calcul de la fourchette affichée :
 //   - Échantillon suffisant (>= SEUIL_ECHANTILLON_SALAIRE salaires) :
@@ -992,10 +980,9 @@ export default function AdminDashboard() {
       {/* En-tête + indicateur de fraîcheur des données */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-slate-100">Tableau de bord</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-            Vue d'ensemble des indicateurs Alumni
-          </p>
+          <div className="mb-3 inline-flex h-1 w-12 rounded-full bg-gradient-to-r from-blue-600 to-indigo-500" />
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-slate-100 sm:text-3xl">Tableau de bord</h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">Suivi des indicateurs Alumni</p>
         </div>
         {lastUpdated && <FreshnessBadge lastUpdated={lastUpdated} />}
       </div>
@@ -1109,7 +1096,7 @@ export default function AdminDashboard() {
           <div className="mb-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Indicateurs des enquêtes</h2>
             <p className="mt-0.5 text-sm text-gray-500 dark:text-slate-400">
-              Calculés automatiquement depuis les tags des questions actives
+              Calculés depuis les questions actives
             </p>
           </div>
           <div className="grid grid-cols-1 gap-6 lg:gap-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -1199,7 +1186,7 @@ export default function AdminDashboard() {
           <div className="mb-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-slate-100">Indicateurs complémentaires</h2>
             <p className="mt-0.5 text-sm text-gray-500 dark:text-slate-400">
-              Lecture croisée des données déjà consolidées côté backend
+              Données consolidées des indicateurs
             </p>
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 xl:gap-6">
@@ -1238,8 +1225,7 @@ export default function AdminDashboard() {
                 sansExp={inactiveAlumni}
               />
               <p className="mt-5 text-xs text-gray-400 dark:text-slate-500">
-                Un taux faible signifie un taux d'emploi mécaniquement sous-estimé
-                (alumni sans parcours déclaré exclus du numérateur).
+                Un taux faible sous-estime mécaniquement le taux d'emploi (alumni sans parcours déclaré exclus).
               </p>
             </ComplementCard>
 
