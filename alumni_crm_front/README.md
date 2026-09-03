@@ -7,7 +7,7 @@ profil, parcours professionnel, consentements RGPD, questionnaire annuel).
 
 ## Prérequis
 
-- Node.js 18+
+- Node.js 20.19+ ou 22.12+ (exigence de Vite 8)
 - Le backend FastAPI lancé en local (voir `alumni_crm_api/README.md`)
 
 ## Installation et démarrage
