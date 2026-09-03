@@ -307,13 +307,13 @@ def build():
     # ---------- 9. Démo Admin (capture dashboard) ----------
     s = _blank(prs); _set_bg(s, WHITE)
     _top_bar(s, "Démonstration — Espace Administration", "Tableau de bord, annuaire, RGPD")
-    _add_image(s, os.path.join(FIG_DIR, "anB_dashboard.png"), Inches(0.9), Inches(1.4), Inches(11.6))
+    _add_image(s, os.path.join(FIG_DIR, "anB_dashboard_light.png"), Inches(0.9), Inches(1.4), Inches(11.6))
     _footer(s, 9)
 
     # ---------- 10. Démo Alumni (capture profil) ----------
     s = _blank(prs); _set_bg(s, WHITE)
     _top_bar(s, "Démonstration — Espace Alumni", "Profil, parcours, consentement, questionnaire")
-    _add_image(s, os.path.join(FIG_DIR, "anC_parcours.png"), Inches(0.9), Inches(1.4), Inches(11.6))
+    _add_image(s, os.path.join(FIG_DIR, "anC_parcours_light.png"), Inches(0.9), Inches(1.4), Inches(11.6))
     _footer(s, 10)
 
     # ---------- 11. RGPD ----------
@@ -324,8 +324,8 @@ def build():
         "Droits des personnes : export en auto-service (JSON/Excel/CSV), demande de suppression avec workflow verrouillé.",
         "Anonymisation vs suppression ; traçabilité via journal d'audit ; purge différée des comptes anonymisés.",
     ], size=18)
-    img = _add_image(s, os.path.join(FIG_DIR, "anC_consentement.png"), Inches(0.9), Inches(3.2), Inches(5.8))
-    img = _add_image(s, os.path.join(FIG_DIR, "anB_demandes_rgpd.png"), Inches(7.0), Inches(3.2), Inches(5.8))
+    img = _add_image(s, os.path.join(FIG_DIR, "anC_consentement_light.png"), Inches(0.9), Inches(3.2), Inches(5.8))
+    img = _add_image(s, os.path.join(FIG_DIR, "anB_demandes_rgpd_light.png"), Inches(7.0), Inches(3.2), Inches(5.8))
     _footer(s, 11)
 
     # ---------- 12. Indicateurs ----------
@@ -339,7 +339,7 @@ def build():
         "Répartition par promotion et par secteur, taux de complétion.",
         "Refus d'afficher un chiffre trompeur (cohortes immatures → non disponible).",
     ], size=17)
-    _add_image(s, os.path.join(FIG_DIR, "anB_dashboard.png"), Inches(7.0), Inches(1.9), Inches(5.6))
+    _add_image(s, os.path.join(FIG_DIR, "anB_dashboard_light.png"), Inches(7.0), Inches(1.9), Inches(5.6))
     _footer(s, 12)
 
     # ---------- 13. Difficultés ----------
