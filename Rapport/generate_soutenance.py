@@ -130,18 +130,25 @@ def _footer(slide, num):
     p.font.color.rgb = GRAY
 
 
-def _numbered_rows(slide, y0, pairs, box_color, title=True):
+def _screenshot(slide, path, left=Inches(1.9), top=Inches(1.35), ratio=1.6):
+    """Capture 16:10 calée verticalement dans la zone utile (max hauteur ~5.55in)."""
+    h = Inches(5.55)
+    w = int(h * ratio)
+    _add_image(slide, path, left, top, w, h)
+
+
+def _numbered_rows(slide, y0, pairs, box_color, step=Inches(0.72), title=True):
     """Suite de lignes numérotées (boîte code + texte)."""
     y = y0
     for code, txt in pairs:
-        box = _box(slide, Inches(0.9), y, Inches(1.0), Inches(0.85), color=box_color)
+        box = _box(slide, Inches(0.9), y, Inches(0.9), Inches(0.6), color=box_color)
         tf = box.text_frame; tf.word_wrap = True
         p = tf.paragraphs[0]; p.text = code
-        p.font.size = Pt(20); p.font.bold = True; p.font.color.rgb = WHITE
+        p.font.size = Pt(17); p.font.bold = True; p.font.color.rgb = WHITE
         p.alignment = PP_ALIGN.CENTER
-        _text(slide, Inches(2.15), y + Inches(0.15), Inches(10.3), Inches(0.6),
+        _text(slide, Inches(2.0), y + Inches(0.03), Inches(10.4), Inches(0.55),
               txt, size=17, bold=(title and code.startswith("O")))
-        y += Inches(0.9)
+        y += step
     return y
 
 
@@ -197,14 +204,14 @@ def build():
     # ---------- 3. Contexte & Objectifs ----------
     s = _blank(prs); _set_bg(s, WHITE)
     _top_bar(s, "Contexte, enjeux et objectifs")
-    _bullets(s, Inches(0.9), Inches(1.35), Inches(11.6), Inches(1.7), [
+    _bullets(s, Inches(0.9), Inches(1.25), Inches(11.6), Inches(1.4), [
         "Le suivi de l'insertion des diplômés est stratégique : pilotage de la formation, animation du réseau, obligations réglementaires (RGPD).",
         "Sans système centralisé, les données périment vite et la collecte est manuelle.",
-    ], size=17)
-    box = _box(s, Inches(0.9), Inches(3.0), Inches(11.6), Inches(0.9), color=LIGHT)
-    _text(s, Inches(1.2), Inches(3.12), Inches(11.0), Inches(0.7),
+    ], size=15, gap=6)
+    box = _box(s, Inches(0.9), Inches(2.8), Inches(11.6), Inches(0.8), color=LIGHT)
+    _text(s, Inches(1.2), Inches(2.88), Inches(11.0), Inches(0.65),
           "Problématique : structurer la donnée alumni, piloter l'insertion par des indicateurs fiables, "
-          "et animer le réseau dans le respect du RGPD.", size=16, bold=True, color=BLUE)
+          "et animer le réseau dans le respect du RGPD.", size=15, bold=True, color=BLUE)
     goals = [
         ("O1", "Un CRM complet : espace admin + espace alumni"),
         ("O2", "Une base relationnelle SQL modélisée (MCD/MLD)"),
@@ -212,7 +219,7 @@ def build():
         ("O4", "Une conformité RGPD réelle (consentement, export, suppression, audit)"),
         ("O5", "L'import/export automatisé (Excel / CSV)"),
     ]
-    _numbered_rows(s, Inches(4.0), goals, ACCENT)
+    _numbered_rows(s, Inches(3.75), goals, ACCENT, step=Inches(0.62))
     _footer(s, 3)
 
     # ---------- 4. Méthodologie & architecture ----------
@@ -259,25 +266,25 @@ def build():
     # ---------- 6. RGPD ----------
     s = _blank(prs); _set_bg(s, WHITE)
     _top_bar(s, "Conformité RGPD")
-    _bullets(s, Inches(0.9), Inches(1.4), Inches(5.9), Inches(2.6), [
+    _bullets(s, Inches(0.9), Inches(1.35), Inches(5.9), Inches(2.5), [
         "Consentement explicite : 4 types, horodaté et réellement consommé.",
         "Droits : export en auto-service (JSON/Excel/CSV), suppression avec workflow verrouillé.",
         "Anonymisation vs suppression ; journal d'audit ; purge différée.",
-    ], size=16)
-    _add_image(s, os.path.join(FIG_DIR, "anC_consentement_light.png"), Inches(0.9), Inches(4.0), Inches(5.9))
-    _add_image(s, os.path.join(FIG_DIR, "anB_demandes_rgpd_light.png"), Inches(7.0), Inches(1.4), Inches(5.9))
+    ], size=15, gap=6)
+    _add_image(s, os.path.join(FIG_DIR, "anC_consentement_light.png"), Inches(0.9), Inches(4.0), Inches(4.7))
+    _add_image(s, os.path.join(FIG_DIR, "anB_demandes_rgpd_light.png"), Inches(7.0), Inches(1.35), Inches(5.9))
     _footer(s, 6)
 
     # ---------- 7. Démo Admin ----------
     s = _blank(prs); _set_bg(s, WHITE)
     _top_bar(s, "Démonstration — Espace Administration", "Tableau de bord, annuaire, RGPD")
-    _add_image(s, os.path.join(FIG_DIR, "anB_dashboard_light.png"), Inches(0.9), Inches(1.4), Inches(11.6))
+    _screenshot(s, os.path.join(FIG_DIR, "anB_dashboard_light.png"))
     _footer(s, 7)
 
     # ---------- 8. Démo Alumni ----------
     s = _blank(prs); _set_bg(s, WHITE)
     _top_bar(s, "Démonstration — Espace Alumni", "Profil, parcours, consentement, questionnaire")
-    _add_image(s, os.path.join(FIG_DIR, "anC_parcours_light.png"), Inches(0.9), Inches(1.4), Inches(11.6))
+    _screenshot(s, os.path.join(FIG_DIR, "anC_parcours_light.png"))
     _footer(s, 8)
 
     # ---------- 9. Indicateurs ----------
