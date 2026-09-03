@@ -137,19 +137,28 @@ def _screenshot(slide, path, left=Inches(1.9), top=Inches(1.35), ratio=1.6):
     _add_image(slide, path, left, top, w, h)
 
 
-def _numbered_rows(slide, y0, pairs, box_color, step=Inches(0.72), title=True):
+def _numbered_rows(slide, y0, pairs, box_color, step=Inches(0.64), title=True):
     """Suite de lignes numérotées (boîte code + texte)."""
     y = y0
     for code, txt in pairs:
-        box = _box(slide, Inches(0.9), y, Inches(0.9), Inches(0.6), color=box_color)
+        box = _box(slide, Inches(0.9), y, Inches(0.9), Inches(0.55), color=box_color)
         tf = box.text_frame; tf.word_wrap = True
         p = tf.paragraphs[0]; p.text = code
-        p.font.size = Pt(17); p.font.bold = True; p.font.color.rgb = WHITE
+        p.font.size = Pt(16); p.font.bold = True; p.font.color.rgb = WHITE
         p.alignment = PP_ALIGN.CENTER
-        _text(slide, Inches(2.0), y + Inches(0.03), Inches(10.4), Inches(0.55),
-              txt, size=17, bold=(title and code.startswith("O")))
+        _text(slide, Inches(2.0), y + Inches(0.02), Inches(10.4), Inches(0.5),
+              txt, size=16, bold=(title and code.startswith("O")))
         y += step
     return y
+
+
+def _example(slide, label, text, y=Inches(5.95)):
+    """Encart « Exemple » réutilisable en bas de diapositive."""
+    ex = _box(slide, Inches(0.9), y, Inches(11.6), Inches(0.95), color=LIGHT, line=ACCENT)
+    _text(slide, Inches(1.2), y + Inches(0.1), Inches(2.1), Inches(0.7),
+          "EXEMPLE", size=14, bold=True, color=ACCENT)
+    _text(slide, Inches(3.3), y + Inches(0.12), Inches(9.0), Inches(0.7),
+          label + " : " + text, size=15, color=DARK)
 
 
 def build():
@@ -183,35 +192,46 @@ def build():
     s = _blank(prs); _set_bg(s, WHITE)
     _top_bar(s, "Plan de la présentation")
     outline = [
-        ("1", "Contexte, objectifs"),
+        ("1", "Contexte et objectifs"),
         ("2", "Méthodologie et architecture"),
-        ("3", "Modèle de données et RGPD"),
-        ("4", "Démonstration — espaces Admin et Alumni"),
-        ("5", "Indicateurs d'insertion"),
-        ("6", "Bilan et perspectives"),
+        ("3", "Modèle de données (MCD)"),
+        ("4", "Conformité RGPD"),
+        ("5", "Démonstration — Admin et Alumni"),
+        ("6", "Indicateurs d'insertion"),
+        ("7", "Bilan et perspectives"),
     ]
-    y = Inches(1.5)
+    y = Inches(1.45)
     for num, txt in outline:
-        box = _box(s, Inches(0.9), y, Inches(1.0), Inches(0.8), color=BLUE)
+        box = _box(s, Inches(0.9), y, Inches(1.0), Inches(0.72), color=BLUE)
         tf = box.text_frame; tf.word_wrap = True
         p = tf.paragraphs[0]; p.text = num
-        p.font.size = Pt(26); p.font.bold = True; p.font.color.rgb = WHITE
+        p.font.size = Pt(24); p.font.bold = True; p.font.color.rgb = WHITE
         p.alignment = PP_ALIGN.CENTER
-        _text(s, Inches(2.15), y + Inches(0.15), Inches(10.3), Inches(0.6), txt, size=20)
-        y += Inches(0.92)
+        _text(s, Inches(2.15), y + Inches(0.1), Inches(10.3), Inches(0.55), txt, size=20)
+        y += Inches(0.8)
     _footer(s, 2)
 
-    # ---------- 3. Contexte & Objectifs ----------
+    # ---------- 3. Contexte & enjeux (refait) ----------
     s = _blank(prs); _set_bg(s, WHITE)
-    _top_bar(s, "Contexte, enjeux et objectifs")
-    _bullets(s, Inches(0.9), Inches(1.25), Inches(11.6), Inches(1.4), [
-        "Le suivi de l'insertion des diplômés est stratégique : pilotage de la formation, animation du réseau, obligations réglementaires (RGPD).",
-        "Sans système centralisé, les données périment vite et la collecte est manuelle.",
-    ], size=15, gap=6)
-    box = _box(s, Inches(0.9), Inches(2.8), Inches(11.6), Inches(0.8), color=LIGHT)
-    _text(s, Inches(1.2), Inches(2.88), Inches(11.0), Inches(0.65),
-          "Problématique : structurer la donnée alumni, piloter l'insertion par des indicateurs fiables, "
-          "et animer le réseau dans le respect du RGPD.", size=15, bold=True, color=BLUE)
+    _top_bar(s, "Contexte et enjeux")
+    _bullets(s, Inches(0.9), Inches(1.25), Inches(11.6), Inches(2.4), [
+        "IONIS-STM : formations Pré-MSc / MSc1 / MSc2 (développement, cyber, data, management, marketing digital).",
+        "Plusieurs centaines de diplômés par an : suivre leur insertion est stratégique (pilotage, tutelle CTI/HCERES, animation du réseau).",
+        "Sans outil centralisé : données dispersées, indicateurs à la main, réseau inactif, RGPD non formalisé.",
+    ], size=14, gap=6)
+    box = _box(s, Inches(0.9), Inches(4.35), Inches(11.6), Inches(1.1), color=BLUE)
+    _text(s, Inches(1.2), Inches(4.48), Inches(11.0), Inches(0.85),
+          "Problématique : comment structurer la donnée alumni, produire des indicateurs "
+          "d'insertion fiables et animer le réseau dans le respect du RGPD ?",
+          size=16, bold=True, color=WHITE)
+    _example(s, "Contexte",
+             "retrouver les anciens d'une promotion repose aujourd'hui sur des fichiers épars "
+             "et des relances manuelles — la base centrale remplace ce bricolage.", y=Inches(5.85))
+    _footer(s, 3)
+
+    # ---------- 4. Objectifs ----------
+    s = _blank(prs); _set_bg(s, WHITE)
+    _top_bar(s, "Objectifs du stage")
     goals = [
         ("O1", "Un CRM complet : espace admin + espace alumni"),
         ("O2", "Une base relationnelle SQL modélisée (MCD/MLD)"),
@@ -219,103 +239,126 @@ def build():
         ("O4", "Une conformité RGPD réelle (consentement, export, suppression, audit)"),
         ("O5", "L'import/export automatisé (Excel / CSV)"),
     ]
-    _numbered_rows(s, Inches(3.75), goals, ACCENT, step=Inches(0.62))
-    _footer(s, 3)
-
-    # ---------- 4. Méthodologie & architecture ----------
-    s = _blank(prs); _set_bg(s, WHITE)
-    _top_bar(s, "Méthodologie et architecture 3-tiers")
-    _bullets(s, Inches(0.9), Inches(1.35), Inches(5.9), Inches(4.8), [
-        "Phases : analyse → conception (MCD/MLD) → développement → consolidation.",
-        "Démarche itérative en solo : audit SQL, rejeu des migrations, tests manuels.",
-        "Failles sécurité identifiées (IDOR, upload, secrets) → correctifs documentés.",
-        "Documentation « comme du code » : tous les livrables générés par script.",
-    ], size=17, gap=10)
-    layers = [
-        ("FRONTEND", "React + Vite (SPA)\nAdmin / Alumni\nproxy /api → 8000", BLUE),
-        ("BACKEND", "FastAPI\n82 endpoints, 16 routeurs\nauth OTP + JWT, clé API, RGPD", ACCENT),
-        ("BASE DE DONNÉES", "PostgreSQL\n14 tables, 16 migrations, JSONB", DARK),
-    ]
-    x = Inches(7.0)
-    for nom, desc, col in layers:
-        box = _box(s, x, Inches(1.6), Inches(2.0), Inches(4.9), color=col)
-        tf = box.text_frame; tf.word_wrap = True
-        p = tf.paragraphs[0]; p.text = nom
-        p.font.size = Pt(17); p.font.bold = True; p.font.color.rgb = WHITE
-        p2 = tf.add_paragraph(); p2.text = desc
-        p2.font.size = Pt(13); p2.font.color.rgb = WHITE
-        if x < Inches(11.0):
-            arr = s.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, x + Inches(1.97), Inches(3.8), Inches(0.24), Inches(0.4))
-            arr.fill.solid(); arr.fill.fore_color.rgb = GRAY; arr.line.fill.background()
-        x += Inches(2.28)
+    _numbered_rows(s, Inches(1.5), goals, ACCENT)
+    _example(s, "Objectif O3",
+             "un directeur voit en une page le taux d'emploi, le salaire moyen et la répartition "
+             "par secteur de la promotion 2026.", y=Inches(5.85))
     _footer(s, 4)
 
-    # ---------- 5. Modèle de données ----------
+    # ---------- 5. Méthodologie ----------
     s = _blank(prs); _set_bg(s, WHITE)
-    _top_bar(s, "Modèle de données (MCD/MLD)")
-    _bullets(s, Inches(0.9), Inches(1.5), Inches(11.6), Inches(5.2), [
-        "5 domaines, 14 tables.",
-        "Étudiants : ETUDIANT, PROMOTION (N:1).",
-        "Parcours pro : ENTREPRISE, EXPERIENCE_PRO, CERTIFICATION, OBTIENT (N:M).",
-        "RGPD : CONSENTEMENT_RGPD, DEMANDE_RGPD, AUDIT_LOG.",
-        "Questionnaires : QUESTIONNAIRE, QUESTION, REPONSE_QUESTIONNAIRE (JSON).",
-        "Cascade et contraintes d'unicité garantissent la cohérence.",
-    ], size=18, gap=12)
+    _top_bar(s, "Méthodologie et déroulement")
+    _bullets(s, Inches(0.9), Inches(1.35), Inches(11.6), Inches(3.3), [
+        "Analyse : cahier des charges, étude des solutions, choix de la stack.",
+        "Conception : MCD/MLD (Looping), règles d'intégrité, schéma d'API.",
+        "Développement : backend FastAPI, frontend React, conformité RGPD.",
+        "Consolidation : revue, documentation « comme du code », guide des processus.",
+    ], size=17, gap=10)
+    _example(s, "Démarche itérative",
+             "chaque brique est livrée puis testée sur les parcours réels (connexion OTP, "
+             "import Excel, demande RGPD) avant d'enchaîner la suivante.", y=Inches(5.85))
     _footer(s, 5)
 
-    # ---------- 6. RGPD ----------
+    # ---------- 6. Architecture 3-tiers ----------
     s = _blank(prs); _set_bg(s, WHITE)
-    _top_bar(s, "Conformité RGPD")
-    _bullets(s, Inches(0.9), Inches(1.35), Inches(5.9), Inches(2.5), [
-        "Consentement explicite : 4 types, horodaté et réellement consommé.",
-        "Droits : export en auto-service (JSON/Excel/CSV), suppression avec workflow verrouillé.",
-        "Anonymisation vs suppression ; journal d'audit ; purge différée.",
-    ], size=15, gap=6)
-    _add_image(s, os.path.join(FIG_DIR, "anC_consentement_light.png"), Inches(0.9), Inches(4.0), Inches(4.7))
-    _add_image(s, os.path.join(FIG_DIR, "anB_demandes_rgpd_light.png"), Inches(7.0), Inches(1.35), Inches(5.9))
+    _top_bar(s, "Architecture 3-tiers")
+    _bullets(s, Inches(0.9), Inches(1.3), Inches(6.0), Inches(3.0), [
+        "Frontend React + Vite (SPA) : espace Admin et Alumni, proxy /api → 8000.",
+        "Backend FastAPI : 82 endpoints, 16 routeurs, validations Pydantic, Swagger.",
+        "PostgreSQL : 14 tables, 16 migrations versionnées, JSONB.",
+        "Sécurité : OTP email, JWT, clé API admin, anti-IDOR.",
+    ], size=15, gap=7)
+    _example(s, "Flux d'une requête",
+             "un alumni saisit son code OTP à 6 chiffres → FastAPI le valide → un JWT est "
+             "émis pour accéder à son profil.", y=Inches(4.85))
+    layers = [
+        ("FRONTEND", "React + Vite\n(SPA)", BLUE),
+        ("BACKEND", "FastAPI\n82 endpoints", ACCENT),
+        ("BASE", "PostgreSQL\n14 tables", DARK),
+    ]
+    x = Inches(7.2)
+    for nom, desc, col in layers:
+        box = _box(s, x, Inches(1.55), Inches(1.85), Inches(3.0), color=col)
+        tf = box.text_frame; tf.word_wrap = True
+        p = tf.paragraphs[0]; p.text = nom
+        p.font.size = Pt(15); p.font.bold = True; p.font.color.rgb = WHITE
+        p.alignment = PP_ALIGN.CENTER
+        p2 = tf.add_paragraph(); p2.text = desc; p2.font.size = Pt(12); p2.font.color.rgb = WHITE
+        p2.alignment = PP_ALIGN.CENTER
+        if x < Inches(11.0):
+            arr = s.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, x + Inches(1.82), Inches(2.8), Inches(0.22), Inches(0.45))
+            arr.fill.solid(); arr.fill.fore_color.rgb = GRAY; arr.line.fill.background()
+        x += Inches(2.12)
     _footer(s, 6)
 
-    # ---------- 7. Démo Admin ----------
+    # ---------- 7. Modèle de données + capture MCD ----------
+    s = _blank(prs); _set_bg(s, WHITE)
+    _top_bar(s, "Modèle de données (MCD)")
+    _bullets(s, Inches(0.9), Inches(1.25), Inches(11.6), Inches(1.4), [
+        "5 domaines, 14 tables : étudiants, parcours pro, RGPD, questionnaires, INFRA.",
+        "Relations clés : ETUDIANT → PROMOTION (N:1) ; EXPERIENCE_PRO (postes & salaires) ; OBTIENT (certifications N:M).",
+    ], size=15, gap=5)
+    mcd = os.path.join(FIG_DIR, "MCD.png")
+    if os.path.exists(mcd):
+        h_mcd = Inches(4.1)
+        w_mcd = int(h_mcd * 1.972)
+        left = int((SW - w_mcd) / 2)
+        _add_image(s, mcd, left, Inches(2.75), w_mcd, h_mcd)
+    _footer(s, 7)
+
+    # ---------- 8. RGPD ----------
+    s = _blank(prs); _set_bg(s, WHITE)
+    _top_bar(s, "Conformité RGPD")
+    _bullets(s, Inches(0.9), Inches(1.25), Inches(11.6), Inches(1.7), [
+        "Consentement explicite (4 types), horodaté et réellement consommé.",
+        "Droits : export en auto-service (JSON/Excel/CSV), suppression avec workflow verrouillé et anonymisation.",
+        "Traçabilité : journal d'audit, purge différée des comptes anonymisés.",
+    ], size=15, gap=6)
+    _add_image(s, os.path.join(FIG_DIR, "anC_consentement_light.png"), Inches(0.9), Inches(3.1), Inches(4.6))
+    _add_image(s, os.path.join(FIG_DIR, "anB_demandes_rgpd_light.png"), Inches(6.1), Inches(3.1), Inches(4.6))
+    _footer(s, 8)
+
+    # ---------- 9. Démo Admin ----------
     s = _blank(prs); _set_bg(s, WHITE)
     _top_bar(s, "Démonstration — Espace Administration", "Tableau de bord, annuaire, RGPD")
     _screenshot(s, os.path.join(FIG_DIR, "anB_dashboard_light.png"))
-    _footer(s, 7)
+    _footer(s, 9)
 
-    # ---------- 8. Démo Alumni ----------
+    # ---------- 10. Démo Alumni ----------
     s = _blank(prs); _set_bg(s, WHITE)
     _top_bar(s, "Démonstration — Espace Alumni", "Profil, parcours, consentement, questionnaire")
     _screenshot(s, os.path.join(FIG_DIR, "anC_parcours_light.png"))
-    _footer(s, 8)
+    _footer(s, 10)
 
-    # ---------- 9. Indicateurs ----------
+    # ---------- 11. Indicateurs ----------
     s = _blank(prs); _set_bg(s, WHITE)
     _top_bar(s, "Indicateurs d'insertion professionnelle")
-    _bullets(s, Inches(0.9), Inches(1.5), Inches(5.9), Inches(5.4), [
+    _bullets(s, Inches(0.9), Inches(1.3), Inches(5.9), Inches(3.2), [
         "8 indicateurs reproductibles, formule et source explicites.",
         "Taux d'emploi à 6 mois (expériences actives).",
         "Adéquation formation/emploi via les tags KPI.",
         "Salaire moyen / min / max (champ annuel).",
-        "Répartition par promotion et secteur, taux de complétion.",
+        "Répartition par promotion et secteur.",
         "Pas de chiffre trompeur : cohortes immatures → « non disponible ».",
-    ], size=17)
+    ], size=15, gap=6)
+    _example(s, "Calcul",
+             "taux d'emploi à 6 mois = diplômés de la promo en poste actif à la date de "
+             "référence / diplômés de la promo (cohorte mature).", y=Inches(5.85))
     _add_image(s, os.path.join(FIG_DIR, "anB_dashboard_light.png"), Inches(7.0), Inches(1.9), Inches(5.6))
-    _footer(s, 9)
+    _footer(s, 11)
 
-    # ---------- 10. Bilan & perspectives ----------
+    # ---------- 12. Bilan & perspectives ----------
     s = _blank(prs); _set_bg(s, WHITE)
-    _top_bar(s, "Bilan, difficultés et perspectives")
-    _bullets(s, Inches(0.9), Inches(1.4), Inches(11.6), Inches(2.2), [
-        "Prototype complet et opérationnel, documenté « comme du code ».",
+    _top_bar(s, "Bilan et perspectives")
+    _bullets(s, Inches(0.9), Inches(1.3), Inches(11.6), Inches(3.2), [
+        "Prototype complet et opérationnel, documenté « comme du code » (rapports, cartographies, guide des processus, support de soutenance).",
         "Compétences : full-stack, sécurité applicative, migrations versionnées, RGPD.",
-    ], size=17)
-    _bullets(s, Inches(0.9), Inches(3.5), Inches(11.6), Inches(1.7), [
-        "Limites assumées : tests automatisés non conservés, newsletter et mise à jour d'expérience à faire.",
-    ], size=16)
-    _bullets(s, Inches(0.9), Inches(4.9), Inches(11.6), Inches(2.0), [
-        "Court terme : suite de tests, automatisation du questionnaire, frontend newsletter.",
-        "Moyen/long terme : mentorat, chiffrement applicatif, application mobile / PWA.",
-    ], size=16, gap=6)
-    _footer(s, 10)
+        "Perspectives : suite de tests automatisés, automatisation du questionnaire, frontend newsletter, mentorat, application mobile / PWA.",
+    ], size=16, gap=9)
+    _example(s, "Suite",
+             "le dépôt Git versionne les migrations et les scripts de génération : "
+             "le projet reste rejouable et transmissible à la reprise.", y=Inches(5.85))
+    _footer(s, 12)
 
     # ---------- 11. Conclusion / fin ----------
     s = _blank(prs); _set_bg(s, WHITE)
