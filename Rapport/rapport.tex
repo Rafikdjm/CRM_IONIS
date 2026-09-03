@@ -561,18 +561,15 @@ Un audit de sécurité m'a permis de corriger des failles critiques~:
 
 J'ai défini et implémenté \textbf{8 indicateurs d'insertion professionnelle} avec formule et source précise~:
 
-\begin{longtable}{@{} L{4.6cm} L{7.2cm} L{4.0cm} @{}}
-\caption{Indicateurs d'insertion professionnelle --- formule, source et exemple.}\\
+\begin{table}[htbp]
+\centering
+\caption{Indicateurs d'insertion professionnelle --- formule, source et exemple.}
+\label{tab:indicateurs}
+\rowcolors{2}{gray!8}{white}
+\begin{tabularx}{\textwidth}{@{} l *{2}{>{\raggedright\arraybackslash}X} @{}}
 \toprule
-\tblHeader{Indicateur} & \tblHeader{Formule / Source} & \tblHeader{Exemple} \\
+\textbf{Indicateur} & \textbf{Formule / Source} & \textbf{Exemple} \\
 \midrule
-\endfirsthead
-\toprule
-\tblHeader{Indicateur} & \tblHeader{Formule / Source} & \tblHeader{Exemple} \\
-\midrule
-\endhead
-\bottomrule
-\endfoot
 Taux d'emploi à 6 mois & Expériences actives à la date de référence $\div$ total alumni & Promo 2025~: 9/12 en poste = 75\,\% \\
 Taux d'emploi global brut & (Alumni avec expérience $\div$ total alumni) $\times$ 100 & 30 en poste / 40 = 75\,\% \\
 Adéquation formation/emploi & Réponses à la question taguée \texttt{adequation\_formation} & 3 réponses Oui / 4 = 75\,\% \\
@@ -581,7 +578,9 @@ Alumni actifs & Alumni avec $\geq$ 1 expérience enregistrée & 45 alumni actifs
 Taux de complétion & Alumni ayant complété profil + parcours & 32 profils complets / 60 = 53\,\% \\
 Alumni par promotion & Comptage par \texttt{id\_promotion} & 2025~: 12 / 75\,\% \\
 Répartition par secteur & Agrégation du champ \texttt{secteur\_activite} & Info 3, Finance 2, Santé 1 \\
-\end{longtable}
+\bottomrule
+\end{tabularx}
+\end{table}
 
 Le calcul du taux d'emploi à 6 mois a nécessité une \textbf{fiabilisation}~: l'ancien calcul comptait des expériences déjà terminées (surestimation), le nouveau ne retient que les expériences actives à la date de référence et exclut les cohortes trop récentes (valeur \texttt{null} plutôt que trompeuse). La méthode détaillée des indicateurs est fournie en annexe~\ref{app:indicateurs}.
 
@@ -603,23 +602,22 @@ Un élément que je souligne est le \textbf{système de tags KPI}~: chaque quest
 
 Le système répond aux quatre problèmes identifiés dans la section~1.4~:
 
-\begin{longtable}{@{} L{5.2cm} L{10.6cm} @{}}
-\caption{Problèmes identifiés et solutions apportées par le système.}\\
+\begin{table}[htbp]
+\centering
+\caption{Problèmes identifiés et solutions apportées par le système.}
+\label{tab:problemes-solutions}
+\rowcolors{2}{gray!8}{white}
+\begin{tabularx}{\textwidth}{@{} l >{\raggedright\arraybackslash}X @{}}
 \toprule
-\tblHeader{Problème} & \tblHeader{Solution apportée} \\
+\textbf{Problème} & \textbf{Solution apportée} \\
 \midrule
-\endfirsthead
-\toprule
-\tblHeader{Problème} & \tblHeader{Solution apportée} \\
-\midrule
-\endhead
-\bottomrule
-\endfoot
 Données dispersées & Base centralisée de 14 tables avec import Excel/CSV \\
 Indicateurs non fiables & 8 indicateurs automatisés, fiabilisés par filtrage temporel \\
 Réseau inanimé & Espace alumni avec inscription, profil, parcours, questionnaire annuel, newsletter \\
 Conformité RGPD non formalisée & Consentements traçables, workflow de demandes, journal d'audit, durée de conservation, contact DPO \\
-\end{longtable}
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \section{Organisation du travail en équipe et ressources à disposition}
 
@@ -843,24 +841,23 @@ Le schéma ci-dessous a été \textbf{régénéré par introspection directe de 
 
 \textbf{Vue d'ensemble des 14 tables et de leurs relations~:}
 
-\begin{longtable}{@{} L{3.4cm} L{4.6cm} L{7.6cm} @{}}
-\caption{Vue d'ensemble des 14 tables par domaine fonctionnel.}\\
+\begin{table}[htbp]
+\centering
+\caption{Vue d'ensemble des 14 tables par domaine fonctionnel.}
+\label{tab:domaines-tables}
+\rowcolors{2}{gray!8}{white}
+\begin{tabularx}{\textwidth}{@{} l *{2}{>{\raggedright\arraybackslash}X} @{}}
 \toprule
-\tblHeader{Domaine} & \tblHeader{Tables} & \tblHeader{Relations principales} \\
+\textbf{Domaine} & \textbf{Tables} & \textbf{Relations principales} \\
 \midrule
-\endfirsthead
-\toprule
-\tblHeader{Domaine} & \tblHeader{Tables} & \tblHeader{Relations principales} \\
-\midrule
-\endhead
-\bottomrule
-\endfoot
 Données étudiantes & ETUDIANT, PROMOTION & ETUDIANT.id\_promotion $\rightarrow$ PROMOTION (N:1) \\
 Parcours professionnel & ENTREPRISE, EXPERIENCE\_PRO, CERTIFICATION, OBTIENT & EXPERIENCE\_PRO $\rightarrow$ ETUDIANT et ENTREPRISE (N:1, avec \texttt{salary\_annuel NUMERIC})~; OBTIENT = association N:M ETUDIANT $\leftrightarrow$ CERTIFICATION \\
 RGPD & CONSENTEMENT\_RGPD, DEMANDE\_RGPD, AUDIT\_LOG & CONSENTEMENT\_RGPD $\rightarrow$ ETUDIANT~; DEMANDE\_RGPD $\rightarrow$ ETUDIANT en SET NULL pour préserver l'historique après anonymisation~; AUDIT\_LOG journalise anonymisations, purges et nettoyages \\
 Questionnaires & QUESTIONNAIRE, QUESTION, REPONSE\_QUESTIONNAIRE & QUESTION $\rightarrow$ QUESTIONNAIRE (N:1, avec tags KPI)~; REPONSE\_QUESTIONNAIRE $\rightarrow$ ETUDIANT + QUESTIONNAIRE (réponses stockées en JSON) \\
 Infrastructure & otp\_codes, schema\_migrations & otp\_codes~: codes OTP hachés identifiés par l'email~; schema\_migrations~: suivi des 16 migrations versionnées \\
-\end{longtable}
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \textbf{Règles d'intégrité}~: clés étrangères avec CASCADE sur les données dépendant d'un étudiant (expériences, certifications obtenues, consentements, réponses), SET NULL sur les demandes RGPD, contraintes d'unicité (ex. email étudiant), contraintes CHECK sur les énumérations (statuts de demande RGPD, types de consentement).
 
@@ -1067,23 +1064,22 @@ La charte complète est livrée séparément~: \texttt{Rapport/Charte de Conform
 
 \textbf{Les 4 types de consentement.}
 
-\begin{longtable}{@{} L{4.2cm} L{3.4cm} L{8.0cm} @{}}
-\caption{Les 4 types de consentement RGPD --- type backend, clé frontend et description.}\\
+\begin{table}[htbp]
+\centering
+\caption{Les 4 types de consentement RGPD --- type backend, clé frontend et description.}
+\label{tab:consentements}
+\rowcolors{2}{gray!8}{white}
+\begin{tabularx}{\textwidth}{@{} l *{2}{>{\raggedright\arraybackslash}X} @{}}
 \toprule
-\tblHeader{Type backend} & \tblHeader{Clé frontend} & \tblHeader{Description} \\
+\textbf{Type backend} & \textbf{Clé frontend} & \textbf{Description} \\
 \midrule
-\endfirsthead
-\toprule
-\tblHeader{Type backend} & \tblHeader{Clé frontend} & \tblHeader{Description} \\
-\midrule
-\endhead
-\bottomrule
-\endfoot
 \texttt{prise\_de\_contact} & \texttt{contact\_allowed} & L'école et les partenaires peuvent contacter l'alumni \\
 \texttt{partage\_donnees} & \texttt{data\_sharing} & Données statistiques anonymisées partagées \\
 \texttt{enquetes} & \texttt{survey\_participation} & Participation aux enquêtes alumni \\
 \texttt{newsletter} & \texttt{newsletter} & Réception de la newsletter \\
-\end{longtable}
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \textbf{Consommation fonctionnelle des consentements.} Le consentement \texttt{newsletter} cible l'envoi via \texttt{/newsletter/envoyer}~; \texttt{enquetes} ouvre l'accès au questionnaire actif (refus $\rightarrow$ 403 et menu masqué)~; \texttt{prise\_de\_contact}, dont le refus exclut des relances et déclenche l'anonymisation du profil via \texttt{cleanup.py}, est le seul dont le refus anonymise~; \texttt{partage\_donnees} alimente les indicateurs partenaires (\texttt{/admin/indicateurs/partenaires}).
 
@@ -1119,18 +1115,15 @@ L'analyse complète est livrée séparément~: \texttt{Rapport/Analyse des Indic
 
 \textbf{Les 10 indicateurs et leurs endpoints.}
 
-\begin{longtable}{@{} L{5.2cm} L{10.6cm} @{}}
-\caption{Synthèse des indicateurs d'insertion et leurs endpoints.}\\
+\begin{table}[htbp]
+\centering
+\caption{Synthèse des indicateurs d'insertion et leurs endpoints.}
+\label{tab:indicateurs-endpoints}
+\rowcolors{2}{gray!8}{white}
+\begin{tabularx}{\textwidth}{@{} l >{\raggedright\arraybackslash}X @{}}
 \toprule
-\tblHeader{Indicateur} & \tblHeader{Calcul / endpoint} \\
+\textbf{Indicateur} & \textbf{Calcul / endpoint} \\
 \midrule
-\endfirsthead
-\toprule
-\tblHeader{Indicateur} & \tblHeader{Calcul / endpoint} \\
-\midrule
-\endhead
-\bottomrule
-\endfoot
 Total alumni actifs & \texttt{COUNT(*)} où \texttt{date\_anonymisation IS NULL} \\
 Alumni actifs ($\geq$ 1 expérience) & \texttt{COUNT(DISTINCT id\_etudiant)} depuis \texttt{EXPERIENCE\_PRO} \\
 Taux de complétion & (alumni avec $\geq$ 1 expérience / total) $\times$ 100 \\
@@ -1141,7 +1134,9 @@ Répartition par secteur & \texttt{COUNT(DISTINCT id\_etudiant)} par secteur (po
 Alumni par promotion & effectif, \% en poste, taux de couverture, salaire moyen \\
 Salaire moyen & \texttt{AVG} de \texttt{salary\_annuel} (ou repli)~; jauge avec échantillon $\geq$ 5 \\
 Répartition par type de contrat & \texttt{COUNT(*)} des expériences en cours \\
-\end{longtable}
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \textbf{Endpoints API.} \texttt{GET /admin/indicateurs}, \texttt{/admin/indicateurs/secteurs}, \texttt{/admin/indicateurs/types-contrat}, \texttt{/admin/indicateurs/kpi-tag}, \texttt{/admin/indicateurs/kpi-tags}, \texttt{/admin/indicateurs/kpi-tags-actifs}, \texttt{/admin/indicateurs/partenaires}.
 
