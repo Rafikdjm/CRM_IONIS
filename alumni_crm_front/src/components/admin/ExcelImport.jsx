@@ -171,11 +171,11 @@ export default function ExcelImport() {
       const wb = utils.book_new();
       utils.book_append_sheet(wb, ws, 'Modèle');
       const exampleRow = [
-        'Jean', 'Dupont', 'jean.dupont@email.com', '+33612345678', 'Promo 2020', '2020',
+        'Jean', 'Dupont', 'jean.dupont@ionis-stm.com', '+33612345678', 'Promo 2020', '2020',
         'Tech Corp', 'Développeur Senior', 'Technologie', 'France', 'Paris',
         'https://linkedin.com/in/jeandupont',
         '15 Rue de Paris', 'Paris', 'France', 'en_poste',
-        'Python, React, Management', '1995-06-15', '2021-09-01', 'jean.dupont@univ.fr',
+        'Python, React, Management', '1995-06-15', '2021-09-01', 'jean.dupont@ionis-stm.com',
         'Licence Informatique - Univ. Paris-Saclay', 'CDI', '2022-03-01', '', 'Oui',
       ];
       utils.sheet_add_aoa(ws, [exampleRow], { origin: -1 });

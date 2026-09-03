@@ -4,13 +4,11 @@
 
 **Auteur :** Rafik Djemadi
 **Formation :** Pré-MSc — IONIS-STM
-**Tuteur pédagogique :** [À COMPLÉTER : nom et fonction]
-**Période du stage :** [À COMPLÉTER : dates exactes]
+**Tuteur pédagogique :** Joly Donfack
+**Période du stage :** stage de substitution (programme Pré-MSc 2026), mené jusqu'à la soutenance du 19 septembre 2026.
 **Soutenance :** 19 septembre 2026
 
 ---
-
-[BROUILLON IA — À RÉÉCRIRE]
 
 ## Résumé
 
@@ -32,7 +30,7 @@ This internship, completed at IONIS-STM as part of the 2026 Pre-MSc program, foc
 
 The starting point was a simple observation. The institution had no tool to follow a student's full lifecycle, from enrollment to professional development. Employment data was scattered, indicators were computed manually, the alumni network was dormant, and GDPR compliance had not been formalized. The brief therefore set four challenges: centralize the data, make employment indicators reliable, animate the network, and embed regulatory compliance from the start.
 
-The approach followed an iterative cycle: data modeling, backend development, frontend implementation, security audit, then documentation. The resulting system relies on a three-tier architecture (FastAPI, React/Vite, PostgreSQL) and includes 14 database tables, 85 API endpoints, 14 frontend routes, and 8 professional insertion indicators.
+The approach followed an iterative cycle: data modeling, backend development, frontend implementation, security audit, then documentation. The resulting system relies on a three-tier architecture (FastAPI, React/Vite, PostgreSQL) and includes 14 database tables, 82 API endpoints, 14 frontend routes, and 8 professional insertion indicators.
 
 The project delivered a functional prototype covering the full scope defined in the internship brief. GDPR compliance was embedded from the start: traceable consent management, a deletion and anonymization request workflow, an audit log, and visible data retention periods. A security audit led to the correction of authentication flaws and the protection of initially unprotected routes. The supplementary deliverables (data mapping, GDPR charter, data update strategy, insertion indicator analysis, and an alumni network process guide) fulfill the Management track of the specification. The main outstanding work before production is the introduction of an automated test suite, which is absent from the repository at the end of the internship.
 
@@ -42,7 +40,7 @@ The project delivered a functional prototype covering the full scope defined in 
 
 ### Remerciements au tuteur pédagogique
 
-Je remercie [nom du tuteur pédagogique, fonction] pour son accompagnement tout au long de ce stage. Sa disponibilité et la pertinence de ses retours ont guidé les choix d'architecture et les priorités fonctionnelles du projet. Les points de suivi réguliers m'ont permis de conserver une direction claire malgré l'ampleur du périmètre à couvrir.
+Je remercie mon tuteur pédagogique, **M. Joly Donfack**, pour son accompagnement tout au long de ce stage. Sa disponibilité et la pertinence de ses retours ont guidé les choix d'architecture et les priorités fonctionnelles du projet. Les points de suivi réguliers m'ont permis de conserver une direction claire malgré l'ampleur du périmètre à couvrir.
 
 ### Remerciements à l'équipe et au projet
 
@@ -56,50 +54,54 @@ Je remercie IONIS-STM et son équipe pédagogique pour la qualité de la formati
 
 ## Liste des abréviations et glossaire
 
-| Abréviation | Signification |
+|**Abréviation**|**Signification**|
 |---|---|
 | API | Application Programming Interface — interface de programmation entre le frontend et le backend |
+| CASCADE | Mécanisme de clé étrangère PostgreSQL assurant la suppression en cascade des enregistrements liés |
+| CHECK | Contrainte d'intégrité PostgreSQL limitant les valeurs autorisées dans une colonne |
+| CNIL | Commission Nationale de l'Informatique et des Libertés — autorité française de contrôle de la protection des données |
 | CRM | Customer Relationship Management — système de gestion de la relation client (ici appliqué au réseau des anciens) |
 | CRUD | Create, Read, Update, Delete — les quatre opérations de base sur les données |
+| CSS | Cascading Style Sheets — langage de mise en forme des pages web |
+| CSV | Comma-Separated Values — format tabulaire pour l'import/export de données |
 | CTI | Commission des Titres d'Ingénieur — organisme d'accréditation des formations d'ingénieurs |
+| DOCX | Format de document Microsoft Word, supporté pour l'import de données |
 | DPO | Data Protection Officer — délégué à la protection des données, contact réglementaire RGPD |
+| E2E | End-to-End — type de test couvrant l'ensemble du flux applicatif |
+| FK | Foreign Key — clé étrangère, contrainte de liaison entre tables |
+| GDPR | General Data Protection Regulation — version anglaise du RGPD |
 | HCERES | Haute Autorité pour l'Évaluation de la Recherche et de l'Enseignement Supérieur |
+| HTTP | HyperText Transfer Protocol — protocole de transfert hypertexte |
+| HTML | HyperText Markup Language — langage structurant le contenu des pages web |
+| IONIS | Groupe IONIS Education — groupe d'enseignement supérieur privé |
 | IDOR | Insecure Direct Object Reference — faille d'accès à un objet via un identifiant modifiable |
+| JSON | JavaScript Object Notation — format d'échange de données structurées |
+| JSONB | Type PostgreSQL stockant du JSON en binaire optimisé, avec indexation |
 | JWT | JSON Web Token — jeton d'authentification utilisé pour les sessions |
 | KPI | Key Performance Indicator — indicateur clé de performance du tableau de bord |
 | MCD | Modèle Conceptuel de Données — représentation abstraite des entités et relations |
 | MLD | Modèle Logique de Données — traduction du MCD en schéma de tables relationnelles |
 | N:M | Cardinalité plusieurs-à-plusieurs — par exemple Étudiant ↔ Certification |
 | OTP | One-Time Password — code à usage unique, ici code à 6 chiffres envoyé par email |
-| RGPD | Règlement Général sur la Protection des Données (Règlement UE 2016/679) |
+| ORM | Object-Relational Mapping — correspondance objet-relationnel pour l'accès aux bases de données |
+| PATCH | Méthode HTTP de modification partielle d'une ressource |
+| pg8000 | Pilote PostgreSQL pur Python, utilisé pour la connexion à la base de données |
+| PostgreSQL | Système de gestion de base de données relationnelle open source |
+| PWA | Progressive Web App — application web offrant une expérience proche du natif |
+| Pydantic | Bibliothèque Python de validation de données basée sur les annotations de type |
+| React | Bibliothèque JavaScript pour la construction d'interfaces utilisateur |
+| README | Fichier de documentation d'un dépôt décrivant installation et usage |
 | REST | Representational State Transfer — style d'architecture pour les API web |
+| RGPD | Règlement Général sur la Protection des Données (Règlement UE 2016/679) |
 | SPA | Single Page Application — application web mono-page (architecture React) |
-| TOCTOU | Time Of Check To Time Of Use — faille liée à la différence entre vérification et utilisation |
-
----
-
-## Liste des figures et tableaux
-
-| N° | Titre | Type | Emplacement |
-|---|---|---|---|
-| 1 | Architecture trois tiers du système | Figure | Section 1.2 |
-| 2 | Schéma relationnel de la base de données (MLD) | Figure | Annexe A |
-| 3 | Dashboard administrateur — vue d'ensemble | Figure | Annexe B |
-| 4 | Espace alumni — formulaire d'inscription | Figure | Annexe C |
-| 5 | Espace alumni — gestion du profil | Figure | Annexe C |
-| 6 | Espace alumni — parcours professionnel | Figure | Annexe C |
-| 7 | Espace alumni — consentement RGPD | Figure | Annexe C |
-| 8 | Espace alumni — questionnaire annuel | Figure | Annexe C |
-| 9 | Dashboard administrateur — indicateurs et KPI | Figure | Annexe B |
-| 10 | Dashboard administrateur — répartition par secteur | Figure | Annexe B |
-| 11 | Répartition des 14 tables par domaine fonctionnel | Tableau | Section 3.2 |
-| 12 | Endpoints API — modules et nombre de routes | Tableau | Section 3.2 |
-| 13 | Indicateurs d'insertion professionnelle | Tableau | Section 3.2 |
-| 14 | Types de consentement RGPD | Tableau | Section 3.2 |
-| 15 | Correctifs de sécurité appliqués | Tableau | Section 3.2 |
-| 16 | Problèmes identifiés et solutions apportées | Tableau | Section 4.2 |
-| 17 | Modèle de données relationnel — vue d'ensemble | Tableau | Annexe A |
-| 18 | Liste complète des endpoints API | Tableau | Annexe E |
+| SQL | Structured Query Language — langage de requête des bases relationnelles (PostgreSQL) |
+| SQLSTATE | Codes d'erreur SQL standardisés pour le diagnostic des erreurs de base de données |
+| SVG | Scalable Vector Graphics — format vectoriel utilisé pour les graphiques du dashboard |
+| Swagger | Interface de documentation et d'essai des API, auto-générée par FastAPI |
+| TOCTOU | Time Of Check To Time Of Use — faille liée à la vérification puis l'utilisation |
+| TTL | Time-To-Live — durée de validité d'un élément (ici : code OTP) |
+| Vite | Outil de build et serveur de développement frontend rapide |
+| XLSX | Format de classeur Microsoft Excel, supporté pour l'import/export des données |
 
 ---
 
@@ -173,7 +175,7 @@ Le stage s'est articulé autour de cinq domaines de mission. Le niveau d'autonom
 
 J'ai conçu un modèle de données relationnel couvrant cinq domaines fonctionnels : données étudiantes, parcours professionnel, conformité RGPD, questionnaires et infrastructure technique. Le résultat est une base PostgreSQL de **14 tables** réparties en 5 groupes :
 
-| Domaine | Tables |
+|**Domaine**|**Tables**|
 |---|---|
 | Données étudiantes | ETUDIANT, PROMOTION |
 | Parcours professionnel | ENTREPRISE, EXPERIENCE_PRO, CERTIFICATION, OBTIENT (association N:M) |
@@ -220,7 +222,7 @@ J'ai intégré la conformité RGPD à toutes les étapes du système :
 
 L'audit de sécurité a permis de corriger plusieurs failles :
 
-| Faiblesse | Correctif |
+|**Faiblesse**|**Correctif**|
 |---|---|
 | Routes POST/DELETE de promotions et entreprises non protégées | Ajout de `require_admin_api_key` |
 | Route d'upload morte et non protégée | Suppression du router correspondant, import exclusivement via la route protégée |
@@ -232,16 +234,16 @@ L'audit de sécurité a permis de corriger plusieurs failles :
 
 J'ai défini et implémenté **8 indicateurs d'insertion professionnelle**, chacun avec une formule et une source précises :
 
-| Indicateur | Formule / Source |
-|---|---|
-| Taux d'emploi à 6 mois | Expériences actives à la date de référence ÷ total alumni |
-| Taux d'emploi global brut | (Alumni avec expérience ÷ total alumni) × 100 |
-| Adéquation formation/emploi | Réponses à la question taggée `adequation_formation` |
-| Salaire moyen | Calcul sur `salary_annuel` avec repli sur le champ texte historique |
-| Alumni actifs | Alumni avec au moins une expérience enregistrée |
-| Taux de complétion | Alumni ayant complété profil et parcours |
-| Alumni par promotion | Comptage par `id_promotion` |
-| Répartition par secteur | Agrégation du champ `secteur_activite` |
+|**Indicateur**|**Formule / Source**|**Exemple**|
+|---|---|---|
+| Taux d'emploi à 6 mois | Expériences actives à la date de référence ÷ total alumni | Promo 2025 : 9/12 en poste = 75 % |
+| Taux d'emploi global brut | (Alumni avec expérience ÷ total alumni) × 100 | 30 en poste / 40 = 75 % |
+| Adéquation formation/emploi | Réponses à la question taguée `adequation_formation` | 3 réponses Oui / 4 = 75 % |
+| Salaire moyen | Calcul sur `salary_annuel` avec repli sur le champ texte historique | (38000+42000+50000)/3 = 43333 |
+| Alumni actifs | Alumni avec ≥ 1 expérience enregistrée | 45 alumni actifs sur 60 |
+| Taux de complétion | Alumni ayant complété profil + parcours | 32 profils complets / 60 = 53 % |
+| Alumni par promotion | Comptage par `id_promotion` | 2025 : 12 / 75 % |
+| Répartition par secteur | Agrégation du champ `secteur_activite` | Info 3, Finance 2, Santé 1 |
 
 Le calcul du taux d'emploi à 6 mois a nécessité une fiabilisation. L'ancien calcul comptait des expériences déjà terminées, ce qui surestimait les résultats. Le nouveau calcul ne retient que les expériences actives à la date de référence et exclut les cohortes trop récentes (valeur `null` plutôt qu'un chiffre trompeur).
 
@@ -261,7 +263,7 @@ Le dispositif le plus notable est le système de **tags KPI**. Chaque question d
 
 Le système répond aux quatre problèmes identifiés dans la section 1.4.
 
-| Problème | Solution apportée |
+|**Problème**|**Solution apportée**|
 |---|---|
 | Données dispersées | Base centralisée de 14 tables avec import Excel/CSV |
 | Indicateurs non fiables | 8 indicateurs automatisés, fiabilisés par filtrage temporel |
@@ -401,7 +403,7 @@ La route d'import de données acceptait un téléversement de fichier sans véri
 
 *Solution.* Ajout de la vérification de l'extension, d'une limite de taille (5 Mo par défaut) et de la validation de chaque ligne via `schemas.EtudiantCreate` avant insertion, au lieu d'insérer les valeurs brutes du fichier.
 
-| Problème | Solution | Leçon retenue |
+|**Problème**|**Solution**|**Leçon retenue**|
 |---|---|---|
 | Session partagée admin/alumni | Clés de stockage distinctes | Vérifier le rôle à chaque appel sensible |
 | Dérive modèle/base | Migrations correctives + rejeu | Rejouer les migrations à chaque évolution |
@@ -459,7 +461,7 @@ Ces améliorations relèvent de correctifs à appliquer avant toute mise en prod
 ### Cadre réglementaire
 
 1. Règlement (UE) 2016/679 du Parlement européen et du Conseil du 27 avril 2016 relatif à la protection des personnes physiques à l'égard du traitement des données à caractère personnel (RGPD).
-2. CNIL — *Guide du RGPD pour les établissements d'enseignement supérieur et de recherche*. *(à compléter : URL ou référence exacte)*.
+2. CNIL — *Guide du RGPD pour les établissements d'enseignement supérieur et de recherche* : https://www.cnil.fr/fr/le-rgpd-et-les-etablissements-denseignement-superieur-et-de-recherche
 
 ### Documentation technique — Backend
 
@@ -478,8 +480,8 @@ Ces améliorations relèvent de correctifs à appliquer avant toute mise en prod
 
 ### Référentiels et organismes de certification
 
-9. Commission des Titres d'Ingénieur (CTI) — Référentiel d'accréditation. *(à compléter : URL ou référence exacte)*.
-10. Haute Autorité pour l'Évaluation de la Recherche et de l'Enseignement Supérieur (HCERES) — Référentiel d'évaluation. *(à compléter : URL ou référence exacte)*.
+9. Commission des Titres d'Ingénieur (CTI) — Référentiel d'accréditation : https://www.cti-commission.fr/referentiel-de-formation
+10. Haute Autorité pour l'Évaluation de la Recherche et de l'Enseignement Supérieur (HCERES) — Référentiel d'évaluation : https://www.hceres.fr/
 
 ### Services tiers
 
@@ -500,35 +502,125 @@ Ces améliorations relèvent de correctifs à appliquer avant toute mise en prod
 
 ### Annexe A — Schéma MCD/MLD complet
 
-Le schéma ci-dessous a été **régénéré par introspection directe de la base PostgreSQL** (14 tables), et non à partir des fichiers de conception initiaux. Les fichiers sources figurent dans le dépôt :
+Le schéma ci-dessous a été **régénéré par introspection directe de la base PostgreSQL** (14 tables), et non à partir des fichiers de conception initiaux. Le **MCD** décrit les entités, associations et cardinalités ; le **MLD** en donne la traduction en 14 tables relationnelles. Les fichiers sources figurent dans le dépôt :
 
 - `alumni_crm_api/docs/erd_alumni_crm.mmd` — définition Mermaid du schéma relationnel (MLD) ;
-- `alumni_crm_api/docs/erd_alumni_crm.docx` — version documentée du MLD ;
-- `MCD_MLD V2.loo` (racine du dépôt) — modèle Looping (MCD + MLD) issu de la phase de conception.
+- `MCD_MLD V3.loo` (racine du dépôt) — modèle Looping (MCD + MLD) issu de la phase de conception.
+
+*[Insérer ici le rendu graphique du MCD (image `image/MCD.png`) et du MLD (image `image/MLD.png`).]*
 
 **Vue d'ensemble des 14 tables et de leurs relations :**
 
-| Domaine | Tables | Relations principales |
+|**Domaine**|**Tables**|**Relations principales**|
 |---|---|---|
 | Données étudiantes | ETUDIANT, PROMOTION | ETUDIANT.id_promotion → PROMOTION (N:1) |
-| Parcours professionnel | ENTREPRISE, EXPERIENCE_PRO, CERTIFICATION, OBTIENT | EXPERIENCE_PRO → ETUDIANT et ENTREPRISE (N:1) ; OBTIENT = association N:M ETUDIANT ↔ CERTIFICATION |
-| RGPD | CONSENTEMENT_RGPD, DEMANDE_RGPD, AUDIT_LOG | CONSENTEMENT_RGPD → ETUDIANT ; DEMANDE_RGPD → ETUDIANT en SET NULL ; AUDIT_LOG journalise anonymisations, purges et nettoyages |
-| Questionnaires | QUESTIONNAIRE, QUESTION, REPONSE_QUESTIONNAIRE | QUESTION → QUESTIONNAIRE (N:1, avec tags KPI) ; REPONSE_QUESTIONNAIRE → ETUDIANT + QUESTIONNAIRE |
-| Infrastructure | otp_codes, schema_migrations | otp_codes : codes OTP hachés ; schema_migrations : suivi des 16 migrations |
+| Parcours professionnel | ENTREPRISE, EXPERIENCE_PRO, CERTIFICATION, OBTIENT | EXPERIENCE_PRO → ETUDIANT et ENTREPRISE (N:1, avec `salary_annuel NUMERIC`) ; OBTIENT = association N:M ETUDIANT ↔ CERTIFICATION |
+| RGPD | CONSENTEMENT_RGPD, DEMANDE_RGPD, AUDIT_LOG | CONSENTEMENT_RGPD → ETUDIANT ; DEMANDE_RGPD → ETUDIANT en SET NULL pour préserver l'historique après anonymisation ; AUDIT_LOG journalise anonymisations, purges et nettoyages |
+| Questionnaires | QUESTIONNAIRE, QUESTION, REPONSE_QUESTIONNAIRE | QUESTION → QUESTIONNAIRE (N:1, avec tags KPI) ; REPONSE_QUESTIONNAIRE → ETUDIANT + QUESTIONNAIRE (réponses stockées en JSON) |
+| Infrastructure | otp_codes, schema_migrations | otp_codes : codes OTP hachés identifiés par l'email ; schema_migrations : suivi des 16 migrations versionnées |
 
-**Règles d'intégrité :** clés étrangères avec CASCADE sur les données dépendant d'un étudiant, SET NULL sur les demandes RGPD, contraintes d'unicité (ex. email étudiant), contraintes CHECK sur les énumérations (statuts de demande RGPD, types de consentement).
+**Règles d'intégrité :** clés étrangères avec CASCADE sur les données dépendant d'un étudiant (expériences, certifications obtenues, consentements, réponses), SET NULL sur les demandes RGPD, contraintes d'unicité (ex. email étudiant), contraintes CHECK sur les énumérations (statuts de demande RGPD, types de consentement).
 
-[Insérer ici le rendu graphique du schéma Mermaid ou l'export du fichier Looping.]
+### Annexe B — Interface de connexion
 
-### Annexe B — Dashboard administrateur (captures d'écran)
+L'alumni CRM propose deux modes d'authentification : un accès administrateur par code et une connexion alumni par OTP (code à 6 chiffres envoyé par email). L'interface supporte le thème clair et le thème sombre (dark mode).
 
-[Insérer les captures d'écran du dashboard bento grid avec indicateurs, répartition par secteur et alumni par promotion.]
+- `image/login_light.png` / `image/login_dark.png` — Page de connexion alumni (saisie de l'email).
+- `image/login_admin_light.png` / `image/login_admin_dark.png` — Page de connexion administrateur (code d'accès).
+- `image/otp_error_light.png` / `image/otp_error_dark.png` — Vérification OTP en erreur (code incorrect, tentatives restantes).
+- `image/otp_success_light.png` / `image/otp_success_dark.png` — Vérification OTP réussie (E-mail vérifié).
 
-### Annexe C — Espace alumni (captures d'écran)
+### Annexe C — Dashboard administrateur (captures d'écran)
 
-[Insérer les captures d'écran de l'inscription multi-étapes, du profil, du parcours professionnel, du consentement RGPD et du questionnaire annuel.]
+Les captures d'écran présentent le tableau de bord administrateur : bento grid de KPI, indicateurs, annuaire filtrable et traitement des demandes RGPD. Chaque écran est présenté en mode clair et mode sombre.
 
-### Annexe D — Guide des processus d'animation du réseau (extrait)
+- `image/anB_dashboard_light.png` / `image/anB_dashboard_dark.png` — Tableau de bord administrateur (KPI, indicateurs, bento grid).
+- `image/anB_annuaire_light.png` / `image/anB_annuaire_dark.png` — Annuaire des alumni filtrable (promotion, secteur, entreprise, disponibilité, compétence).
+- `image/anB_demandes_rgpd_light.png` / `image/anB_demandes_rgpd_dark.png` — Gestion des demandes RGPD (workflow de traitement).
+
+### Annexe D — Espace alumni (captures d'écran)
+
+Les captures d'écran présentent l'espace alumni : profil, parcours professionnel, consentement RGPD et questionnaire annuel. Chaque écran est présenté en mode clair et mode sombre.
+
+- `image/anC_profil_light.png` / `image/anC_profil_dark.png` — Profil alumni (identité, statut de disponibilité, compétences).
+- `image/anC_parcours_light.png` / `image/anC_parcours_dark.png` — Parcours professionnel (expériences et certifications).
+- `image/anC_consentement_light.png` / `image/anC_consentement_dark.png` — Gestion du consentement RGPD (4 types, export, demande de suppression).
+- `image/anC_questionnaire_light.png` / `image/anC_questionnaire_dark.png` — Questionnaire annuel pré-rempli.
+
+### Annexe E — Cartographie des données (synthèse)
+
+La cartographie complète est livrée séparément (`Cartographie des Donnees - Alumni CRM.pdf`). Elle inventorie toutes les données traitées par le système, structurées par phase de vie.
+
+**Phase d'inscription (données à l'entrée).** Identité et coordonnées (nom, prénom, email, téléphone, date de naissance, adresse, ville, pays, LinkedIn), statut et compétences (`availability_status`, tags de compétences), historique académique (`parcours_anterieur`, `previous_school`), rattachement scolaire (`id_promotion` → promotion, année de diplôme, filière), et données complémentaires (date d'inscription, email académique).
+
+**Phase post-diplôme (données à la sortie).** Suivi des postes (entreprise, poste, type de contrat, dates de début/fin, poste actuel, description, salaire annuel `NUMERIC`, pays, ville, secteur), certifications (nom, émetteur, date d'obtention) et réponses aux questionnaires (réponses JSON, années).
+
+**Données de consentement RGPD.** La table `CONSENTEMENT_RGPD` trace les 4 types de consentement (type, date, statut, canal), la table `DEMANDE_RGPD` le workflow de traitement, et `AUDIT_LOG` le journal horodaté des opérations sensibles.
+
+### Annexe F — Charte de conformité RGPD (synthèse)
+
+La charte complète est livrée séparément (`Charte de Conformite RGPD - Alumni CRM.pdf`).
+
+**Contexte juridique.** Le système est conforme au Règlement (UE) 2016/679 et à la loi Informatique et Libertés. Les données personnelles sont protégées par les mécanismes standard de PostgreSQL ; aucun chiffrement applicatif spécifique n'est mis en œuvre à ce jour, et la notification de violation (article 33) reste manuelle.
+
+**Les 4 types de consentement.**
+
+|**Type backend**|**Clé frontend**|**Description**|
+|---|---|---|
+| `prise_de_contact` | `contact_allowed` | L'école et les partenaires peuvent contacter l'alumni |
+| `partage_donnees` | `data_sharing` | Données statistiques anonymisées partagées |
+| `enquetes` | `survey_participation` | Participation aux enquêtes alumni |
+| `newsletter` | `newsletter` | Réception de la newsletter |
+
+**Consommation fonctionnelle des consentements.** Le consentement `newsletter` cible l'envoi via `/newsletter/envoyer` ; `enquetes` ouvre l'accès au questionnaire actif (refus → 403 et menu masqué) ; `prise_de_contact`, dont le refus exclut des relances et déclenche l'anonymisation du profil via `cleanup.py`, est le seul dont le refus anonymise ; `partage_donnees` alimente les indicateurs partenaires (`/admin/indicateurs/partenaires`).
+
+**Droits RGPD implémentés.** Accès (export JSON/Excel/CSV auto-service), rectification (page profil), effacement (workflow demandes → anonymisation → purge différée de 6 mois), retrait du consentement (toggles). Toutes les opérations sont tracées dans `AUDIT_LOG`.
+
+### Annexe G — Stratégie de mise à jour des données (synthèse)
+
+La stratégie complète est livrée séparément (`Strategie de Mise a Jour des Donnees - Alumni CRM.pdf`).
+
+**Le défi de l'obsolescence.** Le principal défi d'un annuaire d'anciens est sa péremption rapide (postes, entreprises, salaires). La gouvernance repose sur un processus proactif d'incitation à la mise à jour.
+
+**Mise à jour manuelle par l'alumni.** Le profil (`AlumniProfile.jsx`) permet la modification de tous les champs personnels, le statut de disponibilité étant obligatoire et les compétences en tags dynamiques. Le parcours (`AlumniCareer.jsx`) gère l'ajout/suppression d'expériences et certifications, avec détection automatique du poste actuel et alerte visuelle en cas d'incohérence entre le statut `en_poste` et l'absence de poste actuel.
+
+**Questionnaire annuel automatisé.** Côté admin, création/modification/suppression de questionnaires, 4 types de questions, tags KPI, questions conditionnées et cycle de vie. Côté alumni, accès au questionnaire actif, pré-remplissage et questions conditionnées masquées.
+
+**Pilotage par le service Relations Entreprises.** Création et administration des campagnes, tags KPI alimentant automatiquement les indicateurs, relances automatiques (`POST /admin/questionnaires/notififier`). La newsletter constitue le principal canal de réactivation, avec un appel à l'action orienté vers la mise à jour du profil.
+
+### Annexe H — Analyse des indicateurs d'insertion (synthèse)
+
+L'analyse complète est livrée séparément (`Analyse des Indicateurs d'Insertion - Alumni CRM.pdf`).
+
+**Principe.** Transformer les données brutes du CRM en indicateurs de performance stratégiques pour les rapports d'insertion professionnelle requis par les organismes de certification (CTI, HCERES) et les ministères.
+
+**Principes généraux de calcul.**
+
+- **Comptes anonymisés exclus** : toute ligne avec `date_anonymisation IS NOT NULL` est exclue de tous les indicateurs (RGPD).
+- **Source de vérité de l'emploi** : la table `EXPERIENCE_PRO` (et non le champ déclaratif `availability_status`). Un alumni est « en emploi » si une expérience est en cours.
+- **Salaire** : `salary_annuel` (numérique) prioritaire, avec repli sur le champ texte historique.
+- **Seuils d'affichage** : secteur et type de contrat vides regroupés sous « Non renseigné » ; au-delà de 6 catégories, regroupement sous « Autres ».
+
+**Les 10 indicateurs et leurs endpoints.**
+
+|**Indicateur**|**Calcul / endpoint**|
+|---|---|
+| Total alumni actifs | `COUNT(*)` où `date_anonymisation IS NULL` |
+| Alumni actifs (≥ 1 expérience) | `COUNT(DISTINCT id_etudiant)` depuis `EXPERIENCE_PRO` |
+| Taux de complétion | (alumni avec ≥ 1 expérience / total) × 100 |
+| Taux d'emploi à 6 mois | expérience active à la date de référence (fenêtre 6 mois) ; promo non mature → `null` |
+| Taux d'emploi global | (étudiants en poste / total) × 100 par promotion |
+| Adéquation formation/emploi | réponses « Oui » / réponses exploitables (question taguée) |
+| Répartition par secteur | `COUNT(DISTINCT id_etudiant)` par secteur (poste actuel) |
+| Alumni par promotion | effectif, % en poste, taux de couverture, salaire moyen |
+| Salaire moyen | `AVG` de `salary_annuel` (ou repli) ; jauge avec échantillon ≥ 5 |
+| Répartition par type de contrat | `COUNT(*)` des expériences en cours |
+
+**Endpoints API.** `GET /admin/indicateurs`, `/admin/indicateurs/secteurs`, `/admin/indicateurs/types-contrat`, `/admin/indicateurs/kpi-tag`, `/admin/indicateurs/kpi-tags`, `/admin/indicateurs/kpi-tags-actifs`, `/admin/indicateurs/partenaires`.
+
+**Cas limites.** Promotion sans fenêtre de 6 mois écoulée → `null` + statut « en_attente » ; échantillon de salaire < 5 → fourchette élargie et mention « échantillon limité » ; adéquation sans réponse → état vide.
+
+### Annexe I — Guide des processus d'animation du réseau (extrait)
 
 Le guide complet est généré séparément (`Guide des Processus - Animation du Reseau Alumni.pdf`, via `generate_reports.py`). Il décrit les processus opérationnels à destination du service Relations Entreprises et de l'équipe pédagogique. Chaque processus identifie les acteurs, les étapes, les outils CRM et les indicateurs de suivi. En voici un extrait à jour.
 
@@ -575,13 +667,13 @@ Le guide complet est généré séparément (`Guide des Processus - Animation du
 - **Archivage.** `POST /admin/cleanup/rgpd/archiver` pour masquer les données des alumni ayant refusé le consentement de prise de contact.
 - **Purge différée.** `purge.py` supprime les comptes anonymisés plus vieux que `PURGE_DELAY_MONTHS` (défaut 6 mois), avec mode dry-run.
 
-### Annexe E — Liste des endpoints API
+### Annexe J — Liste des endpoints API
 
-L'API expose **85 routes** au total (dont 5 routes système : `/openapi.json`, `/docs`, `/docs/oauth2-redirect`, `/redoc` et la racine `/` qui sert la documentation Swagger). Les 80 endpoints applicatifs sont regroupés ci-dessous par domaine, avec la méthode HTTP, le chemin et une description.
+L'API expose 82 endpoints applicatifs au total (dont la racine `GET /` qui sert une bienvenue ; les routes système de documentation `/openapi.json`, `/docs`, `/redoc` s'y ajoutent hors périmètre applicatif). Les 81 endpoints métier sont regroupés ci-dessous par domaine, avec la méthode HTTP, le chemin et une description.
 
 **Authentification (OTP et admin)**
 
-| Méthode | Chemin | Description |
+|**Méthode**|**Chemin**|**Description**|
 |---|---|---|
 | POST | `/auth/otp/request` | Demande d'un code OTP à 6 chiffres envoyé par email pour l'authentification alumni |
 | POST | `/auth/otp/verify` | Vérification du code OTP et émission du token de session alumni (JWT) |
@@ -589,7 +681,7 @@ L'API expose **85 routes** au total (dont 5 routes système : `/openapi.json`, `
 
 **Promotions**
 
-| Méthode | Chemin | Description |
+|**Méthode**|**Chemin**|**Description**|
 |---|---|---|
 | POST | `/promotions/` | Création d'une promotion (admin) |
 | GET | `/promotions/` | Liste paginée des promotions avec nombre d'étudiants |
@@ -599,7 +691,7 @@ L'API expose **85 routes** au total (dont 5 routes système : `/openapi.json`, `
 
 **Étudiants / alumni**
 
-| Méthode | Chemin | Description |
+|**Méthode**|**Chemin**|**Description**|
 |---|---|---|
 | POST | `/etudiants/` | Inscription d'un étudiant (auto-génération de l'email académique) |
 | GET | `/etudiants/` | Liste paginée des étudiants (admin) |
@@ -611,7 +703,7 @@ L'API expose **85 routes** au total (dont 5 routes système : `/openapi.json`, `
 
 **Entreprises**
 
-| Méthode | Chemin | Description |
+|**Méthode**|**Chemin**|**Description**|
 |---|---|---|
 | POST | `/entreprises/` | Création d'une entreprise (admin) |
 | GET | `/entreprises/` | Liste paginée des entreprises (recherche par nom, filtre secteur/pays/ville) |
@@ -621,7 +713,7 @@ L'API expose **85 routes** au total (dont 5 routes système : `/openapi.json`, `
 
 **Expériences professionnelles**
 
-| Méthode | Chemin | Description |
+|**Méthode**|**Chemin**|**Description**|
 |---|---|---|
 | GET | `/etudiants/{id_etudiant}/experiences` | Liste des expériences d'un étudiant |
 | GET | `/experiences/` | Liste paginée des expériences (admin) |
@@ -631,7 +723,7 @@ L'API expose **85 routes** au total (dont 5 routes système : `/openapi.json`, `
 
 **Certifications**
 
-| Méthode | Chemin | Description |
+|**Méthode**|**Chemin**|**Description**|
 |---|---|---|
 | POST | `/certifications/` | Création d'une certification (admin) |
 | GET | `/certifications/` | Liste des certifications (admin) |
@@ -644,7 +736,7 @@ L'API expose **85 routes** au total (dont 5 routes système : `/openapi.json`, `
 
 **RGPD — consentements et demandes (alumni)**
 
-| Méthode | Chemin | Description |
+|**Méthode**|**Chemin**|**Description**|
 |---|---|---|
 | GET | `/consentements/etudiant/{id_etudiant}` | Lecture des consentements d'un étudiant |
 | POST | `/consentements/` | Enregistrement d'un choix de consentement (prise de contact, partage, enquêtes, newsletter) |
@@ -656,7 +748,7 @@ L'API expose **85 routes** au total (dont 5 routes système : `/openapi.json`, `
 
 **RGPD — traitement admin**
 
-| Méthode | Chemin | Description |
+|**Méthode**|**Chemin**|**Description**|
 |---|---|---|
 | GET | `/admin/demandes-rgpd` | Liste des demandes RGPD avec filtres (statut, type) |
 | GET | `/admin/demandes-rgpd/{id_demande}/export` | Export des données d'un alumni (json/xlsx/csv) |
@@ -671,7 +763,7 @@ L'API expose **85 routes** au total (dont 5 routes système : `/openapi.json`, `
 
 **Administration — annuaire et indicateurs**
 
-| Méthode | Chemin | Description |
+|**Méthode**|**Chemin**|**Description**|
 |---|---|---|
 | GET | `/admin/etudiants/filtrer` | Annuaire filtré des alumni (promotion, secteur, entreprise, consentement, anonymisation) |
 | GET | `/admin/indicateurs` | Indicateurs principaux du tableau de bord (taux d'emploi, salaires, couverture, etc.) |
@@ -684,7 +776,7 @@ L'API expose **85 routes** au total (dont 5 routes système : `/openapi.json`, `
 
 **Administration — nettoyage et maintenance**
 
-| Méthode | Chemin | Description |
+|**Méthode**|**Chemin**|**Description**|
 |---|---|---|
 | GET | `/admin/cleanup/orphelins` | Analyse des enregistrements orphelins (dry-run) |
 | DELETE | `/admin/cleanup/orphelins` | Suppression des enregistrements orphelins dans une transaction unique |
@@ -695,7 +787,7 @@ L'API expose **85 routes** au total (dont 5 routes système : `/openapi.json`, `
 
 **Import / Export**
 
-| Méthode | Chemin | Description |
+|**Méthode**|**Chemin**|**Description**|
 |---|---|---|
 | POST | `/import/excel` | Import d'alumni via fichier Excel/CSV (détection du séparateur, validation par ligne) |
 | GET | `/import/template` | Téléchargement du template Excel d'import |
@@ -703,7 +795,7 @@ L'API expose **85 routes** au total (dont 5 routes système : `/openapi.json`, `
 
 **Questionnaires**
 
-| Méthode | Chemin | Description |
+|**Méthode**|**Chemin**|**Description**|
 |---|---|---|
 | GET | `/questionnaires/actif` | Questionnaire actif visible par l'alumni |
 | GET | `/questionnaires/etudiant/{id_etudiant}/reponses` | Réponses d'un étudiant (avec pré-remplissage) |
@@ -712,7 +804,7 @@ L'API expose **85 routes** au total (dont 5 routes système : `/openapi.json`, `
 
 **Questionnaires — administration**
 
-| Méthode | Chemin | Description |
+|**Méthode**|**Chemin**|**Description**|
 |---|---|---|
 | POST | `/admin/questionnaires/` | Création d'un questionnaire |
 | GET | `/admin/questionnaires/` | Liste des questionnaires |
@@ -726,17 +818,163 @@ L'API expose **85 routes** au total (dont 5 routes système : `/openapi.json`, `
 
 **Newsletter**
 
-| Méthode | Chemin | Description |
+|**Méthode**|**Chemin**|**Description**|
 |---|---|---|
 | POST | `/newsletter/envoyer` | Envoi d'une newsletter aux alumni au consentement newsletter actif (et « prise_de_contact » non refusé ; filtres promotion/secteur) |
 
-### Annexe F — Différentiel de migration et audit de conformité
+#### Documentation Swagger (FastAPI `/docs`)
+
+La liste exhaustive des routes est consultable en ligne via la documentation Swagger générée automatiquement par FastAPI (endpoint `/docs`), illustrée ci-dessous en mode clair et sombre.
+
+![Swagger UI (mode clair)](../image/swagger_light.png)
+
+![Swagger UI (mode sombre)](../image/swagger_dark.png)
+
+#### Exemples d'appels (`curl`) et réponses
+
+Quelques appels significatifs avec les réponses JSON retournées par l'API.
+
+**1. Authentification admin — `POST /auth/admin/login`**
+
+```bash
+curl -X POST http://localhost:8000/auth/admin/login \
+  -H "Content-Type: application/json" \
+  -d '{"code": "***"}'
+```
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "role": "admin"
+}
+```
+
+**2. Indicateurs par promotion — `GET /admin/indicateurs`**
+
+```bash
+curl -X GET http://localhost:8000/admin/indicateurs \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "indicateurs_par_promotion": [
+    {
+      "nom_promotion": "Promotion 2023",
+      "total_etudiants": 4,
+      "taux_emploi_pourcentage": 50.0,
+      "salaire_moyen": 3550.0
+    }
+  ],
+  "taux_emploi_6mois": 73.33,
+  "salaire_moyen": 46909.09,
+  "taux_reponse": 100.0
+}
+```
+
+**3. Répartition par secteur — `GET /admin/indicateurs/secteurs`**
+
+```bash
+curl -X GET http://localhost:8000/admin/indicateurs/secteurs \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "secteurs": [
+    {"secteur": "Technologie", "count": 3},
+    {"secteur": "Conseil", "count": 2},
+    {"secteur": "Marketing", "count": 2}
+  ],
+  "total_alumni": 15
+}
+```
+
+**4. KPI tags — `GET /admin/indicateurs/kpi-tags`**
+
+```bash
+curl -X GET http://localhost:8000/admin/indicateurs/kpi-tags \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+[
+  {
+    "tag": "adequation_formation",
+    "libelle": "Adéquation formation/emploi",
+    "valeur": 75.0,
+    "unite": "%",
+    "distribution": [
+      {"label": "Oui", "nb": 9, "pourcentage": 75.0},
+      {"label": "Non", "nb": 3, "pourcentage": 25.0}
+    ]
+  }
+]
+```
+
+**5. Demande OTP — `POST /auth/otp/request`**
+
+```bash
+curl -X POST http://localhost:8000/auth/otp/request \
+  -H "Content-Type: application/json" \
+  -d '{"email": "jean.dupont@example.com"}'
+```
+
+```json
+{
+  "message": "Si ce compte existe, un code a été envoyé."
+}
+```
+
+**6. Questionnaire actif — `GET /questionnaires/actif?id_etudiant=1`**
+
+```bash
+curl -X GET "http://localhost:8000/questionnaires/actif?id_etudiant=1" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "titre": "Enquete Alumni 2026",
+  "questions": [
+    {
+      "texte": "Votre formation vous a-t-elle prepare au monde pro ?",
+      "type": "boolean",
+      "tag": "adequation_formation"
+    },
+    {
+      "texte": "Dans quel secteur exercez-vous ?",
+      "type": "choice",
+      "options": ["Technologie","Finance","Sante",...],
+      "tag": "statut_professionnel"
+    }
+  ]
+}
+```
+
+**7. Consentements — `GET /consentements/etudiant/{id}`**
+
+```bash
+curl -X GET http://localhost:8000/consentements/etudiant/1 \
+  -H "Authorization: Bearer <alumni_token>"
+```
+
+```json
+[
+  {"type_consentement": "prise_de_contact", "statut": "actif", "canal": "web"},
+  {"type_consentement": "partage_donnees",  "statut": "actif", "canal": "web"},
+  {"type_consentement": "enquetes",         "statut": "actif", "canal": "web"},
+  {"type_consentement": "newsletter",        "statut": "actif", "canal": "web"}
+]
+```
+
+### Annexe K — Différentiel de migration et audit de conformité
 
 L'audit de conformité a croisé l'état réel de la base PostgreSQL (`information_schema.columns`, `pg_constraint`, `pg_indexes`) avec les routers, les schémas Pydantic (`schemas.py`) et les fichiers de migration SQL. Il a mis en évidence un **drift entre le modèle versionné et la base réelle**, corrigé depuis, ainsi qu'une validation par **rejeu complet des 16 migrations sur une base vide**.
 
 **Drift de migration corrigé**
 
-| # | Constat | Cause | Correctif apporté |
+|**#**|**Constat**|**Cause**|**Correctif apporté**|
 |---|---|---|---|
 | 1 | `DELETE /entreprises/{id}` renvoyait une erreur dès qu'une expérience référençait l'entreprise | La route tentait un `UPDATE EXPERIENCE_PRO SET id_entreprise = NULL`, impossible sur une colonne `NOT NULL` (`IntegrityError`) | Suppression directe de l'entreprise : la clé étrangère est déjà `ON DELETE CASCADE`, l'expérience est donc supprimée en cascade. |
 | 2 | Après reconstruction depuis les migrations, la FK `REPONSE_QUESTIONNAIRE.id_etudiant` n'avait **pas** `ON DELETE CASCADE`, alors que la base réelle l'avait | La migration 003 créait cette FK en `NO ACTION` ; la base live avait évolué au fil de l'eau sans que la migration soit mise à jour | Nouvelle migration corrective **011** (`fix_reponse_questionnaire_cascade`) : idempotente, elle interroge `pg_constraint` et ne recrée la FK en `CASCADE` que si elle n'y est pas déjà. La 003 n'a pas été modifiée rétroactivement. |
@@ -745,7 +983,7 @@ Le principe retenu est celui d'une discipline stricte : **une migration déjà a
 
 **Inventaire des 16 migrations**
 
-| N° | Fichier | Objet |
+|**N°**|**Fichier**|**Objet**|
 |---|---|---|
 | 000 | `schema_initial.sql` | Schéma initial : tables de base du référentiel (promotions, entreprises, étudiants) |
 | 001 | `audit_log.sql` | Table `AUDIT_LOG` de journalisation |

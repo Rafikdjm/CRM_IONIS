@@ -47,3 +47,6 @@ logs/
 # Database backups
 *.dump
 alumni_crm_backup.dump
+
+# LibreOffice auto backups
+*.lo1

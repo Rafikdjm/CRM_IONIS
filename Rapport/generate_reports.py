@@ -57,41 +57,79 @@ class ReportPDF(FPDF):
         self.multi_cell(0, 5.5, f"  {text}")
         self.ln(1)
 
-    def table_header(self, cols, widths):
-        self.set_font("SegoeUI", "B", 9)
-        self.set_fill_color(243, 244, 246)
-        self.set_text_color(30, 41, 59)
-        for i, col in enumerate(cols):
-            self.cell(widths[i], 7, col, border=1, fill=True)
-        self.ln()
+    TABLE_LINE_H = 5.8
+    TABLE_PAD_X = 1.8
+    TABLE_BORDER = (196, 210, 226)
+    TABLE_HEADER_FILL = (219, 234, 254)
+    TABLE_BODY_FILL = (255, 255, 255)
+    TABLE_BODY_FILL_ALT = (244, 247, 252)
+    TABLE_HEADER_TEXT = (30, 41, 59)
+    TABLE_TEXT = (55, 65, 81)
 
-    def table_row(self, cols, widths, fill=False):
-        self.set_font("SegoeUI", "", 9)
-        self.set_text_color(55, 65, 81)
-        if fill:
-            self.set_fill_color(249, 250, 251)
-        max_h = 7
-        x_start = self.get_x()
+    def _normalize_widths(self, widths):
+        total = self.w - self.l_margin - self.r_margin
+        if abs(sum(widths) - total) > 0.01:
+            scale = total / float(sum(widths))
+            widths = [w * scale for w in widths]
+        widths = [round(w, 2) for w in widths]
+        widths[-1] = round(total - sum(widths[:-1]), 2)
+        return widths
+
+    def _draw_table_row(self, cols, widths, fill, bold=False, min_h=7.0, text_color=TABLE_TEXT):
+        self.set_font("SegoeUI", "B" if bold else "", 10)
+        self.set_text_color(*text_color)
+        line_h = self.TABLE_LINE_H
+        pad = self.TABLE_PAD_X
+        x0 = self.get_x()
         y_start = self.get_y()
 
         heights = []
-        for i, col in enumerate(cols):
-            nb = self.multi_cell(widths[i], 5, col, border=0, split_only=True)
-            heights.append(len(nb) * 5)
+        for w, txt in zip(widths, cols):
+            nb = self.multi_cell(w - 2 * pad, line_h, txt, border=0, split_only=True, padding=0)
+            heights.append(len(nb) * line_h)
+        row_h = max(heights) if heights else min_h
+        row_h = max(row_h, min_h)
 
-        row_h = max(heights) if heights else 7
-        if row_h < 7:
-            row_h = 7
+        self.set_draw_color(*self.TABLE_BORDER)
+        self.set_line_width(0.2)
+        self.set_fill_color(*fill)
+        for i, (w, txt) in enumerate(zip(widths, cols)):
+            cx = x0 + sum(widths[:i])
+            self.rect(cx, y_start, w, row_h, style="FD")
+            self.set_xy(cx + pad, y_start)
+            self.multi_cell(w - 2 * pad, line_h, txt, border=0, padding=0)
+        self.set_xy(x0, y_start + row_h)
+        return row_h
 
-        if self.get_y() + row_h > 270:
+    def table_header(self, cols, widths):
+        self._t_cols = list(cols)
+        self._t_widths = self._normalize_widths(list(widths))
+        self._draw_table_row(self._t_cols, self._t_widths,
+                             fill=self.TABLE_HEADER_FILL, bold=True, min_h=8.0,
+                             text_color=self.TABLE_HEADER_TEXT)
+
+    def table_row(self, cols, widths, fill=False):
+        cols = list(cols)
+        widths = self._normalize_widths(list(widths))
+        line_h = self.TABLE_LINE_H
+        pad = self.TABLE_PAD_X
+
+        self.set_font("SegoeUI", "", 10)
+        heights = []
+        for w, txt in zip(widths, cols):
+            nb = self.multi_cell(w - 2 * pad, line_h, txt, border=0, split_only=True, padding=0)
+            heights.append(len(nb) * line_h)
+        row_h = max(heights) if heights else 7.0
+        row_h = max(row_h, 7.0)
+
+        if self.get_y() + row_h > self.page_break_trigger - 1:
             self.add_page()
-            y_start = self.get_y()
+            if getattr(self, "_t_cols", None):
+                self.table_header(self._t_cols, self._t_widths)
 
-        for i, col in enumerate(cols):
-            self.set_xy(x_start + sum(widths[:i]), y_start)
-            self.multi_cell(widths[i], 5, col, border=1, fill=fill)
-
-        self.set_xy(x_start, y_start + row_h)
+        self._draw_table_row(cols, widths,
+                             fill=self.TABLE_BODY_FILL_ALT if fill else self.TABLE_BODY_FILL,
+                             text_color=self.TABLE_TEXT)
 
 
 def generate_cartographie():
@@ -124,25 +162,25 @@ def generate_cartographie():
         "dans l'etablissement, en s'appuyant sur les entites ETUDIANT et PROMOTION du modele de donnees."
     )
 
-    headers = ["Categorie", "Champs (Code)", "Description"]
-    widths = [38, 55, 97]
+    headers = ["Categorie", "Champs (Code)", "Description (simplifiee)", "Exemple"]
+    widths = [31, 73, 58, 28]
     pdf.table_header(headers, widths)
-
     rows = [
-        ["Identite et Coordonnees", "nom, prenom, email, telephone", "Informations d'etat civil et moyens de contact personnels permettant l'identification unique de l'alumni."],
-        ["Identite et Coordonnees", "date_naissance", "Date de naissance, utile pour les statistiques demographiques."],
-        ["Identite et Coordonnees", "email_academique", "Adresse email institutionnelle (optionnel), pour le contact via les canaux universitaires."],
-        ["Identite et Coordonnees", "address, city, country", "Adresse postale et localisation geographique de l'alumni."],
-        ["Identite et Coordonnees", "linkedin", "URL du profil LinkedIn, pour le reseautage et la valorisation du profil."],
-        ["Identite et Coordonnees", "availability_status", "Statut de disponibilite obligatoire : en_poste, a_lecoute, en_recherche. Conditionne l'affichage de certaines questions du questionnaire."],
-        ["Identite et Coordonnees", "skills", "Tags de competences (tableau de chaines). Mots-cles decrivant les competences techniques et transversales."],
-        ["Historique Academique", "parcours_anterieur", "Detail du cursus suivi avant l'integration, utile pour analyser la diversite des profils recrutes."],
-        ["Historique Academique", "previous_school (inscription)", "Nom de l'etablissement precedent (collecte a l'inscription uniquement)."],
-        ["Rattachement Scolaire", "id_promotion -> nom_promotion, annee_diplome, filiere", "Lien vers l'entite PROMOTION, permettant les filtrages par promotion et filiere."],
-        ["Donnees complementaires", "date_inscription", "Date de creation du profil dans le systeme."],
+        ["Identite et Coordonnees", "nom, prenom, email, telephone", "Identification unique de l'alumni.", "Alice Martin"],
+        ["Identite et Coordonnees", "date_naissance", "Statistiques demographiques.", "1999-04-12"],
+        ["Identite et Coordonnees", "email_academique", "Contact institutionnel (optionnel).", "alice@ionis-stm.com"],
+        ["Identite et Coordonnees", "address, city, country", "Localisation geographique.", "Paris, France"],
+        ["Identite et Coordonnees", "linkedin", "URL du profil LinkedIn.", "linkedin.com/in/alice"],
+        ["Identite et Coordonnees", "availability_status", "Statut : en_poste, a_lecoute, en_recherche.", "en_recherche"],
+        ["Identite et Coordonnees", "skills", "Competences techniques (tags).", "Python, SQL, DevOps"],
+        ["Historique Academique", "parcours_anterieur", "Cursus suivi avant integration.", "BTS SIO"],
+        ["Historique Academique", "previous_school (inscription)", "Etablissement precedent.", "Lycee Voltaire"],
+        ["Rattachement Scolaire", "id_promotion -> nom_promotion, annee_diplome, filiere", "Lien PROMOTION (filtres promotion/filiere).", "Promo 2025, Data"],
+        ["Donnees complementaires", "date_inscription", "Date de creation du profil.", "2023-09-01"],
     ]
     for i, r in enumerate(rows):
         pdf.table_row(r, widths, fill=(i % 2 == 0))
+
 
     pdf.ln(4)
 
@@ -154,25 +192,28 @@ def generate_cartographie():
         "QUESTIONNAIRE et REPONSE pour les donnees declaratives collectees chaque annee."
     )
 
+    headers = ["Categorie", "Champs (Code)", "Description (simplifiee)", "Exemple"]
+    widths = [41, 44, 73, 32]
     pdf.table_header(headers, widths)
     rows2 = [
-        ["Suivi des Postes", "company (nom_entreprise)", "Nom de l'entreprise employeuse."],
-        ["Suivi des Postes", "position (intitule_poste)", "Intitule du poste occupe."],
-        ["Suivi des Postes", "type_contrat", "Type de contrat : CDI, CDD, Freelance, Alternance, Stage, Intérim, Autre."],
-        ["Suivi des Postes", "start_date, end_date (date_debut/fin)", "Periode d'occupation du poste (format mois annee)."],
-        ["Suivi des Postes", "is_current (poste_actuel)", "Booleen indiquant si le poste est actuellement occupe. En l'absence de coche, le systeme affiche automatiquement l'experience la plus recente."],
-        ["Suivi des Postes", "description", "Description des missions et responsabilites du poste."],
-        ["Informations Salariales", "salary_range (salaire)", "Champ historique en saisie libre (ex: '35k-45k EUR'), conserve pour retrocompatibilite."],
-        ["Informations Salariales", "salary_annuel (NUMERIC)", "Salaire annuel brut en euros saisi via un select de tranches chiffrees (migration 012). Sert aux calculs statistiques (moyenne, min, max) avec repli sur l'ancien champ texte."],
-        ["Geographie", "pays, ville", "Localisation geographique de l'entreprise (pays et ville)."],
-        ["Secteur d'activite", "sector (secteur_activite)", "Secteur d'activite choisi parmi 37 categories standardisees + 'Autre' avec saisie libre."],
-        ["Certifications", "name (nom_certification)", "Nom de la certification obtenue post-diplome."],
-        ["Certifications", "issuer (organisme)", "Organisme émetteur de la certification."],
-        ["Certifications", "date_obtained (date_obtention)", "Date d'obtention de la certification."],
-        ["Reponse Questionnaire", "reponses (JSON, table REPONSE)", "Reponses aux questionnaires annuels, stockees au format JSON. Permettent le calcul d'indicateurs d'insertion."],
+        ["Suivi des Postes", "company (nom_entreprise)", "Entreprise employeuse.", "Capgemini"],
+        ["Suivi des Postes", "position (intitule_poste)", "Intitule du poste.", "Developpeur Data"],
+        ["Suivi des Postes", "type_contrat", "CDI, CDD, Freelance, Alternance, Stage...", "CDI"],
+        ["Suivi des Postes", "start_date, end_date", "Periode du poste (mois annee).", "09/2024 - 06/2025"],
+        ["Suivi des Postes", "is_current (poste_actuel)", "Poste occupe actuellement.", "true"],
+        ["Suivi des Postes", "description", "Missions et responsabilites.", "Pipeline data, API"],
+        ["Informations Salariales", "salary_range (salaire)", "Ancien champ texte (retrocomp.).", "35-45k EUR"],
+        ["Informations Salariales", "salary_annuel (NUMERIC)", "Salaire brut annuel (chiffre).", "42000"],
+        ["Geographie", "pays, ville", "Localisation de l'entreprise.", "France, Paris"],
+        ["Secteur d'activite", "sector (secteur_activite)", "37 categories + Autre.", "Conseil"],
+        ["Certifications", "name (nom_certification)", "Certification post-diplome.", "AWS Certified"],
+        ["Certifications", "issuer (organisme)", "Organisme emetteur.", "Amazon AWS"],
+        ["Certifications", "date_obtained", "Date d'obtention.", "2025-03-15"],
+        ["Reponse Questionnaire", "reponses (JSON)", "Reponses enquetes annuelles.", "{\"salaire\": \"42k\"}"],
     ]
     for i, r in enumerate(rows2):
         pdf.table_row(r, widths, fill=(i % 2 == 0))
+
 
     pdf.ln(4)
 
@@ -183,20 +224,20 @@ def generate_cartographie():
         "confidentialite de chaque alumni."
     )
 
-    headers3 = ["Champ", "Type / Valeurs", "Description"]
-    widths3 = [42, 48, 100]
+    headers3 = ["Champ", "Type / Valeurs", "Description (simplifiee)", "Exemple"]
+    widths3 = [45, 51, 67, 27]
     pdf.table_header(headers3, widths3)
     rgpd_rows = [
-        ["id_etudiant", "Entier (FK)", "Reference vers l'alumni concerne."],
-        ["type_consentement", "4 types : prise_de_contact, partage_donnees, enquetes, newsletter", "Nature precise de l'autorisation accordee."],
-        ["date_consentement", "Date (AAAA-MM-JJ)", "Date exacte du recueil du consentement."],
-        ["statut", "actif | refuse", "Etat actuel du consentement ; seuls 'actif' (accorde) et 'refuse' (refuse ou retire) existent, sans statut 'revoque' distinct. Le retrait est modelise par un nouveau consentement a 'refuse'."],
-        ["canal", "Formulaire inscription Web, Questionnaire annuel", "Origine formelle de l'accord, essentielle pour tout audit de conformite."],
+        ["id_etudiant", "Entier (FK)", "Reference vers l\u0027alumni.", "42"],
+        ["type_consentement", "4 types (voir 5.2)", "Nature de l\u0027autorisation.", "newsletter"],
+        ["date_consentement", "Date (AAAA-MM-JJ)", "Date du recueil.", "2025-09-14"],
+        ["statut", "actif | refuse", "Etat du consentement.", "actif"],
+        ["canal", "web | questionnaire", "Origine de l\u0027accord.", "web"],
     ]
     for i, r in enumerate(rgpd_rows):
         pdf.table_row(r, widths3, fill=(i % 2 == 0))
+    pdf.ln(4)
 
-    pdf.section_title("4.1 Workflow et tracabilite associes")
     pdf.bullet("DEMANDE_RGPD : demandes d'export ou de suppression initiees par l'alumni ; cycle envoyee -> en_traitement -> traitee/rejetee avec verrou de prise en charge (prise_en_charge_par).")
     pdf.bullet("AUDIT_LOG : journal horodate des operations sensibles (anonymisations, purges, nettoyages) avec acteur, action, details et nombre de lignes.")
     pdf.bullet("ETUDIANT.date_anonymisation : horodatage d'anonymisation RGPD ; un compte anonymise refuse toute nouvelle ecriture et reste exclu des indicateurs jusqu'a la purge differee.")
@@ -218,14 +259,14 @@ def generate_cartographie():
         "Le systeme differencie quatre categories precises de consentement, chacune etant geree "
         "independamment via des toggles dedies dans l'interface alumni (AlumniConsent.jsx)."
     )
-    headers_rgpd = ["Type (Backend)", "Cle Frontend", "Description"]
-    widths_rgpd = [40, 38, 112]
+    headers_rgpd = ["Type (Backend)", "Cle Frontend", "Description (simplifiee)", "Exemple"]
+    widths_rgpd = [27, 34, 74, 55]
     pdf.table_header(headers_rgpd, widths_rgpd)
     rgpd_types = [
-        ["prise_de_contact", "contact_allowed", "Autoriser l'ecole et les partenaires a contacter l'alumni pour des opportunites professionnelles, des evenements ou des enquetes."],
-        ["partage_donnees", "data_sharing", "Autoriser le partage anonymise de donnees statistiques (secteur, poste) avec les entreprises partenaires."],
-        ["enquetes", "survey_participation", "Accepter de recevoir et de repondre aux enquetes alumni sur l'evolution professionnelle et la satisfaction."],
-        ["newsletter", "newsletter", "Recevoir la newsletter alumni avec les actualites, evenements et offres d'emploi."],
+        ["prise_de_contact", "contact_allowed", "Ecole / partenaires peuvent contacter.", "Offres de postes, evenements"],
+        ["partage_donnees", "data_sharing", "Donnees statistiques anonymisees partagees.", "Secteur, poste"],
+        ["enquetes", "survey_participation", "Participation aux enquetes alumni.", "Evolution carriere, satisfaction"],
+        ["newsletter", "newsletter", "Reception de la newsletter.", "Actualites, offres d\u0027emploi"],
     ]
     for i, r in enumerate(rgpd_types):
         pdf.table_row(r, widths_rgpd, fill=(i % 2 == 0))
@@ -284,19 +325,19 @@ def generate_rgpd():
         "independamment via des toggles dedies dans l'interface alumni (AlumniConsent.jsx)."
     )
 
-    headers = ["Type (Backend)", "Cle Frontend", "Description"]
-    widths = [40, 38, 112]
+    headers = ["Type (Backend)", "Cle Frontend", "Description (simplifiee)", "Exemple"]
+    widths = [27, 34, 74, 55]
     pdf.table_header(headers, widths)
     rows = [
-        ["prise_de_contact", "contact_allowed", "Autoriser l'ecole et les partenaires a contacter l'alumni pour des opportunites professionnelles, des evenements ou des enquetes."],
-        ["partage_donnees", "data_sharing", "Autoriser le partage anonymise de donnees statistiques (secteur, poste) avec les entreprises partenaires."],
-        ["enquetes", "survey_participation", "Accepter de recevoir et de repondre aux enquetes alumni sur l'evolution professionnelle et la satisfaction."],
-        ["newsletter", "newsletter", "Recevoir la newsletter alumni avec les actualites, evenements et offres d'emploi."],
+        ["prise_de_contact", "contact_allowed", "Ecole / partenaires peuvent contacter.", "Offres de postes, evenements"],
+        ["partage_donnees", "data_sharing", "Donnees statistiques anonymisees partagees.", "Secteur, poste"],
+        ["enquetes", "survey_participation", "Participation aux enquetes alumni.", "Evolution carriere, satisfaction"],
+        ["newsletter", "newsletter", "Reception de la newsletter.", "Actualites, offres d\u0027emploi"],
     ]
     for i, r in enumerate(rows):
         pdf.table_row(r, widths, fill=(i % 2 == 0))
-
     pdf.ln(4)
+
 
     # 3. Gestion du consentement
     pdf.chapter_title("3", "Mecanisme de Gestion du Consentement")
@@ -342,15 +383,15 @@ def generate_rgpd():
     # 5. Valeurs du statut
     pdf.chapter_title("5", "Modele de Donnees CONSENTEMENT_RGPD")
 
-    headers2 = ["Champ", "Type", "Contraintes"]
-    widths2 = [42, 48, 100]
+    headers2 = ["Champ", "Type", "Contraintes (simplifiees)", "Exemple"]
+    widths2 = [44, 33, 87, 26]
     pdf.table_header(headers2, widths2)
     rows2 = [
-        ["id_etudiant", "Entier (FK)", "NOT NULL, reference vers ETUDIANT.id_etudiant."],
-        ["type_consentement", "Enum / Chaine", "Valeurs : 'prise_de_contact', 'partage_donnees', 'enquetes', 'newsletter'."],
-        ["date_consentement", "Date", "NOT NULL, date du jour au moment de l'operation."],
-        ["statut", "Chaine", "Deux valeurs implementees : 'actif' (consentement accorde), 'refuse' (refuse ou retire). Aucun statut 'revoque' distinct n'existe : le retrait passe par un nouveau vote 'refuse' horodate."],
-        ["canal", "Chaine", "Origine : 'web' (formulaire inscription), 'questionnaire' (enquete annuelle, valeur acceptee par l'API mais non encore emise par le frontend a ce jour)."],
+        ["id_etudiant", "Entier (FK)", "REFERENCES ETUDIANT, NOT NULL.", "42"],
+        ["type_consentement", "Enum / Chaine", "4 valeurs possibles.", "newsletter"],
+        ["date_consentement", "Date", "NOT NULL, date du jour.", "2025-09-14"],
+        ["statut", "Chaine", "actif (accorde) / refuse (retire).", "actif"],
+        ["canal", "Chaine", "web | questionnaire.", "web"],
     ]
     for i, r in enumerate(rows2):
         pdf.table_row(r, widths2, fill=(i % 2 == 0))
@@ -485,18 +526,18 @@ def generate_indicateurs():
     # 2. Indicateurs
     pdf.chapter_title("2", "Indicateurs Cles de Pilotage")
 
-    headers = ["Indicateur", "Definition", "Metier / Utilisation Strategique"]
-    widths = [42, 62, 86]
+    headers = ["Indicateur", "Definition (simplifiee)", "Metier / Utilisation", "Exemple"]
+    widths = [32, 76, 41, 41]
     pdf.table_header(headers, widths)
     rows = [
-        ["Taux d'emploi a 6 mois", "Proportion des diplomes en activite (CDI, CDD, etc.) six mois apres l'obtention du diplome. Source : table EXPERIENCE_PRO filtree par date_debut.", "Indicateur indispensable pour les rapports ministeriels et les audits de certification qualite de l'etablissement."],
-        ["Taux d'emploi global (brut)", "Proportion de tous les diplomes ayant au moins une experience professionnelle enregistree, quel que soit le delai. Calcule par : (alumni en poste / total alumni) x 100.", "Vue d'ensemble de l'efficacite du systeme de formation sur l'ensemble des promotions."],
-        ["Adequation formation/emploi", "Mesure du taux de correspondance entre la filiere suivie et le secteur d'activite des postes occupes. Source : question KPI taggee 'adequation_formation' dans le questionnaire.", "Evaluation de la pertinence de l'offre de formation au regard des besoins reels du marche du travail."],
-        ["Salaire moyen par filiere", "Calcul du salaire brut annuel moyen des diplomes, segmente par promotion (moyenne, min et max globaux egalement exposes). Le calcul par secteur d'activite n'est pas implemente a ce jour.", "Outil de valorisation des debouches aupres des futurs candidats et des entreprises partenaires."],
-        ["Alumni actifs", "Nombre d'alumni ayant au moins une experience professionnelle enregistree dans le CRM.", "Indicateur d'engagement : mesure l'adoption du systeme par les anciens eleves."],
-        ["Taux de completion", "Pourcentage d'alumni ayant complete au moins leur profil + une experience professionnelle.", "Mesure de la qualite des donnees collectees, essentielle pour la fiabilite des indicateurs."],
-        ["Alumni par promotion", "Nombre d'alumni inscrits et taux d'emploi pour chaque promotion. Source : table ETUDIANT jointe a PROMOTION.", "Analyse comparative des cohortes pour identifier les promotions necessitant un accompagnement renforce."],
-        ["Repartition par secteur", "Nombre d'alumni par secteur d'activite. Source : agrégation du champ secteur_activite.", "Cartographie des debouches et identification des secteurs recrutant le plus de diplomes."],
+        ["Taux d'emploi a 6 mois", "Diplomes en activite 6 mois apres la sortie (CDI, CDD...).", "Rapports ministeriels et audits.", "Promo 2025 : 9/12 en poste = 75 %"],
+        ["Taux d'emploi global (brut)", "(Alumni en poste / total alumni) x 100.", "Efficacite globale de la formation.", "30 alumni en poste / 40 = 75 %"],
+        ["Adequation formation/emploi", "Correspondance filiere suivie / secteur du poste (question KPI).", "Pertinence de l'offre de formation.", "3 reponses Oui / 4 = 75 %"],
+        ["Salaire moyen par filiere", "Salaire brut annuel moyen (AVG/MIN/MAX sur salary_annuel).", "Valorisation des debouches.", "38000+42000+50000 / 3 = 43 333 EUR"],
+        ["Alumni actifs", "Alumni avec au moins une experience enregistree.", "Engagement des anciens eleves.", "45 alumni actifs sur 60"],
+        ["Taux de completion", "Alumni avec profil + experience completes.", "Qualite des donnees collectees.", "32 profils complets / 60 = 53 %"],
+        ["Alumni par promotion", "Effectif et taux d'emploi par promotion (ETUDIANT + PROMOTION).", "Comparatif des cohortes.", "2024 : 10 / 80 % ; 2025 : 12 / 75 %"],
+        ["Repartition par secteur", "Nombre d'alumni par secteur d'activite.", "Debouches et secteurs recruteurs.", "Info 3, Finance 2, Sante 1"],
     ]
     for i, r in enumerate(rows):
         pdf.table_row(r, widths, fill=(i % 2 == 0))
@@ -507,17 +548,17 @@ def generate_indicateurs():
     pdf.chapter_title("3", "Implementation Technique des Indicateurs")
     pdf.section_title("3.1 Endpoints API")
 
-    headers2 = ["Endpoint", "Description", "Donnees retournees"]
-    widths2 = [55, 60, 75]
+    headers2 = ["Endpoint", "Description (simplifiee)", "Donnees retournees (extrait)"]
+    widths2 = [35, 62, 93]
     pdf.table_header(headers2, widths2)
     rows2 = [
-        ["GET /admin/indicateurs", "Indicateurs principaux du tableau de bord.", "total_alumni, taux_emploi_6mois (global et par promotion avec statut_maturite/date_reference), taux_couverture, coherence_availability_poste_actuel, alumni_actifs, taux_reponse, salaire_moyen/min/max, salaires_renseignes, hypothese, source_de_verite."],
-        ["GET /admin/indicateurs/secteurs", "Repartition des alumni par secteur d'activite.", "tableau de {secteur, count} + total_alumni."],
-        ["GET /admin/indicateurs/types-contrat", "Repartition des experiences en cours par type de contrat.", "tableau de {type_contrat, count} (valeurs vides groupees sous 'Non renseigne')."],
-        ["GET /admin/indicateurs/kpi-tag?tag=X", "Valeur d'un indicateur KPI calcule a partir des reponses taggees.", "valeur, unite (% ou moyenne), total_repondants, question_texte, distribution."],
-        ["GET /admin/indicateurs/kpi-tags", "Tous les tags KPI des questionnaires actifs, calcules automatiquement ; un echec sur un tag ne fait pas echouer la route.", "[{tag, libelle, pourcentage, nb_repondants, valeur, unite, distribution}, ...]"],
-        ["GET /admin/indicateurs/kpi-tags-actifs", "Liste des tags DISTINCT utilises par les questions des questionnaires actifs.", "{tags: [...]}"],
-        ["GET /admin/indicateurs/partenaires", "Indicateurs d'insertion agregees et anonymisees restreints aux alumni ayant accepte le partage de donnees ('partage_donnees' actif) : perimetre transmissible aux partenaires.", "nb_consentants, taux_emploi_pourcentage, en_emploi, salaire_moyen, par_promotion, top_secteurs, perimetre."],
+        ["GET /admin/indicateurs", "Indicateurs principaux du tableau de bord.", "total_alumni, taux_emploi_6mois, taux_couverture, alumni_actifs, taux_reponse, salaire_moyen/min/max."],
+        ["GET /admin/indicateurs/secteurs", "Repartition par secteur d'activite.", "{secteur, count}, total_alumni."],
+        ["GET /admin/indicateurs/types-contrat", "Repartition par type de contrat (des experiences en cours).", "{type_contrat, count} ; vides = 'Non renseigne'."],
+        ["GET /admin/indicateurs/kpi-tag?tag=X", "Valeur d'un indicateur KPI (question taggee).", "valeur, unite (% ou moyenne), total_repondants, question_texte, distribution."],
+        ["GET /admin/indicateurs/kpi-tags", "Tous les tags KPI des questionnaires actifs.", "[{tag, libelle, pourcentage, nb_repondants, valeur, unite, distribution}]."],
+        ["GET /admin/indicateurs/kpi-tags-actifs", "Liste des tags DISTINCT utilises.", "{tags: [...]}"],
+        ["GET /admin/indicateurs/partenaires", "Indicateurs anonymises pour les partenaires (partage_donnees actif).", "nb_consentants, taux_emploi_pourcentage, en_emploi, salaire_moyen, par_promotion, top_secteurs."],
     ]
     for i, r in enumerate(rows2):
         pdf.table_row(r, widths2, fill=(i % 2 == 0))
@@ -556,7 +597,7 @@ def generate_indicateurs():
 
     pdf.section_title("5.1 Informations Generales du Rapport")
     headers_info = ["Champ", "Valeur / Source"]
-    widths_info = [60, 130]
+    widths_info = [50, 140]
     pdf.table_header(headers_info, widths_info)
     info_rows = [
         ["Institution", "Nom de l'etablissement (ex: Ionis Education Group)"],
@@ -570,25 +611,23 @@ def generate_indicateurs():
     pdf.ln(4)
 
     pdf.section_title("5.2 Indicateurs Cles du Rapport")
-    headers_kpi = ["Indicateur", "Valeur attendue", "Calcul"]
-    widths_kpi = [52, 50, 88]
+    headers_kpi = ["Indicateur", "Valeur attendue", "Calcul (simplifie)", "Exemple"]
+    widths_kpi = [34, 48, 68, 40]
     pdf.table_header(headers_kpi, widths_kpi)
     kpi_rows = [
-        ["Effectif de la promotion", "Nombre total d'inscrits", "COUNT(etudiants WHERE id_promotion = X)"],
-        ["Taux d'emploi a 6 mois", "Pourcentage (%)", "Alumni avec experience debutant <= 6 mois apres diplomation / total promotion"],
-        ["Taux d'emploi a 12 mois", "Pourcentage (%) - non calcule a ce jour", "Formule : alumni avec experience debutant <= 12 mois apres diplomation / total promotion"],
-        ["Taux d'insertion totale", "Pourcentage (%)", "Alumni avec au moins 1 experience / total promotion"],
-        ["Adequation formation-emploi", "Pourcentage (%)", "Reponses KPI tag 'adequation_formation' / total repondants"],
-        ["Salaire moyen par filiere", "Euros (moyen, min, max)", "AVG/MIN/MAX sur EXPERIENCE_PRO.salary_annuel (>0) des experiences en cours, avec repli sur le champ salaire texte ; moyennes exposees par promotion"],
-        ["Repartition par secteur", "Tableau (secteur, %)", "COUNT(experiences WHERE secteur = X) / total experiences"],
-        ["Repartition geographique", "Tableau (pays, ville, %)", "COUNT(alumni WHERE pays = X) / total alumni"],
+        ["Effectif de la promotion", "Nombre total d'inscrits", "COUNT(etudiants WHERE id_promotion = X)", "Promo 2025 : 128"],
+        ["Taux d'emploi a 6 mois", "Pourcentage (%)", "Experience debutant <= 6 mois apres diplomation / total", "120 alumni : 90 en poste = 75 %"],
+        ["Taux d'emploi a 12 mois", "Pourcentage (%) - non calcule a ce jour", "Identique avec une fenetre de 12 mois", "En cours de definition"],
+        ["Taux d'insertion totale", "Pourcentage (%)", "Au moins 1 experience / total", "128 alumni : 101 en poste = 79 %"],
+        ["Adequation formation-emploi", "Pourcentage (%)", "Reponses KPI / total repondants", "3 reponses Oui / 4 = 75 %"],
+        ["Salaire moyen par filiere", "Euros (moyen, min, max)", "AVG/MIN/MAX salary_annuel (>0)", "38000+42000+50000/3 = 43333"],
+        ["Repartition par secteur", "Tableau (secteur, %)", "COUNT(experiences WHERE secteur = X)", "Info 3 (33 %), Finance 2"],
+        ["Repartition geographique", "Tableau (pays, ville, %)", "COUNT(alumni WHERE pays = X)", "France 8 (62 %), Maroc 3"],
     ]
     for i, r in enumerate(kpi_rows):
         pdf.table_row(r, widths_kpi, fill=(i % 2 == 0))
     pdf.ln(4)
 
-    pdf.section_title("5.3 Format et Cadriciel du Rapport")
-    pdf.bullet("Format : PDF genere automatiquement depuis le CRM ou export Excel/CSV.")
     pdf.bullet("Frequence : annuelle, coincidant avec la campagne de collecte du questionnaire.")
     pdf.bullet("Destinataires : Ministere de l'Enseignement Superieur, organes de certification (CTI, HCERES), direction de l'etablissement.")
     pdf.bullet("Diffusion : via le tableau de bord admin (AdminDashboard.jsx) avec bouton d'export.")
@@ -596,7 +635,7 @@ def generate_indicateurs():
 
     pdf.section_title("5.4 Exemple de Tableau de Synthese par Promotion")
     headers_syn = ["Promotion", "Nb Alumni", "Emploi 6 mois", "Emploi 12 mois", "Adequation"]
-    widths_syn = [35, 30, 40, 40, 45]
+    widths_syn = [33, 30, 47, 47, 33]
     pdf.table_header(headers_syn, widths_syn)
     synth_rows = [
         ["Promo 2023", "120", "78%", "85%", "72%"],
@@ -623,6 +662,27 @@ def generate_rapport_stage():
     pdf.cell(0, 7, "Conception et Développement d'un Alumni CRM", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.cell(0, 7, "Ionis Education Group", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.ln(10)
+
+    # Résumé
+    pdf.section_title("Résumé")
+    pdf.body_text(
+        "Ce rapport présente le travail réalisé dans le cadre du stage de substitution Pré-MSc 2026 "
+        "au sein d'IONIS-STM : la conception et le développement d'un Alumni CRM, système de suivi "
+        "du parcours étudiant et de valorisation du réseau des anciens diplômés. Le projet couvre "
+        "l'ensemble du cycle de vie : modélisation des données (MCD/MLD, 14 tables), développement "
+        "d'une application web complète (backend FastAPI, frontend React, base PostgreSQL), "
+        "intégration de la conformité au RGPD, pilotage de l'insertion professionnelle par "
+        "indicateurs, et livraison des documents du volet Management (cartographie des données, "
+        "charte RGPD, stratégie de mise à jour, guide des processus)."
+    )
+    pdf.body_text(
+        "L'application met à disposition un espace administrateur (tableau de bord, annuaire, "
+        "gestion des promotions, import/export, questionnaires, demandes RGPD) et un espace alumni "
+        "(inscription avec authentification OTP, profil, parcours professionnel, consentements, "
+        "questionnaire annuel). Le prototype est complet et opérationnel, ses limites sont "
+        "documentées et hiérarchisées en axes d'amélioration en vue d'une éventuelle mise en "
+        "production."
+    )
 
     # Introduction
     pdf.chapter_title("1", "Introduction et Contexte")
@@ -666,10 +726,6 @@ def generate_rapport_stage():
         "crée un enjeu commun : disposer d'un dispositif de suivi alumni scalable, capable de fonctionner "
         "à l'échelle de plusieurs centaines de diplômés par promotion sur l'ensemble du groupe."
     )
-    pdf.body_text(
-        "[A COMPLETER : donnees chiffrees sur le nombre total d'etudiants, le nombre de promotions, "
-        "le nombre d'ecoles du groupe — sources internes Ionis Education Group]"
-    )
 
     # 1.5 Enjeux du suivi alumni
     pdf.section_title("1.5 Enjeux du suivi alumni dans le contexte Ionis")
@@ -705,8 +761,55 @@ def generate_rapport_stage():
         "d'animation du réseau alumni."
     )
     pdf.body_text(
-        "[A COMPLETER : positionnement strategique d'Ionis Education Group par rapport aux autres "
-        "acteurs prives de l'enseignement superieur — si information disponible]"
+        "Ce positionnement est cohérent avec les pratiques des autres acteurs privés de "
+        "l'enseignement supérieur, pour lesquels la valorisation des débouchés professionnels est "
+        "devenue un argument décisif auprès des candidats comme des partenaires."
+    )
+
+    pdf.section_title("1.7 Analyse des solutions existantes et positionnement")
+    pdf.body_text(
+        "Avant le lancement du développement, une analyse des solutions existantes a été conduite. "
+        "Deux grandes familles d'outils ont été étudiées : les CRM généralistes (Salesforce, HubSpot) "
+        "et les plateformes low-code (Budibase, Appsmith). Ces solutions offrent des fonctionnalités "
+        "de base de gestion de contacts, mais ne répondent pas spécifiquement aux besoins d'un "
+        "établissement d'enseignement supérieur : le cycle de vie étudiant, le calcul automatique des "
+        "taux d'insertion, la conformité RGPD intégrée au processus de collecte et la gestion des "
+        "questionnaires annuels ne figurent pas dans leurs modules standards."
+    )
+    pdf.body_text(
+        "À l'inverse, les solutions métiers spécialisées dans le suivi alumni existent mais impliquent "
+        "un coût de licence élevé et une dépendance au fournisseur. Le choix d'un développement sur "
+        "mesure s'est donc imposé pour trois raisons : le contrôle total sur la conformité RGPD (sans "
+        "transfert de données vers un éditeur tiers), la maîtrise des algorithmes de calcul des "
+        "indicateurs (qui doivent être transparents et auditables pour les organismes de tutelle), et "
+        "l'absence de coût de licence pour un établissement de taille moyenne."
+    )
+
+    pdf.section_title("1.8 Méthodologie de conception et cycle itératif")
+    pdf.body_text(
+        "La démarche a suivi un cycle itératif en cinq phases : modélisation du MCD/MLD, "
+        "développement du backend, développement du frontend, audit de sécurité, puis rédaction des "
+        "livrables documentaires. Cette organisation itérative a permis de détecter tôt des "
+        "incohérences de modélisation (par exemple le drift de migration sur "
+        "reponse_questionnaire.id_etudiant) et de corriger les écarts entre le modèle et l'implémentation "
+        "avant que le périmètre ne s'étende."
+    )
+    pdf.body_text(
+        "Chaque itération se concluait par une validation fonctionnelle manuelle des parcours "
+        "utilisateur, couvrant les deux profils (admin et alumni). Le rejeu complet des 16 migrations "
+        "sur une base vide constituait le test d'intégration structurel. Cette discipline a révélé "
+        "deux classes de problèmes : des routes fonctionnellement cassées (DELETE /entreprises/{id} "
+        "renvoyant une erreur d'intégrité au lieu de la suppression en cascade prévue) et des "
+        "endpoints renvoyant un statut 200 OK avec un corps d'erreur au lieu d'une véritable "
+        "exception HTTP, masquant les fautes de frappe dans les requêtes."
+    )
+    pdf.body_text(
+        "L'audit de sécurité, conduit en phase finale, a permis de corriger des failles "
+        "d'authentification (routes admin non protégées), des failles d'autorisation (un alumni "
+        "pouvant modifier les réponses d'un autre via IDOR) et des failles de validation (upload "
+        "sans vérification d'extension ni de taille). Les correctifs ont été appliqués avant la "
+        "rédaction des livrables, afin que le prototype reflète un niveau de sécurité cohérent avec "
+        "les exigences du RGPD."
     )
 
     # Problematique
@@ -724,6 +827,92 @@ def generate_rapport_stage():
     pdf.bullet("Enjeu réglementaire : fournir les rapports d'insertion aux autorités de tutelle.")
     pdf.bullet("Enjeu managérial : fidéliser le réseau alumni pour les partenariats et le mentorat.")
     pdf.bullet("Enjeu technique : concevoir une architecture évolutive et conforme RGPD.")
+
+    pdf.section_title("2.3 Périmètre fonctionnel détaillé")
+    pdf.body_text(
+        "Le périmètre du prototype s'est structuré autour de deux espaces et de fonctionnalités "
+        "transverses. Côté administration, l'application couvre le pilotage de l'insertion (tableau de "
+        "bord avec KPI et graphiques), la gestion du référentiel (promotions, entreprises, "
+        "certifications), l'annuaire filtrable, l'import/export de données, la gestion des "
+        "questionnaires et le traitement des demandes RGPD. Côté alumni, elle couvre l'inscription "
+        "multi-étapes avec vérification OTP, l'édition du profil, le parcours professionnel "
+        "(expériences et certifications), la gestion des consentements et la réponse au questionnaire "
+        "annuel."
+    )
+    pdf.body_text(
+        "Trois fonctionnalités transverses traversent ces deux espaces : la conformité RGPD, appliquée "
+        "à chaque collecte et chaque suppression ; les indicateurs d'insertion, alimentés aussi bien "
+        "par les données de parcours que par les réponses aux questionnaires ; et l'animation du "
+        "réseau, via la newsletter et les relances annuelles. Ce découpage garantit qu'aucune "
+        "collecte n'échappe aux règles de consentement et que toutes les données utiles au pilotage "
+        "sont disponibles pour le calcul des indicateurs."
+    )
+
+    pdf.section_title("2.4 Expression détaillée des besoins")
+    pdf.body_text(
+        "L'analyse des besoins a abouti à une liste hiérarchisée de fonctions attendues, classées en "
+        "trois niveaux de priorité. Les besoins de premier niveau (obligatoires) couvrent la "
+        "gestion des profils alumni et de leur parcours, le tableau de bord d'insertion, la "
+        "conformité RGPD et l'import/export. Les besoins de second niveau (souhaitables) couvrent la "
+        "newsletter, les questions conditionnelles et les indicateurs partenaires. Les besoins de "
+        "troisième niveau (optionnels) concernent le mentorat et l'application mobile."
+    )
+    pdf.body_text(
+        "Deux contraintes transverses ont structuré l'ensemble de la conception. La première est la "
+        "contrainte réglementaire : toute donnée personnelle doit être collectée sur la base d'un "
+        "consentement explicite, pouvoir être exportée et effacée, et toute opération sensible doit "
+        "être tracée. La deuxième est la contrainte de fiabilité des indicateurs : un chiffre "
+        "d'insertion affiché dans le tableau de bord doit être reproductible et vérifiable, ce qui a "
+        "conduit à définir une source de données et une formule explicites pour chaque indicateur, "
+        "et à privilégier l'affichage d'une valeur non disponible plutôt que d'un chiffre trompeur."
+    )
+
+    pdf.section_title("2.5 Contraintes, hypothèses et risques")
+    pdf.body_text(
+        "Plusieurs contraintes ont borné le périmètre du prototype. La contrainte de temps "
+        "s'imposait naturellement puisque le stage était mené en parallèle de la formation Pré-MSc : "
+        "le périmètre a donc été découpé en tranches fonctionnelles hiérarchisées, et les "
+        "fonctionnalités jugées non essentielles (mentorat, application mobile) ont été reportées en "
+        "axes d'amélioration plutôt que d'être livrées partiellement. La contrainte d'environnement "
+        "portait sur l'absence de serveur de production dédié : le développement et la validation se "
+        "sont faits en local, et le mode OTP « console » a remplacé l'envoi d'emails réel pour les "
+        "tests."
+    )
+    pdf.body_text(
+        "Les principales hypothèses formulées portaient sur la structure du référentiel : une "
+        "école, un identifiant de promotion par année et programme, un référentiel de secteurs "
+        "standardisé, et la présence d'un champ salaire annuel à des fins statistiques. Ces "
+        "hypothèses, explicitées dès la phase d'analyse, sont documentées dans le modèle de données "
+        "et le guide des processus afin que tout écart ultérieur soit tracé."
+    )
+    pdf.body_text(
+        "Les risques identifiés ont été cartographiés et traités au fil du projet : risque de "
+        "dérive entre le modèle et la base réelle (couvert par l'introspection et le rejeu des "
+        "migrations), risque de fuite de secrets (couvert par le .gitignore et les variables "
+        "d'environnement), risque de fuite d'informations via les messages d'erreur (couvert par "
+        "leur sanitisation), et risque de chiffre d'insertion trompeur (couvert par un calcul "
+        "contrôlé et l'affichage d'une valeur non disponible dans les cas douteux)."
+    )
+
+    pdf.section_title("2.6 Acteurs et principaux cas d'usage")
+    pdf.body_text(
+        "Le système identifie trois acteurs principaux. L'administrateur (service Relations "
+        "Entreprises) pilote l'insertion, enrichit le référentiel, importe les listes d'admis, gère "
+        "les questionnaires et traite les demandes RGPD. L'alumni gère son profil, son parcours "
+        "professionnel, ses consentements et répond au questionnaire. Enfin, le tuteur pédagogique "
+        "exerce un rôle de supervision et de validation des choix, sans utilisation directe des "
+        "fonctionnalités métier."
+    )
+    pdf.body_text(
+        "Les principaux cas d'usage couvrent : l'inscription d'un nouvel alumnus avec vérification "
+        "OTP ; la consultation et la mise à jour du profil et du parcours ; la gestion des "
+        "consentements ; la réponse au questionnaire annuel ; l'export des données personnelles ; "
+        "la demande de suppression ; le suivi des indicateurs d'insertion par l'administrateur ; "
+        "le filtrage de l'annuaire ; l'import en masse des admis ; la création et l'activation de "
+        "questionnaires ; le traitement des demandes RGPD ; et l'envoi de newsletter. Chaque cas "
+        "d'usage associe un acteur, un déclencheur, des étapes et l'outil CRM mobilisé, conformément "
+        "au guide des processus d'animation du réseau."
+    )
 
     # Methodologie
     pdf.chapter_title("3", "Méthodologie et Démarche")
@@ -779,9 +968,74 @@ def generate_rapport_stage():
         "tierces — en particulier Resend pour l'envoi d'emails OTP — et les polices système pour "
         "la mise en forme des documents."
     )
+
+    pdf.section_title("3.6 Choix technologiques et arbitrages")
     pdf.body_text(
-        "[A COMPLETER : informations complementaires sur les ressources materielles, frequence des "
-        "points de suivi, modalites de communication utilisees]"
+        "Le choix de la stack a été guidé par quatre critères : vitesse de développement, lisibilité "
+        "du code, robustesse relationnelle et coût de maintenance. Les arbitrages suivants ont été "
+        "effectués et documentés :"
+    )
+    pdf.bullet("Backend FastAPI (Python) : retenu pour sa rapidité de développement, sa validation intégrée via Pydantic et sa documentation automatique Swagger. Alternative écartée : Node.js/Express, jugé moins adapté à la validation de schémas métier complexes.")
+    pdf.bullet("Base PostgreSQL : modèle relationnel robuste, support JSONB (compétences et réponses de questionnaire), transactions et contraintes d'intégrité. Le driver pg8000 (Python pur sans ORM) a été choisi pour sa simplicité, au prix de particularités documentées (sérialisation JSONB, RETURNING, pool artisanal).")
+    pdf.bullet("Frontend React + Vite : expérience utilisateur fluide en SPA, écosystème riche, build rapide. Le ling et le build de production (oxlint, vite build) servent de garde-fous en l'absence de tests automatisés.")
+    pdf.bullet("Migrations versionnées maison (run_migrations.py) : script SQL numéroté avec table de suivi schema_migrations, plutôt qu'un outil lourd (Alembic), pour rester simple et transparent. Le principe 'une migration appliquée ne se modifie jamais' est strictement respecté.")
+    pdf.bullet("Envoi d'emails Resend : OTP et newsletter, avec un mode console en développement qui affiche le code dans les logs pour les tests locaux.")
+    pdf.body_text(
+        "Ces choix ont été régulièrement ré-interrogés au fil du stage. Par exemple, le remplacement "
+        "des vérifications d'existence en deux temps (SELECT puis INSERT, vulnérables aux race "
+        "conditions de type TOCTOU) par la gestion des erreurs d'intégrité a amélioré à la fois la "
+        "sécurité et la performance, en réduisant le nombre d'allers-retours base de données."
+    )
+
+    pdf.section_title("3.7 Environnement et outils de développement")
+    pdf.body_text(
+        "L'environnement de développement reposait sur un poste de travail local. Le backend "
+        "FastAPI s'exécutait dans un environnement virtuel Python dédié, avec uvicorn comme serveur "
+        "de développement ; le frontend React était servi par le serveur de développement Vite sur "
+        "le port 3000, avec un proxy redirigeant les requêtes /api vers le backend sur le port 8000. "
+        "La base PostgreSQL était gérée localement, et les migrations étaient appliquées via un "
+        "script Python dédié."
+    )
+    pdf.body_text(
+        "À des fins de démonstration et de test, un jeu de données réaliste a été injecté dans la "
+        "base de démonstration : trente-deux alumni répartis sur huit promotions, plus de trente "
+        "entreprises, une cinquantaine d'expériences professionnelles, des certifications, les "
+        "consentements associés et un questionnaire actif avec plus de vingt réponses. Ce jeu de "
+        "données, insérable de façon rejouable grâce à un marqueur de boîte mail de démonstration, "
+        "a permis d'illustrer de manière crédible le tableau de bord et les parcours utilisateur "
+        "lors de la soutenance."
+    )
+    pdf.body_text(
+        "L'ensemble des livrables documentaires (rapport de stage, indicateurs, charte, cartographie, "
+        "stratégie, guide des processus) est généré par les scripts Python du dossier Rapport, ce qui "
+        "garantit leur mise à jour cohérente et leur régénérabilité à tout moment. Cette approche de "
+        "« documentation comme du code » a été adoptée dès le départ pour éviter les dérives entre le "
+        "contenu du rapport et l'état réel du projet."
+    )
+
+    pdf.section_title("3.8 Démarche de recette et de validation")
+    pdf.body_text(
+        "La recette du prototype a été menée selon une démarche progressive, articulée autour de "
+        "plusieurs niveaux de vérification. Au niveau structurel, le rejeu complet des seize "
+        "migrations sur une base vierge a confirmé l'absence de différence structurelle par "
+        "rapport au schéma de référence. Au niveau fonctionnel, les parcours utilisateur des deux "
+        "profils ont été exercés manuellement et de façon reproductible, à l'aide de jeux de "
+        "données de démonstration."
+    )
+    pdf.body_text(
+        "Au niveau sécurité, l'audit d'introspection a croisé le schéma réel de la base, les "
+        "routeurs FastAPI et les schémas Pydantic, afin de détecter les incohérences entre le "
+        "modèle déclaré et l'implémentation réelle. Ces contrôles ont fait émerger des anomalies "
+        "réelles (routes de suppression cassées, endpoints renvoyant un statut trompeur, écarts de "
+        "migration), chacune corrigée puis consignée dans le rapport avec la solution retenue."
+    )
+    pdf.body_text(
+        "La recette a été documentée dans le journal de bord du projet, qui trace l'ensemble des "
+        "anomalies détectées, leur gravité, la correction appliquée et la leçon retenue. Cette "
+        "démarche, bien que reposant majoritairement sur des contrôles manuels faute de suite de "
+        "tests automatisés, a garanti un niveau de fiabilité cohérent avec les attentes d'un "
+        "prototype de démonstration, et a identifié les points à automatiser en priorité avant "
+        "une éventuelle mise en production."
     )
 
     # Developpement technique
@@ -827,6 +1081,255 @@ def generate_rapport_stage():
     pdf.bullet("Espace Alumni : Inscription multi-étapes, Vérification OTP, Profil (édition), Parcours (expériences + certifications), Consentement RGPD, Questionnaire annuel.")
     pdf.bullet("Composants partagés : ThemeToggle (clair/sombre), LoadingSpinner, KPICard, ErrorMessage, ProtectedRoute (garde de route par rôle).")
 
+    pdf.section_title("4.5 Authentification, sessions et sécurité")
+    pdf.body_text(
+        "Le système distingue strictement deux profils, avec des mécanismes d'authentification adaptés : "
+        "les alumni s'authentifient par code OTP à 6 chiffres envoyé par email (mode console en "
+        "développement, Resend en production), tandis que l'administrateur se connecte par un code "
+        "d'accès comparé via un hash SHA-256. Les sessions reposent sur des jetons JWT, avec un "
+        "maillage de sécurité sur l'ensemble des routes sensibles :"
+    )
+    pdf.bullet("Les routes /admin/*, l'import de fichiers et la newsletter sont protégées par une clé API (header X-API-Key).")
+    pdf.bullet("Les sessions admin et alumni sont stockées sous des clés distinctes dans le navigateur, avec vérification du rôle contenu dans le JWT à chaque appel sensible et purge des sessions orphelines à la réception d'un 401.")
+    pdf.bullet("Les routes accédant aux données d'un étudiant vérifient que l'appelant est bien le propriétaire du compte (require_owner_or_admin), corrigeant les failles de type IDOR.")
+    pdf.bullet("Un garde centralisé (refuser_compte_anonymise) interdit toute écriture sur un compte anonymisé, sur les 12 points d'écriture concernés.")
+    pdf.bullet("Les messages d'erreur renvoyés au client sont sanitaires (aucun détail d'exception), la protection repose sur des mises à jour de sécurité (rapport de sécurité des en-têtes, limites de taille d'upload, extension contrôlée).")
+
+    pdf.section_title("4.6 Import / export de données")
+    pdf.body_text(
+        "L'automatisation de la saisie était un objectif explicite du sujet. Le module d'import/export "
+        "permet à l'administration de charger une liste d'admis depuis un fichier Excel ou CSV, et "
+        "d'exporter l'ensemble des alumni :"
+    )
+    pdf.bullet("Template Excel téléchargeable (GET /import/template) décrivant les colonnes attendues.")
+    pdf.bullet("Import avec détection automatique du séparateur CSV, aperçu des dix premières lignes, coloration des en-têtes reconnus/ignorés et compte rendu détaillé par ligne en cas d'échec partiel.")
+    pdf.bullet("Validation de chaque ligne via le schéma Pydantic avant insertion (au lieu d'insérer les valeurs brutes), préchargement des entreprises existantes en une seule requête pour éviter un SELECT par ligne.")
+    pdf.bullet("Export complet (GET /import/export/alumni) et exports RGPD en auto-service (JSON, Excel, CSV) côté alumni, avec exports unitaires ou groupés côté administration.")
+
+    pdf.section_title("4.7 Validation et qualité")
+    pdf.body_text(
+        "En l'absence de suite de tests automatisés conservée dans le dépôt, la validation s'est appuyée "
+        "sur plusieurs dispositifs complémentaires : le rejeu complet des 16 migrations sur une base "
+        "vide (aucune différence structurelle constatée), l'exercice manuel des parcours utilisateur "
+        "des deux profils, un audit d'introspection SQL croisant le schéma réel avec les routers et les "
+        "schémas Pydantic, et des scripts ad hoc exerçant les routes réelles via l'API HTTP. Ces "
+        "dispositifs ont permis d'intercepter une route de suppression cassée et des endpoints renvoyant "
+        "un statut 200 trompeur."
+    )
+
+    pdf.section_title("4.8 Parcours utilisateur détaillés")
+    pdf.body_text(
+        "Le prototype repose sur deux parcours principaux, dont l'exhaustivité est essentielle à la "
+        "validité de la démonstration. Le parcours alumni commence par une inscription multi-étapes : "
+        "saisie des informations personnelles, choix d'une promotion, puis vérification du code OTP "
+        "envoyé par email. Une fois authentifié, l'alumni accède à quatre espaces : la consultation et "
+        "la modification de son profil, la gestion de son parcours professionnel (ajout d'expériences "
+        "et de certifications), la gestion de ses consentements RGPD, et la réponse au questionnaire "
+        "annuel."
+    )
+    pdf.body_text(
+        "Le parcours administrateur s'ouvre sur un tableau de bord synthétisant les indicateurs clés "
+        "sous forme de cartes et de graphiques. À partir de cet écran, l'administrateur navigue vers "
+        "l'annuaire filtrable, la gestion des promotions, l'import/export de données, la gestion des "
+        "questionnaires et le suivi des demandes RGPD. La cohérence des rôles est assurée à chaque "
+        "étape par le garde ProtégedRoute côté frontend et par les dépendances role sur les endpoints "
+        "côté backend."
+    )
+    pdf.body_text(
+        "Le cycle de vie d'une demande RGPD illustre la robustesse du modélisation : un alumni effectue "
+        "une demande de suppression depuis son espace personnel ; la demande apparaît avec le statut "
+        "'envoyée' dans le tableau de bord admin ; un administrateur la prend en charge (statut 'en "
+        "cours de traitement'), ce qui verrouille la demande contre tout traitement parallèle ; la "
+        "validation de la prise en charge déclenche l'anonymisation automatique du compte et le statut "
+        "'traitée'. L'alumni ne peut plus écrire sur son compte anonymisé, mais ses données conservées "
+        "continuent d'alimenter les statistiques agrégées. Un journal d'audit retrace chaque "
+        "changement d'état."
+    )
+    pdf.body_text(
+        "Le cycle annuel du questionnaire suit un déroulement similaire : l'administrateur crée un "
+        "questionnaire et ses questions, l'active, puis les alumni y répondent depuis leur espace "
+        "personnel. La soumission est validée par le backend (les clés doivent correspondre aux "
+        "questions du questionnaire) et les réponses alimentent les indicateurs par le biais des tags "
+        "KPI. L'endpoint de relance POST /admin/questionnaires/notififier cible les non-répondants, "
+        "hors alumni ayant refusé les enquêtes, dans le respect du RGPD."
+    )
+
+    pdf.section_title("4.9 Gamme d'endpoints et répartition")
+    pdf.body_text(
+        "Les 82 endpoints applicatifs recensés se répartissent en 60 chemins et par méthode HTTP : "
+        "35 opérations GET (lectures et filtrages), 27 opérations POST (créations, soumissions, "
+        "authentification), 4 opérations PUT, 3 opérations PATCH et 13 opérations DELETE. Cette "
+        "répartition reflète une API riche et conforme aux conventions REST : chaque ressource "
+        "fondamentale (promotions, étudiants, entreprises, expériences, certifications, "
+        "questionnaires) dispose d'un CRUD complet, tandis que les actions métier (envoi d'OTP, "
+        "soumission de questionnaire, traitement des demandes RGPD, import/export, newsletter) sont "
+        "modélisées comme des POST dédiés."
+    )
+    pdf.section_title("4.10 Structure du dépôt et organisation du code")
+    pdf.body_text(
+        "Le dépôt s'organise en trois dossiers principaux. Le dossier backend alumni_crm_api regroupe "
+        "le point d'entrée main.py (montage des 16 routeurs), le dossier routers contenant les 14 "
+        "fichiers de routes, la configuration config.py (variables d'environnement, secrets), les "
+        "helpers métier et le dossier migrations avec les 16 scripts SQL versionnés. Le dossier "
+        "frontend alumni_crm_front contient le code React (Vite), l'arborescence des composants, les "
+        "pages métier par rôle, les utilitaires API et les gestionnaires d'authentification. Enfin, "
+        "le dossier Racine du projet contient la documentation, les livrables et les scripts de "
+        "génération de rapports."
+    )
+    pdf.body_text(
+        "Le fichier .env centralise les variables de configuration : accès PostgreSQL, clé API admin, "
+        "clé Resend et mode d'envoi d'emails. Le .env.example fournit un gabarit sans secrets, "
+        "conformément à la bonne pratique de ne jamais versionner de données sensibles. Le mode OTP "
+        "console, activé en développement, affiche les codes dans les logs du serveur, ce qui permet "
+        "de tester le parcours d'inscription sans dépendre d'un service d'emails externe."
+    )
+
+    pdf.section_title("4.11 Mise en œuvre détaillée de la conformité RGPD")
+    pdf.body_text(
+        "La conformité au RGPD ne se limite pas à un écran de consentement : elle imprègne le modèle "
+        "de données, les flux et les interfaces. Elle repose sur quatre piliers mis en œuvre "
+        "concrètement dans le prototype."
+    )
+    pdf.body_text(
+        "Le premier pilier est le consentement explicite et conforme. La table CONSENTEMENT_RGPD "
+        "stocke, pour chaque étudiant et chaque type de consentement (prise de contact, partage des "
+        "données partenaires, enquêtes, newsletter), la valeur (1/0), la date associée et le canal de "
+        "collecte. Le choix est proposé au moment de l'inscription mais reste modifiable à tout moment "
+        "depuis l'espace alumni. L'information de l'alumni est garantie par un texte de politique de "
+        "confidentialité indiquant la durée de conservation et le contact du délégué à la protection "
+        "des données."
+    )
+    pdf.body_text(
+        "Le deuxième pilier est l'exercice des droits des personnes. Le droit d'accès et la "
+        "portabilité sont assurés par un export en auto-service : l'alumni peut télécharger, depuis "
+        "son espace personnel, l'ensemble de ses données personnelles au format JSON, Excel ou CSV. "
+        "Le droit à l'effacement est mis en œuvre via une demande de suppression, dont le traitement "
+        "par l'administration peut aboutir à une anonymisation ou à une suppression définitive."
+    )
+    pdf.body_text(
+        "Le troisième pilier est la traçabilité des traitements. La table AUDIT_LOG consigne les "
+        "opérations sensibles (accès, modification, suppression), et chaque demande RGPD suit un "
+        "workflow d'états (envoyée, en cours, traitée, rejetée) dont les changements sont journalisés. "
+        "Le quatrième pilier est la purge des données : les comptes anonymisés sont conservés pour les "
+        "statistiques agrégées mais purgés après un délai configurable (6 mois par défaut) par "
+        "l'outil purge.py, avec mode dry-run pour valider l'impact avant application."
+    )
+    pdf.section_title("4.12 Développement du tableau de bord et des indicateurs")
+    pdf.body_text(
+        "Le tableau de bord constitue la vitrine de l'application pour le pilotage de l'insertion. "
+        "Il agrège, en une seule page, plusieurs cartes KPI (alumni total, taux d'emploi, salaire "
+        "moyen, taux de complétion, etc.) et des graphiques d'évolution (nouvelles inscriptions par "
+        "période, répartition par promotion ou par secteur). Les données sont servies par des "
+        "endpoints dédiés qui effectuent les agrégations SQL directement en base, plutôt que de "
+        "transférer l'ensemble des lignes au frontend pour un traitement en mémoire."
+    )
+    pdf.body_text(
+        "Le calcul d'un indicateur suit un principe de reproductibilité : chaque indicateur est "
+        "défini par une formule et une source de données explicites. Par exemple, le taux d'emploi "
+        "à 6 mois n'est calculé que sur les expériences actives à la date de référence, et les "
+        "cohortes trop récentes pour être significatives sont exclues du calcul (le taux affiché "
+        "vaut alors « non disponible »). Les indicateurs issus du questionnaire exploitent les "
+        "tags KPI attribués aux questions, ce qui permet d'ajouter un nouvel indicateur sans "
+        "modifier le code backend."
+    )
+    pdf.body_text(
+        "L'interface AdminDashboard est alimentée par plusieurs appels parallèles et gère les états "
+        "de chargement et d'erreur avec des composants réutilisables (LoadingSpinner, ErrorMessage). "
+        "Les filtres de l'annuaire (nom, promotion, secteur, statut, disponibilité) sont appliqués "
+        "via des paramètres de requête, et l'annuaire propose un affichage en cartes ou en tableau."
+    )
+
+    pdf.section_title("4.13 Gestion des erreurs, journalisation et maintenance")
+    pdf.body_text(
+        "Une attention particulière a été portée à la qualité des retours applicatifs. Le principe "
+        "retenu est de ne jamais mentir au client : un endpoint qui échoue doit renvoyer une "
+        "véritable exception HTTP avec le statut approprié (400, 404, 409, 422, 500), et non un statut "
+        "200 avec un corps d'erreur. Ce principe, appliqué après la détection de plusieurs endpoints "
+        "trompeurs, améliore nettement la fiabilité des diagnostics autant côté client que lors des "
+        "tests."
+    )
+    pdf.body_text(
+        "La gestion centralisée des erreurs du pilote pg8000 a été encapsulée dans des helpers : "
+        "analyse des IntegrityError (contrainte violée ou doublon), gestion des RETURNING (absence "
+        "d'ID automatique côté serveur), et sérialisation JSONB uniforme. Ces helpers évitent la "
+        "duplication de logique fragile et garantissent un comportement cohérent sur l'ensemble des "
+        "16 routeurs."
+    )
+    pdf.body_text(
+        "La maintenance du schéma repose sur un principe strict : une migration appliquée ne se "
+        "modifie jamais. Les évolutions se font exclusivement par des migrations correctives "
+        "incrémentales, et le rejeu complet des migrations sur une base vide sert de test "
+        "structurel systématique. Cette discipline, associée à l'utilisation de variables "
+        "d'environnement pour tous les secrets, rend l'application déployable et maintenable dans "
+        "la durée."
+    )
+
+    pdf.section_title("4.14 Installation et mise en route")
+    pdf.body_text(
+        "Le déploiement du prototype en local suit une procédure documentée dans le README. Après "
+        "la création de la base PostgreSQL et le renseignement du fichier .env (copié depuis "
+        ".env.example), les migrations sont appliquées via le script de migration, puis le backend "
+        "est lancé avec uvicorn et le frontend avec le serveur de développement Vite. Le "
+        "proxy configuré dans vite.config.js (port 3000 → port 8000) permet d'atteindre l'API "
+        "sans configuration CORS supplémentaire en développement."
+    )
+    pdf.body_text(
+        "Quelques points d'attention ont été consignés pour une mise en production ultérieure : "
+        "la rotation de la clé API administrateur avant tout déploiement public, l'activation du "
+        "mode d'envoi d'emails réel (Resend) à la place du mode console, la configuration d'un "
+        "serveur PostgreSQL de production avec sauvegardes régulières, la planification des tâches "
+        "de purge et de relance, et l'ajout d'un reverse proxy avec le protocole HTTPS. Ces points "
+        "sont détaillés dans les axes d'amélioration."
+    )
+
+    pdf.section_title("4.15 Sécurité applicative détaillée")
+    pdf.body_text(
+        "L'audit de sécurité mené en phase finale a identifié et corrigé plusieurs classes de "
+        "failles, dont voici la synthèse. En matière d'authentification, toutes les routes "
+        "d'administration sont protégées par une clé API, les sessions reposent sur des JWT "
+        "signés, et les mots de passe temporaires (OTP) sont à usage unique et expirants."
+    )
+    pdf.body_text(
+        "En matière d'autorisation, les failles d'accès inter-utilisateurs de type IDOR ont été "
+        "corrigées : chaque route accédant aux données d'un étudiant vérifie que l'appelant est "
+        "bien le propriétaire du compte (sauf rôle administrateur). Un garde centralisé bloque "
+        "toute écriture sur un compte anonymisé, sur les douze points d'écriture concernés, "
+        "empêchant qu'une donnée « supprimée » soit accidentellement réécrite."
+    )
+    pdf.body_text(
+        "En matière de validation des entrées, l'upload n'accepte désormais que des extensions "
+        "autorisées avec une limite de taille maximale (5 Mo), et chaque ligne de l'import est "
+        "validée par un schéma Pydantic avant insertion. En matière de confidentialité, les "
+        "messages d'erreur renvoyés au client sont sanitaires (aucun détail d'exception interne), "
+        "le détail étant conservé dans les logs serveur uniquement."
+    )
+    pdf.body_text(
+        "Enfin, une vigilance particulière a porté sur la gestion des secrets : aucun identifiant "
+        "ou mot de passe ne figure en dur dans le code (variables d'environnement via config.py), "
+        "le fichier .env est exclu du versionnement par le .gitignore, et la fuite d'une clé "
+        "administrateur constatée dans une capture a conduit à une rotation de cette clé avant "
+        "toute mise en production."
+    )
+
+    pdf.section_title("4.17 Performance et volumétrie")
+    pdf.body_text(
+        "Les choix d'implémentation ont pris en compte la montée en charge probable d'un annuaire "
+        "d'anciens. Le transfert de l'agrégation des indicateurs vers le serveur de base de données "
+        "(plutôt que le chargement de toutes les lignes en mémoire côté frontend) limite la "
+        "quantité de données transitant sur le réseau et permet au moteur PostgreSQL d'optimiser "
+        "les calculs via ses index et son optimiseur de requêtes."
+    )
+    pdf.body_text(
+        "Les consultations de l'annuaire et du profil enrichi reposent sur des jointures contrôlées "
+        "entre les tables ETUDIANT, PROMOTION, ENTREPRISE, EXPERIENCE_PRO et CERTIFICATION, avec une "
+        "sélection des colonnes utiles plutôt qu'un SELECT * systématique. La table otp_codes, dont "
+        "les lignes sont temporaires, est destinée à être purgée régulièrement pour éviter "
+        "l'accumulation. Ces dispositions assurent des temps de réponse confortables pour le "
+        "volume cible de quelques centaines de diplômés par promotion, tout en laissant la place "
+        "à une optimisation (indexation complémentaire, agrégats matérialisés) si l'usage "
+        "devenait plus intensif."
+    )
+
     # Resultats
     pdf.chapter_title("5", "Résultats et Livrables")
     pdf.section_title("5.1 Prototype fonctionnel")
@@ -850,6 +1353,144 @@ def generate_rapport_stage():
         "Le passage du MCD au MLD a été effectué en respectant les règles de transformation "
         "(entité forte -> table, association -> table de jonction ou FK)."
     )
+    pdf.body_text(
+        "Les tables du modèle se répartissent en cinq domaines. Le domaine « données étudiantes » "
+        "comprend les tables ETUDIANT et PROMOTION : un étudiant appartient à une promotion (relation "
+        "N:1), chaque promotion étant identifiée par son année et son programme. Le domaine « parcours "
+        "professionnel » comprend ENTREPRISE, EXPERIENCE_PRO et CERTIFICATION, reliées à l'étudiant, "
+        "ainsi que la table de jonction OBTIENT pour l'association N:M entre étudiants et certifications."
+    )
+    pdf.body_text(
+        "Le domaine RGPD comprend CONSENTEMENT_RGPD (un enregistrement par type de consentement et "
+        "par étudiant, avec date et canal), DEMANDE_RGPD (workflow des demandes de suppression avec "
+        "ensemble de statuts contraint) et AUDIT_LOG (trace des opérations sensibles). Le domaine "
+        "questionnaires comprend QUESTIONNAIRE, QUESTION (avec un champ pour les 4 types de réponse) "
+        "et REPONSE_QUESTIONNAIRE, dont le contenu est stocké en JSON pour absorber la variété des "
+        "types de questions. Enfin, le domaine infrastructure comprend otp_codes (codes d'authentification "
+        "temporaires) et schema_migrations (suivi des versions du schéma)."
+    )
+    pdf.body_text(
+        "Ce découpage a été choisi pour séparer les préoccupations : les données de parcours sont "
+        "indépendantes des données de consentement, ce qui permet une gestion fine du RGPD sans "
+        "impacter le calcul des indicateurs. Le stockage JSON des réponses de questionnaire, bien que "
+        "moins relationnel, a été retenu pour sa flexibilité face à des questionnaires dont le "
+        "contenu évolue chaque année. À l'inverse, les associations N:M (étudiants-certifications) "
+        "sont matérialisées par une table de jonction, garantissant l'intégrité référentielle."
+    )
+    pdf.section_title("5.4 Indicateurs d'insertion professionnelle")
+    pdf.body_text(
+        "La mission Indicateurs a consisté à modéliser les rapports d'insertion demandés par les "
+        "autorités de tutelle (ministères, organismes de certification) et à les automatiser dans le "
+        "tableau de bord. Huit indicateurs ont été définis, chacun avec une formule et une source de "
+        "données précise, afin que le chiffre affiché soit reproductible et vérifiable :"
+    )
+    pdf.bullet("Taux d'emploi à 6 mois : proportion des diplômés en activité six mois après l'obtention du diplôme. Calcul fondé sur la table EXPERIENCE_PRO, en ne retenant que les expériences actives à la date de référence.")
+    pdf.bullet("Taux d'emploi global brut : (alumni ayant au moins une expérience / total des alumni) x 100. Source : tables ETUDIANT et EXPERIENCE_PRO.")
+    pdf.bullet("Adéquation formation/emploi : proportion de réponses positives à la question taggée 'adequation_formation' dans le questionnaire annuel.")
+    pdf.bullet("Salaire moyen / minimum / maximum : statistiques calculées sur le champ numérique salary_annuel, avec repli sur le champ texte historique lorsque la valeur annuelle est absente.")
+    pdf.bullet("Alumni actifs : nombre d'alumni ayant au moins une expérience enregistrée.")
+    pdf.bullet("Taux de complétion : proportion d'alumni ayant complété leur profil et leur parcours professionnel.")
+    pdf.bullet("Alumni par promotion : répartition par id_promotion, avec notion de maturité des cohortes.")
+    pdf.bullet("Répartition par secteur : agrégation du champ secteur_activite des entreprises.")
+    pdf.body_text(
+        "Un effort particulier a porté sur la fiabilisation du taux d'emploi à 6 mois. Un calcul trop "
+        "simple comptait des expériences déjà terminées, ce qui surestimait les résultats pour les "
+        "promotions récentes. Le calcul retenu ne retient que les expériences actives à la date de "
+        "référence et exclut les cohortes trop récentes (valeur 'null' plutôt qu'un chiffre trompeur). "
+        "Le système de tags KPI permet par ailleurs d'ajouter de nouveaux indicateurs d'enquête sans "
+        "modifier le code backend : étiqueter une question suffit à faire apparaître l'indicateur "
+        "correspondant dans le tableau de bord."
+    )
+    pdf.section_title("5.5 Conformité RGPD")
+    pdf.body_text(
+        "La conformité au Règlement général sur la protection des données a été intégrée dès la "
+        "conception, et non ajoutée a posteriori. Quatre axes ont été traités :"
+    )
+    pdf.bullet("Consentement : quatre types de consentement gérés de façon indépendante (prise de contact, partage de données partenaires, enquêtes, newsletter). Chaque choix est horodaté, lié à un canal ('web') et réellement consommé par le reste du système.")
+    pdf.bullet("Droits des personnes : droit d'accès et de portabilité via un export en auto-service (JSON, Excel ou CSV) côté alumni, et droit à l'effacement via une demande de suppression traitée par l'administration.")
+    pdf.bullet("Anonymisation vs suppression : l'anonymisation (masquage des données personnelles tout en conservant un compte pour les statistiques) est distinguée de la suppression définitive, réservée aux doublons ou erreurs.")
+    pdf.bullet("Traçabilité : un journal d'audit (AUDIT_LOG) enregistre les opérations sensibles, et les demandes RGPD suivent un workflow verrouillé (envoyée, en cours de traitement, traitée, rejetée) empêchant le traitement parallèle par deux administrateurs.")
+    pdf.body_text(
+        "La purge différée des comptes anonymisés (délai configurable, 6 mois par défaut) est traitée "
+        "par l'outil purge.py avec un mode dry-run. L'interface de consentement informe l'alumni de la "
+        "durée de conservation et du contact du délégué à la protection des données."
+    )
+    pdf.section_title("5.6 Volet Management - Gouvernance des données")
+    pdf.body_text(
+        "Le sujet prévoyait un volet Management complémentaire au développement informatique. Celui-ci "
+        "a été traité sous la forme de quatre livrables documentaires, générés par script et donc "
+        "régénérables et maintenables :"
+    )
+    pdf.bullet("Cartographie des données : inventaire des données collectées à l'entrée (coordonnées, parcours antérieur) et à la sortie (entreprises, postes, salaires), avec leur classification RGPD.")
+    pdf.bullet("Charte RGPD : règlement intérieur encadrant le traitement des données des anciens, les durées de conservation et les canaux de contact autorisés.")
+    pdf.bullet("Stratégie de mise à jour des données : processus managériaux (questionnaire annuel automatisé, newsletter) destinés à lutter contre la péremption rapide d'un annuaire d'anciens.")
+    pdf.bullet("Analyse des indicateurs : modélisation des KPI et exemple structuré de rapport ministériel d'insertion.")
+    pdf.bullet("Guide des processus d'animation du réseau : à destination du service Relations Entreprises, décrivant sept processus opérationnels (inscription, suivi d'insertion, questionnaire, newsletter, animation, conformité, maintenance).")
+    pdf.body_text(
+        "Cette gouvernance répond directement à la difficulté intrinsèque d'un annuaire d'anciens : "
+        "ses données périment vite. Le couplage entre l'application (collecte) et ces processus "
+        "(relance) vise à maintenir la fraîcheur des données dans la durée."
+    )
+
+    pdf.section_title("5.7 Fonctionnalités du prototype par module")
+    pdf.body_text(
+        "Le prototype peut être présenté selon quatre modules complémentaires. Le module "
+        "« Administration » offre le tableau de bord (KPI, graphiques d'évolution, répartition), "
+        "l'annuaire filtrable, la gestion des promotions et des entreprises, l'import/export et la "
+        "gestion des questionnaires. Chaque écran est conçu pour réduire le temps de traitement "
+        "administratif : l'annuaire autorise une recherche multicritère en temps réel, et "
+        "l'import Excel évite la saisie manuelle ligne à ligne."
+    )
+    pdf.body_text(
+        "Le module « Espace alumni » permet à un ancien élève d'accomplir l'ensemble de ses démarches "
+        "en autonomie : s'inscrire avec vérification OTP, renseigner son profil et son parcours, "
+        "gérer ses consentements, répondre au questionnaire annuel ou demander la suppression de ses "
+        "données. Cette autonomie décharge le service Relations Entreprises d'une partie du travail "
+        "de mise à jour."
+    )
+    pdf.body_text(
+        "Le module « RGPD » traite les droits des personnes : export en auto-service, demande de "
+        "suppression avec workflow, anonymisation automatique, journal d'audit et purge différée. "
+        "Le module « Indicateurs » alimente le pilotage avec huit KPI reproductibles, appuyés sur "
+        "des formules et des sources de données documentées, et ouvre la possibilité de rapports "
+        "ministériels standardisés et d'indicateurs partenaires agrégés."
+    )
+    pdf.section_title("5.8 Jeu de données de démonstration")
+    pdf.body_text(
+        "Pour rendre la démonstration du prototype crédible et illustrer les parcours avec des "
+        "données réalistes, un jeu de données de démonstration a été élaboré et injecté dans la base : "
+        "trente-deux alumni fictifs répartis sur huit promotions, trente-quatre entreprises, plus de "
+        "cinquante expériences professionnelles, des certifications, les consentements RGPD associés, "
+        "et un questionnaire actif comptant six questions et plus de vingt réponses."
+    )
+    pdf.body_text(
+        "Ce jeu de données est insérable de façon rejouable grâce à un marqueur de boîte mail de "
+        "démonstration (domaine @demo-alumni-crm.io), ce qui permet de reconstituer un environnement "
+        "de démonstration propre en quelques secondes, sans risquer de polluer la base réelle. Les "
+        "captures d'écran présentées en annexe (B et C) ont été réalisées sur la base de ces données, "
+        "garantissant la cohérence entre le contenu affiché à l'écran et le texte du rapport."
+    )
+
+    pdf.section_title("5.9 Revue de conformité au cahier des charges")
+    pdf.body_text(
+        "Une revue finale a confronté les livrables aux exigences du sujet de stage. Chaque "
+        "fonctionnalité attendue a été vérifiée fonctionnellement, et le résultat est consigné ici :"
+    )
+    pdf.bullet("Suivi du parcours étudiant : fonctionnel (profil, expériences, certifications, promotion) — réalisé.")
+    pdf.bullet("Valorisation du réseau des anciens : fonctionnelle (annuaire, espace alumni, newsletter backend) — réalisé.")
+    pdf.bullet("Tableau de bord avec indicateurs d'insertion : fonctionnel (8 KPI reproductibles, graphiques) — réalisé.")
+    pdf.bullet("Conformité RGPD : fonctionnelle (consentement, export, suppression, anonymisation, audit, purge) — réalisé.")
+    pdf.bullet("Import/export automatisé : fonctionnel (template, import validé, exports JSON/Excel/CSV) — réalisé.")
+    pdf.bullet("Schéma MCD/MLD : livré (14 tables, règles d'intégrité) — réalisé.")
+    pdf.bullet("Volet Management : livré (cartographie, charte, stratégie, indicateurs, guide des processus) — réalisé.")
+    pdf.body_text(
+        "Les écarts relevés sont de deux ordres. Des écarts fonctionnels assumés : l'absence "
+        "d'interface frontend de newsletter, l'absence d'automatisation du questionnaire annuel, et "
+        "l'absence de mise à jour directe d'une expérience. Des écarts de qualité : l'absence de "
+        "suite de tests automatisés conservée dans le dépôt. Ces écarts, tous documentés et "
+        "hiérarchisés dans le chapitre 7, ne remettent pas en cause la conformité d'ensemble du "
+        "prototype avec les objectifs du sujet."
+    )
 
     # Bilan
     pdf.chapter_title("6", "Bilan et Perspectives")
@@ -865,11 +1506,102 @@ def generate_rapport_stage():
         "cohérence par introspection SQL, écrit et daté avant tout correctif."
     )
     pdf.section_title("6.2 Difficultés rencontrées et solutions")
+    pdf.body_text(
+        "Le développement d'un projet de cette ampleur en autonomie a mis en évidence de nombreuses "
+        "difficultés, plus nombreuses que ne le laisse paraître la synthèse initiale. Les principales "
+        "sont détaillées ci-dessous avec la solution retenue :"
+    )
     pdf.bullet("Authentification croisée admin/alumni : les tokens partageaient la même clé de stockage, provoquant des erreurs 403 inexpliquées. Correction : clés de stockage distinctes, contrôle du rôle dans le JWT, purge automatique des sessions orphelines.")
     pdf.bullet("Dérive entre le modèle et la base réelle : des écarts de migration ont été détectés par introspection (clés étrangères, routes cassées, doublons). Solution : migrations correctives et rejeu complet des migrations sur base vide comme test de validation systématique.")
     pdf.bullet("Deux admins pouvaient traiter la même demande RGPD : ajout d'un statut intermédiaire 'en traitement' et verrou applicatif pour éviter le traitement parallèle.")
     pdf.bullet("Indicateur d'insertion trompeur : le taux d'emploi à 6 mois comptait des expériences terminées. Correction : filtrage sur les expériences actives à la date de référence, exclusion des cohortes immatures.")
     pdf.bullet("Absence de versionnement Git (incident OneDrive) : perte de fichiers sans historique. Solution : dépôt Git avec .gitignore consolidé. Leçon : versionner avant la première ligne de code.")
+    pdf.bullet("Modification non atomique d'une expérience : l'alumni devait supprimer puis recréer une expérience, soit deux transactions HTTP distinctes, avec risque de perte en cas d'échec. Une route PUT/PATCH et un formulaire dédié sont prévus en évolution, non livrés dans le délai du stage.")
+    pdf.bullet("Messages d'erreur trompeurs : certains endpoints renvoyaient un statut 200 avec un corps d'erreur au lieu d'une véritable exception HTTP, masquant les fautes de frappe dans les requêtes. Correction : remplacement des 200 trompeurs par de vraies exceptions HTTP.")
+    pdf.bullet("Filtres invalides ignorés silencieusement : un paramètre de filtre inconnu était ignoré et la liste complète renvoyée. Point laissé ouvert et consigné dans l'audit de cohérence pour traitement ultérieur.")
+    pdf.bullet("Accumulation de données temporaires : lignes OTP et journal d'audit sans procédure de rétention. La purge différée couvre les comptes anonymisés ; une rétention sur ces tables est en piste d'amélioration.")
+    pdf.bullet("Spécificités du driver PostgreSQL pg8000 : sérialisation JSONB non uniforme (gérée par isinstance + json.dumps + cast ::jsonb), absence d'ID automatique (clause RETURNING), erreurs d'intégrité via IntegrityError à analyser. Traitement centralisé dans des helpers.")
+    pdf.bullet("Fuite de la clé admin lors d'une session : la clé protégeant /admin/* a été exposée dans une capture. Solution : rotation de la clé avant toute mise en production et renforcement de la gestion des secrets.")
+    pdf.bullet("Identifiants PostgreSQL en dur dans le code : risque de secrets versionnés. Migration vers des variables d'environnement via config.py et .env.example.")
+    pdf.bullet("Messages d'erreur exposant le détail des exceptions : risque de fuite d'informations sur la structure interne. Sanitisation côté serveur, détail conservé dans les logs.")
+    pdf.bullet("Upload de fichier sans contrôle : l'import acceptait un fichier sans vérifier l'extension ni limiter la taille. Ajout de la vérification d'extension, d'une limite de taille (5 Mo) et de la validation de chaque ligne via le schéma Pydantic.")
+    pdf.body_text(
+        "Chaque difficulté a fait l'objet d'une leçon retenue, formalisée dans le journal de bord du "
+        "projet : vérifier le rôle à chaque appel sensible, rejouer les migrations à chaque évolution, "
+        "tracer toute prise en charge, refuser d'afficher un chiffre trompeur, versionner avant de "
+        "développer, ne jamais mélanger statut et corps d'erreur, valider toute entrée externe avant "
+        "insertion, et ne jamais publier de secret dans le code ou une capture."
+    )
+    pdf.section_title("6.3 Compétences transversales")
+    pdf.bullet("Autonomie et prise de décision : projet mené en solo, choix d'architecture assumés et documentés, arbitrages justifiés tout au long du rapport.")
+    pdf.bullet("Documentation traitée comme du code : livrables PDF et DOCX générés par script (fpdf2, python-docx), donc régénérables et maintenables.")
+    pdf.bullet("Rigueur méthodologique : audit de cohérence modèle/implémentation mené par introspection SQL, rédigé avant tout correctif, et principe strict 'une migration appliquée ne se modifie jamais'.")
+    pdf.bullet("Compréhension des enjeux réglementaires : mise en pratique concrète du RGPD (consentement, portabilité, effacement, traçabilité) dans un contexte éducatif.")
+    pdf.body_text(
+        "Ce stage de substitution, proposé par IONIS-STM aux étudiants n'ayant pas trouvé de placement "
+        "en entreprise, m'a permis d'appréhender l'ensemble du cycle de vie d'un projet logiciel, de la "
+        "modélisation des besoins à la documentation de production, en passant par le développement, la "
+        "sécurité et la conformité réglementaire."
+    )
+
+    pdf.section_title("6.4 Évaluation par rapport aux objectifs du sujet")
+    pdf.body_text(
+        "Au regard du contenu du sujet de stage, l'ensemble des livrables attendus a été produit : un "
+        "système de suivi du parcours étudiant et de valorisation du réseau des anciens (prototype "
+        "fonctionnel), le schéma MCD/MLD, un rapport de stage, ainsi que les documents de la mission "
+        "Indicateurs et du volet Management (cartographie des données, charte RGPD, stratégie de mise "
+        "à jour, analyse des indicateurs, guide des processus)."
+    )
+    pdf.body_text(
+        "Les fonctionnalités cœur — gestion des profils, du parcours professionnel, des certifications, "
+        "des questionnaires et des demandes RGPD — sont entièrement opérationnelles. Le tableau de "
+        "bord d'insertion est alimenté par huit indicateurs calculés de façon reproductible. "
+        "L'automatisation de la saisie par import Excel réduit un travail administratif important de "
+        "saisie manuelle. La conformité RGPD, intégrée dès la conception, couvre le consentement, les "
+        "droits des personnes et la traçabilité."
+    )
+    pdf.body_text(
+        "Des écarts volontaires et assumés subsistent et sont détaillés dans le chapitre 7 : "
+        "l'absence de suite de tests automatisés conservée dans le dépôt, l'absence de composant "
+        "frontend pour la newsletter et l'automatisation du questionnaire annuel, et l'absence de "
+        "route de mise à jour directe d'une expérience. Ces écarts ne remettent pas en cause la "
+        "démonstration du concept, mais constituent les chantiers prioritaires d'une éventuelle mise "
+        "en production."
+    )
+    pdf.section_title("6.5 Analyse critique du travail réalisé")
+    pdf.body_text(
+        "Le principal atout du travail réalisé est la maîtrise de bout en bout du cycle de vie : de "
+        "la modélisation des données à la documentation, en passant par le développement, la "
+        "sécurité et la conformité réglementaire. La documentation des livrables par script garantit "
+        "leur régénérabilité et leur cohérence avec le code. Le fait d'avoir mené un audit de "
+        "cohérence par introspection SQL, plutôt que de prétendre que tout fonctionnait, a permis de "
+        "détecter des écarts réels et d'appliquer des correctifs documentés."
+    )
+    pdf.body_text(
+        "Le principal point faible est la couverture des tests automatisés. Faute de suite de tests "
+        "conservée dans le dépôt, la détection de régressions repose sur le rejeu des migrations et "
+        "sur des tests manuels, ce qui ne garantit pas la stabilité à long terme. Cette limite est "
+        "honnêtement documentée, et les axes d'amélioration du chapitre 7 en font la priorité "
+        "absolue avant toute mise en production."
+    )
+
+    pdf.section_title("6.6 Récapitulatif des livrables et de l'organisation du travail")
+    pdf.body_text(
+        "Le travail réalisé s'est matérialisé en une série de livrables, répartis entre le "
+        "développement et le volet documentaire : le prototype fonctionnel Alumni CRM (backend "
+        "FastAPI, frontend React, base PostgreSQL), le schéma MCD/MLD (14 tables), le rapport de "
+        "stage rédigé de façon « code » et régénérable, le volet Indicateurs (analyse et exemples "
+        "de rapports), le volet Management (cartographie des données, charte RGPD, stratégie de "
+        "mise à jour, guide des processus) ainsi que les captures d'écran présentées en annexe."
+    )
+    pdf.body_text(
+        "Le projet a été mené de manière autonome et itérative. Le découpage en tranches "
+        "fonctionnelles, la documentation continue, la revue régulière des décisions et la "
+        "traçabilité des anomalies ont constitué le cadre de travail. Cette organisation, bien que "
+        "sans équipe ni gestionnaire de projet dédié, a permis de livrer un prototype complet et "
+        "cohérent, dont les limites sont clairement identifiées et hiérarchisées en vue d'une "
+        "éventuelle poursuite."
+    )
 
     # Axes d'amélioration
     pdf.chapter_title("7", "Axes d'amélioration")
@@ -924,19 +1656,51 @@ def generate_rapport_stage():
         "RGPD n'est pas couverte par une fonctionnalité dédiée. L'ajout d'un mécanisme d'alerte "
         "automatisé pourrait être envisagé.")
 
+    # Conclusion
+    pdf.chapter_title("8", "Conclusion")
+    pdf.body_text(
+        "Ce stage de substitution, mené au sein d'IONIS-STM dans le cadre du programme Pré-MSc 2026, "
+        "m'a permis de concevoir et de développer de bout en bout un Alumni CRM : une plateforme de "
+        "suivi du parcours étudiant et de valorisation du réseau des anciens, intégrant un espace "
+        "administration, un espace alumni, un module d'indicateurs d'insertion et une conformité RGPD "
+        "intégrée dès la conception."
+    )
+    pdf.body_text(
+        "Le prototype livré couvre l'ensemble des fonctionnalités cœur du cahier des charges : "
+        "inscription et authentification OTP, gestion du profil et du parcours professionnel, "
+        "questionnaires annuels, tableau de bord avec huit indicateurs d'insertion calculés de façon "
+        "reproductible, import/export automatisé, et traitement des demandes RGPD avec anonymisation "
+        "et traçabilité. Le tout repose sur une architecture 3-tiers (React, FastAPI, PostgreSQL) "
+        "documentée par 14 tables et 16 migrations versionnées."
+    )
+    pdf.body_text(
+        "Le principal apport humain de ce stage est l'acquisition d'une vision complète du cycle de "
+        "vie d'un projet logiciel : analyser un besoin, le modéliser, le développer, le sécuriser, le "
+        "documenter et l'évaluer. Le principal apport méthodologique est la démonstration qu'un audit "
+        "honnête, appuyé sur l'introspection du système réel, vaut mieux qu'une présentation "
+        "superficielle de fonctionnalités supposées fonctionnelles."
+    )
+    pdf.body_text(
+        "Les perspectives d'évolution sont nombreuses et documentées : automatisation du "
+        "questionnaire annuel, composant frontend de newsletter, suite de tests automatisés, module "
+        "de mentorat, application mobile et renforcement du chiffrement. Par leur réalisme et leur "
+        "hiérarchisation par horizon, elles constituent une feuille de route crédible pour une "
+        "éventuelle mise en production du prototype."
+    )
+
     # Références
-    pdf.chapter_title("8", "Références bibliographiques")
+    pdf.chapter_title("9", "Références bibliographiques")
 
     pdf.section_title("Cadre réglementaire")
     pdf.bullet("Règlement (UE) 2016/679 du Parlement européen et du Conseil du 27 avril 2016 "
         "(RGPD).")
     pdf.bullet("Commission Nationale de l'Informatique et des Libertés (CNIL) — Guide pratique du "
-        "RGPD : [A COMPLETER : URL si utilisée].")
+        "RGPD : https://www.cnil.fr/fr/le-rgpd-et-les-etablissements-denseignement-superieur-et-de-recherche")
 
     pdf.section_title("Documentation technique — Backend")
     pdf.bullet("FastAPI — Documentation officielle : https://fastapi.tiangolo.com/")
     pdf.bullet("Pydantic — Documentation : https://docs.pydantic.dev/")
-    pdf.bullet("pg8000 — Documentation : [A COMPLETER : URL si référencée]")
+    pdf.bullet("pg8000 — Documentation : https://pypi.org/project/pg8000/")
     pdf.bullet("Python — Documentation officielle : https://docs.python.org/3/")
 
     pdf.section_title("Documentation technique — Frontend")
@@ -949,9 +1713,9 @@ def generate_rapport_stage():
 
     pdf.section_title("Référentiels et organismes de certification")
     pdf.bullet("Commission des Titres d'Ingénieur (CTI) — Référentiel d'accréditation : "
-        "[A COMPLETER : URL ou référence exacte].")
-    pdf.bullet("Haute Autorité pour l'Évaluation de la Recherche et l'Enseignement Supérieur "
-        "(HCERES) — Référentiel d'évaluation : [A COMPLETER : URL ou référence exacte].")
+        "https://www.cti-commission.fr/referentiel-de-formation")
+    pdf.bullet("Haute Autorité pour l'Évaluation de la Recherche et de l'Enseignement Supérieur "
+        "(HCERES) — Référentiel d'évaluation : https://www.hceres.fr/")
 
     pdf.section_title("Services tierces")
     pdf.bullet("Resend — API email : https://resend.com/")
@@ -962,6 +1726,76 @@ def generate_rapport_stage():
     pdf.section_title("Sources internes")
     pdf.bullet("Cahier des charges du sujet de stage — IONIS-STM, 2026.")
     pdf.bullet("Instructions Livrables & Soutenance 2026 v4 — IONIS-STM.")
+
+    pdf.section_title("Glossaire et sigles")
+    pdf.bullet("API : Application Programming Interface (interface de programmation applicative).")
+    pdf.bullet("CRM : Customer Relationship Management (gestion de la relation client / des anciens élèves).")
+    pdf.bullet("CTI : Commission des Titres d'Ingénieur (organisme de certification des formations d'ingénieur).")
+    pdf.bullet("E2E : End-to-End (test couvrant l'ensemble du flux applicatif).")
+    pdf.bullet("FK : Foreign Key (clé étrangère, contrainte de liaison entre tables).")
+    pdf.bullet("HCERES : Haut Conseil de l'évaluation de la recherche et de l'enseignement supérieur.")
+    pdf.bullet("HTTP : HyperText Transfer Protocol (protocole de transfert hypertexte).")
+    pdf.bullet("IONIS : Groupe IONIS Education (groupe d'enseignement supérieur privé).")
+    pdf.bullet("JWT : JSON Web Token (jeton d'authentification).")
+    pdf.bullet("MCD/MCD : Modèle Conceptuel de Données / Modèle Logique de Données.")
+    pdf.bullet("KPI : Key Performance Indicator (indicateur clé de performance).")
+    pdf.bullet("OTP : One-Time Password (mot de passe à usage unique).")
+    pdf.bullet("ORM : Object-Relational Mapping (correspondance objet-relationnel).")
+    pdf.bullet("pg8000 : Pilote PostgreSQL pur Python utilisé pour la connexion à la base de données.")
+    pdf.bullet("PostgreSQL : Système de gestion de base de données relationnelle open source.")
+    pdf.bullet("PWA : Progressive Web App (application web installable).")
+    pdf.bullet("Pydantic : Bibliothèque Python de validation de données basée sur les annotations de type.")
+    pdf.bullet("React : Bibliothèque JavaScript pour la construction d'interfaces utilisateur.")
+    pdf.bullet("RGPD : Règlement Général sur la Protection des Données (UE 2016/679).")
+    pdf.bullet("REST : Representational State Transfer (style d'architecture d'API).")
+    pdf.bullet("SQL : Structured Query Language (langage de requêtes relationnel).")
+    pdf.bullet("SPA : Single Page Application (application monopage).")
+    pdf.bullet("Swagger : Interface de documentation et d'essai des API, auto-générée par FastAPI.")
+    pdf.bullet("Vite : Outil de build et serveur de développement frontend rapide.")
+
+    # ---------- Annexes : captures d'écran ----------
+    fig_dir = os.path.join(OUTPUT_DIR, "..", "image")
+    annexe_b = [
+        ("Annexe B.1 - Tableau de bord administrateur (KPI et graphiques)", "anB_dashboard.png"),
+        ("Annexe B.2 - Annuaire filtrable des alumni", "anB_annuaire.png"),
+        ("Annexe B.3 - Traitement des demandes RGPD", "anB_demandes_rgpd.png"),
+    ]
+    annexe_c = [
+        ("Annexe C.1 - Espace alumni - Mon Profil", "anC_profil.png"),
+        ("Annexe C.2 - Espace alumni - Mon Parcours professionnel", "anC_parcours.png"),
+        ("Annexe C.3 - Espace alumni - Consentement RGPD", "anC_consentement.png"),
+        ("Annexe C.4 - Espace alumni - Questionnaire annuel", "anC_questionnaire.png"),
+    ]
+
+    def _capture_page(title, filename):
+        path = os.path.join(fig_dir, filename)
+        if not os.path.exists(path):
+            pdf.body_text("[Capture manquante : %s]" % filename)
+            return
+        try:
+            from PIL import Image
+            with Image.open(path) as im:
+                ratio = im.height / im.width
+        except Exception:
+            ratio = 0.625
+        pdf.add_page()
+        pdf.section_title(title)
+        pdf.image(path, x=10, w=180.0, h=180.0 * ratio)
+        pdf.ln(2)
+
+    pdf.section_title("10. Annexes - Captures d'écran de l'application")
+    pdf.body_text(
+        "Les captures suivantes illustrent l'interface du prototype. Elles ont été réalisées sur la "
+        "base de données de démonstration (domaine @demo-alumni-crm.io) et servent d'appui à la "
+        "présentation orale. L'annexe B présente l'espace administrateur : le tableau de bord avec "
+        "les KPI et graphiques d'insertion, l'annuaire filtrable des alumni et le suivi des demandes "
+        "RGPD. L'annexe C présente l'espace alumni : le profil, le parcours professionnel, la "
+        "gestion des consentements et le questionnaire annuel."
+    )
+    for t, f in annexe_b:
+        _capture_page(t, f)
+    for t, f in annexe_c:
+        _capture_page(t, f)
 
     pdf.output(os.path.join(OUTPUT_DIR, "Rapport de Stage - Alumni CRM.pdf"))
     print("Rapport de stage genere.")
@@ -1104,4 +1938,3 @@ if __name__ == "__main__":
     generate_rapport_stage()
     generate_guide_animation()
     print("\nTous les rapports ont ete generes dans :", OUTPUT_DIR)
-

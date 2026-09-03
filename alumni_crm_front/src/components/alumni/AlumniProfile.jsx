@@ -239,7 +239,7 @@ export default function AlumniProfile() {
           </div>
           <div>
             <label className={labelClass}>Email académique</label>
-            <input type="email" name="email_academique" value={profile.email_academique} onChange={handleProfileChange} placeholder="prenom.nom@univ.fr" className={inputClass} />
+            <input type="email" name="email_academique" value={profile.email_academique} onChange={handleProfileChange} placeholder="prenom.nom@ionis-stm.com" className={inputClass} />
           </div>
           <div className="md:col-span-2">
             <label className={labelClass}>Parcours antérieur</label>

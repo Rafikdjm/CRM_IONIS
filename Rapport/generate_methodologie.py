@@ -3,19 +3,104 @@ import docx
 from docx import Document
 from docx.shared import Pt, RGBColor, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
 
 OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+HEADER_FILL = 'DBEAFE'      # bleu clair
+STRIPE_FILL = 'F4F7FC'      # gris très clair (alternance)
+BODY_FILL = 'FFFFFF'
+BORDER_HEX = 'C4D2E2'       # bordure fine gris-bleu
+HEADER_TEXT = RGBColor(0x1E, 0x29, 0x3B)
+BODY_TEXT = RGBColor(0x37, 0x41, 0x51)
+TABLE_FONT_PT = 10
 
 
 def set_cell_bg(cell, color_hex):
     tcPr = cell._tc.get_or_add_tcPr()
-    from docx.oxml.ns import qn
-    from docx.oxml import OxmlElement
     shd = OxmlElement('w:shd')
     shd.set(qn('w:val'), 'clear')
     shd.set(qn('w:color'), 'auto')
     shd.set(qn('w:fill'), color_hex)
     tcPr.append(shd)
+
+
+def _set_cell_borders(cell, hexcolor=BORDER_HEX, width='4'):
+    tcPr = cell._tc.get_or_add_tcPr()
+    borders = OxmlElement('w:tcBorders')
+    for edge in ('top', 'left', 'bottom', 'right'):
+        el = OxmlElement(f'w:{edge}')
+        el.set(qn('w:val'), 'single')
+        el.set(qn('w:sz'), width)
+        el.set(qn('w:space'), '0')
+        el.set(qn('w:color'), hexcolor)
+        borders.append(el)
+    tcPr.append(borders)
+
+
+def _write_cell(cell, text, bold=False, color=BODY_TEXT, size=TABLE_FONT_PT):
+    cell.text = ''
+    p = cell.paragraphs[0]
+    p.paragraph_format.space_after = Pt(2)
+    p.paragraph_format.space_before = Pt(2)
+    run = p.add_run(text)
+    run.font.bold = bold
+    run.font.size = Pt(size)
+    run.font.color.rgb = color
+
+
+def _set_row_keep_together(row):
+    """w:cantSplit → une ligne ne peut pas être coupée entre deux pages."""
+    trPr = row._tr.get_or_add_trPr()
+    cant = OxmlElement('w:cantSplit')
+    trPr.append(cant)
+
+
+def _set_row_repeat_header(row):
+    """w:tblHeader → l'en-tête est répété quand le tableau se poursuit sur une page."""
+    trPr = row._tr.get_or_add_trPr()
+    th = OxmlElement('w:tblHeader')
+    trPr.append(th)
+
+
+def _set_col_widths(table, widths_cm):
+    table.autofit = False
+    for row in table.rows:
+        for idx, w in enumerate(widths_cm):
+            if idx < len(row.cells):
+                row.cells[idx].width = Cm(w)
+
+
+def styled_table(doc, headers, rows, widths_cm, header_bold_cols=None):
+    """Table uniforme : en-tête bleu clair gras, bordures fines, alternance de lignes."""
+    table = doc.add_table(rows=0, cols=len(headers))
+    table.style = 'Table Grid'
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    table.autofit = False
+
+    hdr = table.add_row().cells
+    _set_row_repeat_header(table.rows[0])
+    _set_row_keep_together(table.rows[0])
+    for i, h in enumerate(headers):
+        set_cell_bg(hdr[i], HEADER_FILL)
+        _set_cell_borders(hdr[i])
+        _write_cell(hdr[i], h, bold=True, color=HEADER_TEXT)
+
+    header_bold_cols = header_bold_cols or set()
+    for r, row in enumerate(rows):
+        cells = table.add_row().cells
+        _set_row_keep_together(table.rows[r + 1])
+        fill = STRIPE_FILL if r % 2 == 1 else BODY_FILL
+        for i, val in enumerate(row):
+            set_cell_bg(cells[i], fill)
+            _set_cell_borders(cells[i])
+            _write_cell(cells[i], val, bold=(i in header_bold_cols))
+
+    _set_col_widths(table, widths_cm)
+    doc.add_paragraph()
+    return table
 
 
 def titre(doc, text):
@@ -65,24 +150,24 @@ def bullet(doc, text):
 
 
 def indicateur_table(doc, rows):
-    table = doc.add_table(rows=1, cols=2)
-    table.style = 'Light Grid Accent 1'
-    hdr = table.rows[0].cells
-    hdr[0].text = 'Champ'
-    hdr[1].text = 'Valeur'
-    set_cell_bg(hdr[0], 'DBEAFE')
-    set_cell_bg(hdr[1], 'DBEAFE')
-    for champ, valeur in rows:
-        r = table.add_row().cells
-        r[0].text = champ
-        r[1].text = valeur
-        r[0].paragraphs[0].runs[0].font.bold = True
-    doc.add_paragraph()
-    return table
+    return styled_table(
+        doc,
+        headers=['Champ', 'Valeur'],
+        rows=[(champ, valeur) for champ, valeur in rows],
+        widths_cm=[4.0, 12.0],
+        header_bold_cols={0},
+    )
 
 
 def generate():
     doc = Document()
+    sec = doc.sections[0]
+    sec.page_width = Cm(21.0)
+    sec.page_height = Cm(29.7)
+    sec.left_margin = Cm(2.2)
+    sec.right_margin = Cm(2.2)
+    sec.top_margin = Cm(2.4)
+    sec.bottom_margin = Cm(2.6)
     titre(doc, "Methodologie des indicateurs d'insertion")
     sous_titre(doc, "CRM Alumni (IONIS STM) - Fiche de reference complete et fidele au code")
     body(doc, "Chaque indicateur est documente avec sa formule exacte, ses tables/colonnes, ses exclusions et un exemple chiffre calcule comme le font les requetes SQL reelles du backend (routers/admin.py).")
@@ -188,17 +273,12 @@ def generate():
         ("GET /admin/indicateurs/kpi-tags-actifs", "Tags DISTINCT des questionnaires actifs"),
         ("GET /admin/indicateurs/partenaires", "Indicateurs anonymises restreints aux alumni 'partage_donnees' actif"),
     ]
-    table = doc.add_table(rows=1, cols=2)
-    table.style = 'Light Grid Accent 1'
-    hdr = table.rows[0].cells
-    hdr[0].text = 'Endpoint'
-    hdr[1].text = 'Description'
-    set_cell_bg(hdr[0], 'DBEAFE')
-    set_cell_bg(hdr[1], 'DBEAFE')
-    for e, d in endpoints:
-        r = table.add_row().cells
-        r[0].text = e
-        r[1].text = d
+    styled_table(
+        doc,
+        headers=['Endpoint', 'Description'],
+        rows=[(e, d) for e, d in endpoints],
+        widths_cm=[5.0, 11.0],
+    )
 
     # 4. Cas limites
     chapitre(doc, 4, "Cas limites & alertes")
