@@ -20,7 +20,7 @@ utils.py               # helper de sérialisation cursor -> dict
 main.py                 # assemble les routers + CORS
 run_migrations.py      # exécute les migrations SQL numérotées avec tracking (schema_migrations)
 purge.py               # CLI : purge définitive différée des comptes anonymisés RGPD (--dry-run)
-migrations/            # migrations SQL numérotées 000 → 014
+migrations/            # migrations SQL numérotées 000 → 015
 routers/
   promotions.py         # /promotions          : CRUD des promotions
   etudiants.py          # /etudiants           : CRUD étudiants + profil alumni
@@ -70,9 +70,9 @@ contrôle ad hoc qui exercent les routes réelles via l'API HTTP (voir
 « Test fonctionnel de bout en bout » ci-dessous) et sur le rejeu complet des
 migrations sur une base vide.
 
-**Frontend** : les dépendances et la configuration Vitest restent en place
-(`npm test` dans `alumni_crm_front`), mais aucune suite de tests automatisés
-n'est fournie dans le dépôt à l'issue du stage.
+**Frontend** : aucune suite de tests automatisés n'est fournie dans le dépôt ;
+la configuration Vitest n'a pas été conservée (le `package.json` ne contient
+pas de script `test`).
 
 ### Test fonctionnel de bout en bout (E2E)
 

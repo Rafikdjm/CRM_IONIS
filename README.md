@@ -29,18 +29,25 @@ Alumni CRM est une application web 3-tiers qui permet à un établissement d'ens
 
 ```
 alumni_crm_api/     Backend FastAPI (+ README détaillé : routes, sécurité, corrections)
-alumni_crm_front/   Frontend React/Vite (config Vitest présente, pas de suite de tests conservée)
-Rapport/            Livrables PDF générés par generate_reports.py
-                    (rapport de stage, cartographie des données, charte RGPD,
-                     stratégie de mise à jour, indicateurs d'insertion,
-                     guide d'animation du réseau)
-MCD_MLD V2.loo      Modèle Looping (conception MCD/MLD initiale)
-alumni_crm_api/
   docs/             erd_alumni_crm.mmd / .docx (MLD régénéré par introspection)
   migrations/       Migrations SQL numérotées 000 → 015
-Rapport/
-  methodologie_indicateurs_dashboard.md   (méthodologie indicateurs, version simplifiée)
+alumni_crm_front/   Frontend React/Vite (espace admin + espace alumni)
+Rapport/            Rapport de stage (LaTeX) + livrables — voir ci-dessous
+image/              Captures d'écran du rapport (26 fichiers PNG)
+MCD_MLD V3.loo      Modèle Looping (conception MCD/MLD)
 ```
+
+## Rapport de stage et livrables
+
+- **`Rapport/rapport.tex`** — rapport de stage en **LaTeX** (source unique de
+  vérité) ; à compiler sur Overleaf sous le nom `main.tex` avec le dossier
+  `image/` (captures d'écran). Un miroir Markdown (`Rapport/rapport.md`) est
+  maintenu à jour.
+- **`Rapport/`** — autres livrables PDF/DOCX générés (cartographie des données,
+  charte RGPD, stratégie de mise à jour, indicateurs d'insertion, guide
+  d'animation du réseau) par `generate_reports.py` / `generate_methodologie.py`.
+- **`Rapport/Soutenance - Alumni CRM - PreMSc 2026.pptx`** — support de soutenance
+  (généré par `generate_soutenance.py`).
 
 ## Démarrage rapide
 
@@ -81,12 +88,12 @@ Variables d'environnement attendues (fichier `.env`) :
 ```bash
 cd alumni_crm_front
 npm install
-npm run dev      # http://localhost:5173
-npm test         # config Vitest (aucune suite de tests fournie)
+npm run dev      # http://localhost:3000
+npm run lint     # oxlint
 ```
 
 ## Documentation complémentaire
 
 - [`alumni_crm_api/README.md`](alumni_crm_api/README.md) — architecture backend, liste des routers, test E2E, limites connues.
 - [`AUDIT_COHERENCE_TABLES.txt`](alumni_crm_api/AUDIT_COHERENCE_TABLES.txt) — audit base/API par introspection SQL.
-- [`Rapport/`](Rapport/) — livrables PDF du sujet de stage.
+- [`Rapport/`](Rapport/) — rapport de stage (LaTeX) et livrables PDF/DOCX du sujet de stage.
