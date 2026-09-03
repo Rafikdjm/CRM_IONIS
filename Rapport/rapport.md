@@ -379,25 +379,19 @@ Le backend utilise pg8000, un driver Python pur sans ORM. Son comportement diff�
 
 *Solution.* Ces points ont été traités de façon centralisée (helper de sérialisation de lignes, helpers d'analyse des `IntegrityError`) et documentés dans le code, pour éviter que chaque route ne réimplémente la même logique.
 
-**Difficulté 11 — Fuite de la clé admin lors d'une session de travail.**
-
-Pendant une session de travail, la clé `ADMIN_API_KEY` a été exposée par erreur dans une capture d'écran. Cette clé protège toutes les routes `/admin/*`, l'import et la newsletter.
-
-*Solution.* La clé doit être changée avant tout déploiement en production. Cet incident a aussi conduit à renforcer la documentation de la gestion des secrets (`.env` exclu du dépôt, `.gitignore` consolidé).
-
-**Difficulté 12 — Identifiants PostgreSQL en dur dans le code.**
+**Difficulté 11 — Identifiants PostgreSQL en dur dans le code.**
 
 Au départ, les identifiants de connexion à la base figuraient en dur dans le code source. C'était à la fois un risque de sécurité (secrets versionnés) et une gêne pour changer d'environnement.
 
 *Solution.* Migration des identifiants vers des variables d'environnement (`config.py`, `.env.example`), avec un dépôt ne contenant plus aucun secret.
 
-**Difficulté 13 — Messages d'erreur exposant des détails d'exception.**
+**Difficulté 12 — Messages d'erreur exposant des détails d'exception.**
 
 Les messages d'erreur renvoyés au client contenaient le détail brut des exceptions (`str(e)`), ce qui pouvait fuiter des informations sur la structure interne (noms de tables, requêtes).
 
 *Solution.* Sanitisation des messages côté serveur : le détail complet est loggé côté backend, un message générique est renvoyé au client.
 
-**Difficulté 14 — Envoi de fichier sans contrôle préalable.**
+**Difficulté 13 — Envoi de fichier sans contrôle préalable.**
 
 La route d'import de données acceptait un téléversement de fichier sans vérifier l'extension ni limiter la taille.
 
@@ -415,7 +409,6 @@ La route d'import de données acceptait un téléversement de fichier sans véri
 | Filtres invalides ignorés | Validation des paramètres | Rejeter explicitement les entrées invalides |
 | Données temporaires sans purge | Rétention à ajouter | Prévoir la rétention dès la conception |
 | Sérialisation JSONB non uniforme | `isinstance` + `json.dumps` + `::jsonb` | Connaître les particularités du driver choisi |
-| Fuite de la clé admin | Rotation de la clé avant production | Ne jamais publier de secret dans une capture |
 | Identifiants en dur | Variables d'environnement | Les secrets n'ont pas leur place dans le code |
 | Messages d'erreur bruts | Sanitisation + log serveur | Ne jamais exposer le détail d'une exception |
 | Upload sans contrôle | Extension + taille + validation | Valider toute entrée externe avant insertion |

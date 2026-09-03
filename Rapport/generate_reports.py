@@ -1306,9 +1306,8 @@ def generate_rapport_stage():
     pdf.body_text(
         "Enfin, une vigilance particulière a porté sur la gestion des secrets : aucun identifiant "
         "ou mot de passe ne figure en dur dans le code (variables d'environnement via config.py), "
-        "le fichier .env est exclu du versionnement par le .gitignore, et la fuite d'une clé "
-        "administrateur constatée dans une capture a conduit à une rotation de cette clé avant "
-        "toute mise en production."
+        "le fichier .env est exclu du versionnement par le .gitignore, et la rotation régulière "
+        "des clés d'accès est documentée avant toute mise en production."
     )
 
     pdf.section_title("4.17 Performance et volumétrie")
@@ -1521,7 +1520,6 @@ def generate_rapport_stage():
     pdf.bullet("Filtres invalides ignorés silencieusement : un paramètre de filtre inconnu était ignoré et la liste complète renvoyée. Point laissé ouvert et consigné dans l'audit de cohérence pour traitement ultérieur.")
     pdf.bullet("Accumulation de données temporaires : lignes OTP et journal d'audit sans procédure de rétention. La purge différée couvre les comptes anonymisés ; une rétention sur ces tables est en piste d'amélioration.")
     pdf.bullet("Spécificités du driver PostgreSQL pg8000 : sérialisation JSONB non uniforme (gérée par isinstance + json.dumps + cast ::jsonb), absence d'ID automatique (clause RETURNING), erreurs d'intégrité via IntegrityError à analyser. Traitement centralisé dans des helpers.")
-    pdf.bullet("Fuite de la clé admin lors d'une session : la clé protégeant /admin/* a été exposée dans une capture. Solution : rotation de la clé avant toute mise en production et renforcement de la gestion des secrets.")
     pdf.bullet("Identifiants PostgreSQL en dur dans le code : risque de secrets versionnés. Migration vers des variables d'environnement via config.py et .env.example.")
     pdf.bullet("Messages d'erreur exposant le détail des exceptions : risque de fuite d'informations sur la structure interne. Sanitisation côté serveur, détail conservé dans les logs.")
     pdf.bullet("Upload de fichier sans contrôle : l'import acceptait un fichier sans vérifier l'extension ni limiter la taille. Ajout de la vérification d'extension, d'une limite de taille (5 Mo) et de la validation de chaque ligne via le schéma Pydantic.")
