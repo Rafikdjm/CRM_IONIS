@@ -264,7 +264,7 @@ def build():
     _top_bar(s, "Architecture 3-tiers")
     _bullets(s, Inches(0.9), Inches(1.3), Inches(6.0), Inches(3.0), [
         "Frontend React + Vite (SPA) : espace Admin et Alumni, proxy /api → 8000.",
-        "Backend FastAPI : 82 endpoints, 16 routeurs, validations Pydantic, Swagger.",
+        "Backend FastAPI : 83 endpoints, 16 routeurs, validations Pydantic, Swagger.",
         "PostgreSQL : 14 tables, 16 migrations versionnées, JSONB.",
         "Sécurité : OTP email, JWT, clé API admin, anti-IDOR.",
     ], size=15, gap=7)
@@ -273,7 +273,7 @@ def build():
              "émis pour accéder à son profil.", y=Inches(4.85))
     layers = [
         ("FRONTEND", "React + Vite\n(SPA)", BLUE),
-        ("BACKEND", "FastAPI\n82 endpoints", ACCENT),
+        ("BACKEND", "FastAPI\n83 endpoints", ACCENT),
         ("BASE", "PostgreSQL\n14 tables", DARK),
     ]
     x = Inches(7.2)

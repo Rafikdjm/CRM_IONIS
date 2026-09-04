@@ -926,7 +926,7 @@ def generate_rapport_stage():
     pdf.bullet("Mise en place des règles d'intégrité (clés étrangères, cascade, contraintes UNIQUE).")
     pdf.bullet("Prototype du schéma API (endpoints REST, authentification OTP + JWT).")
     pdf.section_title("3.3 Phase de développement (Semaines 5-10)")
-    pdf.bullet("Développement itératif du backend (API REST complète, 82 endpoints).")
+    pdf.bullet("Développement itératif du backend (API REST complète, 83 endpoints).")
     pdf.bullet("Développement du frontend React (14 pages, composants partagés).")
     pdf.bullet("Intégration de la conformité RGPD (consentement, export, suppression, audit).")
     pdf.bullet("Validation fonctionnelle par tests manuels des parcours, scripts ad hoc d'exercice des routes réelles et rejeu complet des migrations sur base vide (aucune suite de tests automatisés conservée dans le dépôt).")
@@ -1062,7 +1062,7 @@ def generate_rapport_stage():
     )
 
     pdf.section_title("4.3 Backend API (FastAPI)")
-    pdf.body_text("L'API expose 82 endpoints REST organisés en 16 routeurs montés (14 fichiers) :")
+    pdf.body_text("L'API expose 83 endpoints REST organisés en 16 routeurs montés (14 fichiers) :")
     pdf.bullet("Authentification : OTP send/verify, admin login, API key validation.")
     pdf.bullet("Gestion des promotions : CRUD complet.")
     pdf.bullet("Gestion des étudiants/alumni : CRUD + profil enrichi (jointures promotion, entreprise, expériences, certifications).")
@@ -1156,8 +1156,8 @@ def generate_rapport_stage():
 
     pdf.section_title("4.9 Gamme d'endpoints et répartition")
     pdf.body_text(
-        "Les 82 endpoints applicatifs recensés se répartissent en 60 chemins et par méthode HTTP : "
-        "35 opérations GET (lectures et filtrages), 27 opérations POST (créations, soumissions, "
+        "Les 83 endpoints applicatifs recensés se répartissent en 60 chemins et par méthode HTTP : "
+        "36 opérations GET (lectures et filtrages), 27 opérations POST (créations, soumissions, "
         "authentification), 4 opérations PUT, 3 opérations PATCH et 13 opérations DELETE. Cette "
         "répartition reflète une API riche et conforme aux conventions REST : chaque ressource "
         "fondamentale (promotions, étudiants, entreprises, expériences, certifications, "

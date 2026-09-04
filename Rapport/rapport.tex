@@ -258,7 +258,7 @@ Ce stage, réalisé au sein d'IONIS-STM dans le cadre du programme \textbf{Pré-
 La problématique identifiée était l'absence d'un outil centralisé permettant à un établissement d'enseignement supérieur de suivre le cycle de vie de ses étudiants --- de l'inscription administrative à l'évolution professionnelle post-diplôme --- et de disposer d'indicateurs d'insertion fiables pour le pilotage de la formation. Les données d'insertion étaient dispersées, les indicateurs calculés manuellement, le réseau alumni inactif et la conformité RGPD non formalisée.
 
 \medskip
-La démarche a consisté à concevoir et développer une application complète --- backend, base de données, frontend et conformité réglementaire --- en suivant une approche itérative. Le système repose sur une architecture \textbf{3-tiers} (FastAPI, React/Vite, PostgreSQL) avec \textbf{14 tables} de base de données, \textbf{82 endpoints} API, \textbf{14 routes} frontend et \textbf{8 indicateurs} d'insertion professionnelle.
+La démarche a consisté à concevoir et développer une application complète --- backend, base de données, frontend et conformité réglementaire --- en suivant une approche itérative. Le système repose sur une architecture \textbf{3-tiers} (FastAPI, React/Vite, PostgreSQL) avec \textbf{14 tables} de base de données, \textbf{83 endpoints} API, \textbf{14 routes} frontend et \textbf{8 indicateurs} d'insertion professionnelle.
 
 \medskip
 Le projet a abouti à un \textbf{prototype fonctionnel} couvrant l'intégralité du périmètre défini dans le sujet de stage. La conformité RGPD a été intégrée dès la conception~: consentements traçables, workflow de demandes de suppression et d'anonymisation, journal d'audit et durée de conservation affichée. Un audit de sécurité a permis de corriger des failles d'authentification et de protéger des routes initialement ouvertes. Les livrables documentaires complémentaires (cartographie des données, charte RGPD, stratégie de mise à jour, analyse des indicateurs d'insertion et guide des processus d'animation du réseau) couvrent les exigences du volet Management du sujet de stage.
@@ -285,7 +285,7 @@ This internship, completed at IONIS-STM as part of the 2026 Pre-MSc program, foc
 The core issue was the lack of a unified tool enabling a higher-education institution to monitor students throughout their entire journey --- from initial enrollment to post-graduation professional development --- and to produce reliable insertion indicators for program evaluation. Student data was scattered across disconnected channels, insertion rates were computed manually, the alumni network was dormant, and GDPR compliance had not been formalized.
 
 \medskip
-The approach followed an iterative cycle: data modeling, backend development, frontend implementation, security audit, and documentation. The resulting system is built on a 3-tier architecture (FastAPI, React/Vite, PostgreSQL) and includes \textbf{14 database tables}, \textbf{82 API endpoints}, \textbf{14 frontend routes}, and \textbf{8 professional insertion indicators}.
+The approach followed an iterative cycle: data modeling, backend development, frontend implementation, security audit, and documentation. The resulting system is built on a 3-tier architecture (FastAPI, React/Vite, PostgreSQL) and includes \textbf{14 database tables}, \textbf{83 API endpoints}, \textbf{14 frontend routes}, and \textbf{8 professional insertion indicators}.
 
 \medskip
 The project delivered a functional prototype covering the full scope defined in the internship brief. GDPR compliance was embedded from the start: traceable consent management, a deletion/anonymization request workflow, an audit log, and visible data retention periods. A security audit led to the correction of authentication flaws and the protection of initially unprotected routes. Supplementary documentation (data mapping, GDPR charter, update strategy, insertion indicator analysis, and alumni network process guide) fulfills the Management track requirements of the internship specification.
@@ -509,7 +509,7 @@ Le passage du MCD au MLD a respecté les règles de transformation standard (ent
 
 \subsection{Mission 2 --- Développement du backend API}
 
-J'ai développé une API REST complète avec FastAPI (Python). L'API comprend \textbf{16 routeurs} et \textbf{82 endpoints} couvrant~:
+J'ai développé une API REST complète avec FastAPI (Python). L'API comprend \textbf{16 routeurs} et \textbf{83 endpoints} couvrant~:
 
 \begin{itemize}
   \item Authentification (OTP email + code à 6 chiffres, clé d'accès API admin, sessions JWT)
@@ -590,7 +590,7 @@ Le prototype résultant de ce stage couvre l'intégralité du périmètre foncti
 
 \begin{itemize}
   \item \textbf{14 tables} de base de données, validées par introspection et rejeu complet des 16 migrations sur une base vide (0 différence structurelle constatée).
-  \item \textbf{82 endpoints} API avec authentification OTP + JWT et protection admin, dont les ajouts de fin de stage~: \texttt{POST /newsletter/envoyer} (newsletter avec filtres de ciblage), \texttt{POST /admin/questionnaires/notififier} (relance questionnaire avec filtres de ciblage et exclusion RGPD) et \texttt{GET /admin/indicateurs/partenaires} (indicateurs agrégés anonymisés).
+  \item \textbf{83 endpoints} API avec authentification OTP + JWT et protection admin, dont les ajouts de fin de stage~: \texttt{POST /newsletter/envoyer} (newsletter avec filtres de ciblage), \texttt{POST /admin/questionnaires/notififier} (relance questionnaire avec filtres de ciblage et exclusion RGPD), \texttt{GET /admin/indicateurs/partenaires} (indicateurs agrégés anonymisés) et \texttt{GET /admin/demandes-rgpd/bulk/export} (export groupé compatible avec les téléchargements natifs mobiles).
   \item \textbf{14 routes} frontend couvrant les espaces admin et alumni.
   \item \textbf{8 indicateurs} d'insertion professionnelle, dont 6 exposés via des endpoints dédiés, complétés d'un endpoint agrégé partenaire.
   \item \textbf{5 documents} de livraison complémentaires couvrant les exigences \og{}Management\fg{} du sujet~: cartographie des données (M1), charte RGPD (M2), stratégie de mise à jour des données (M3), analyse des indicateurs d'insertion (M4) et guide des processus d'animation du réseau (livrable attendu).
@@ -1159,7 +1159,7 @@ Le guide complet est livré séparément~: \texttt{Rapport/Guide des Processus -
 
 \chapter{Liste des endpoints API}
 
-L'API expose \textbf{82 endpoints} REST répartis sur \textbf{16 routeurs} (60 chemins). La liste exhaustive des méthodes et chemins est consultable directement dans la documentation Swagger générée automatiquement par FastAPI (endpoint \texttt{/docs}). Les principaux domaines sont~: Authentification (3), Promotions (5), Étudiants (7), Entreprises (5), Expériences (5), Certifications (8), RGPD alumni (7), RGPD admin (9), Annuaire/Indicateurs (8), Nettoyage (6), Import/Export (3), Questionnaires alumni (4), Questionnaires admin (9), Newsletter (1).
+L'API expose \textbf{83 endpoints} REST répartis sur \textbf{16 routeurs} (60 chemins). La liste exhaustive des méthodes et chemins est consultable directement dans la documentation Swagger générée automatiquement par FastAPI (endpoint \texttt{/docs}). Les principaux domaines sont~: Authentification (3), Promotions (5), Étudiants (7), Entreprises (5), Expériences (5), Certifications (8), RGPD alumni (7), RGPD admin (11), Annuaire/Indicateurs (8), Nettoyage (6), Import/Export (3), Questionnaires alumni (4), Questionnaires admin (9), Newsletter (1).
 
 \textbf{Documentation Swagger (FastAPI).} La figure suivante montre la page \texttt{/docs} générée automatiquement, avec la liste des routeurs et la console d'essai intégrée.
 

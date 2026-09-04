@@ -58,7 +58,7 @@ src/
     shared/    ThemeToggle (clair/sombre), KPICard, LoadingSpinner, ProtectedRoute
   contexts/    Thème clair/sombre
   services/    api.js — client axios (baseURL '/api')
-  utils/       Helpers (emails académiques, téléchargement blob)
+  utils/       Helpers (emails académiques, téléchargement natif par URL avec `?token=`)
 ```
 
 ## Authentification

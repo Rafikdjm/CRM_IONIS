@@ -16,7 +16,7 @@ Ce stage, réalisé au sein d'IONIS-STM dans le cadre du programme Pré-MSc 2026
 
 La problématique partait d'un constat simple. L'établissement ne disposait d'aucun outil pour suivre le cycle de vie complet d'un étudiant, de son inscription jusqu'à son évolution professionnelle. Les données d'insertion étaient dispersées, les indicateurs calculés manuellement, le réseau alumni inactif et la conformité RGPD non formalisée. Le sujet posait donc quatre défis : centraliser les données, fiabiliser les indicateurs d'insertion, animer le réseau, et intégrer la conformité réglementaire dès la conception.
 
-La démarche a suivi un cycle itératif : modélisation de la base de données, développement du backend, développement du frontend, audit de sécurité, puis rédaction des livrables documentaires. Le système repose sur une architecture trois tiers (FastAPI, React/Vite, PostgreSQL) et compte 14 tables, 82 endpoints API, 14 routes frontend et 8 indicateurs d'insertion professionnelle.
+La démarche a suivi un cycle itératif : modélisation de la base de données, développement du backend, développement du frontend, audit de sécurité, puis rédaction des livrables documentaires. Le système repose sur une architecture trois tiers (FastAPI, React/Vite, PostgreSQL) et compte 14 tables, 83 endpoints API, 14 routes frontend et 8 indicateurs d'insertion professionnelle.
 
 Le projet a abouti à un prototype fonctionnel couvrant l'intégralité du périmètre défini dans le sujet de stage. La conformité RGPD a été intégrée dès la conception : consentements traçables, workflow de demandes de suppression et d'anonymisation, journal d'audit et durée de conservation affichée. Un audit de sécurité a permis de corriger des failles d'authentification et de protéger des routes initialement ouvertes. Les livrables documentaires complémentaires (cartographie des données, charte RGPD, stratégie de mise à jour, analyse des indicateurs d'insertion et guide des processus d'animation du réseau) couvrent le volet Management du sujet. Le principal chantier restant avant la production est l'introduction d'une suite de tests automatisés, absente du dépôt à l'issue du stage.
 
@@ -30,7 +30,7 @@ This internship, completed at IONIS-STM as part of the 2026 Pre-MSc program, foc
 
 The starting point was a simple observation. The institution had no tool to follow a student's full lifecycle, from enrollment to professional development. Employment data was scattered, indicators were computed manually, the alumni network was dormant, and GDPR compliance had not been formalized. The brief therefore set four challenges: centralize the data, make employment indicators reliable, animate the network, and embed regulatory compliance from the start.
 
-The approach followed an iterative cycle: data modeling, backend development, frontend implementation, security audit, then documentation. The resulting system relies on a three-tier architecture (FastAPI, React/Vite, PostgreSQL) and includes 14 database tables, 82 API endpoints, 14 frontend routes, and 8 professional insertion indicators.
+The approach followed an iterative cycle: data modeling, backend development, frontend implementation, security audit, then documentation. The resulting system relies on a three-tier architecture (FastAPI, React/Vite, PostgreSQL) and includes 14 database tables, 83 API endpoints, 14 frontend routes, and 8 professional insertion indicators.
 
 The project delivered a functional prototype covering the full scope defined in the internship brief. GDPR compliance was embedded from the start: traceable consent management, a deletion and anonymization request workflow, an audit log, and visible data retention periods. A security audit led to the correction of authentication flaws and the protection of initially unprotected routes. The supplementary deliverables (data mapping, GDPR charter, data update strategy, insertion indicator analysis, and an alumni network process guide) fulfill the Management track of the specification. The main outstanding work before production is the introduction of an automated test suite, which is absent from the repository at the end of the internship.
 
@@ -187,7 +187,7 @@ Le passage du MCD au MLD a respecté les règles de transformation standard (ent
 
 **Mission 2 — Développement du backend API**
 
-J'ai développé une API REST complète avec FastAPI (Python). L'API compte **16 routeurs** et **82 endpoints** :
+J'ai développé une API REST complète avec FastAPI (Python). L'API compte **16 routeurs** et **83 endpoints** :
 
 - Authentification OTP par email (code à 6 chiffres) côté alumni, code d'accès et clé API côté admin, sessions JWT.
 - Gestion des promotions et des étudiants, avec CRUD complet.
@@ -252,7 +252,7 @@ Le calcul du taux d'emploi à 6 mois a nécessité une fiabilisation. L'ancien c
 Le prototype couvre l'intégralité du périmètre fonctionnel défini dans le sujet officiel.
 
 - **14 tables** de base de données, validées par introspection et rejeu complet des 16 migrations sur une base vide (aucune différence structurelle constatée).
-- **82 endpoints** API avec authentification OTP et JWT et protection admin.
+- **83 endpoints** API avec authentification OTP et JWT et protection admin.
 - **14 routes** frontend couvrant les espaces admin et alumni.
 - **8 indicateurs** d'insertion professionnelle, dont 6 exposés via des endpoints dédiés.
 - **5 documents** de livraison complémentaires couvrant le volet Management du sujet : cartographie des données, charte RGPD, analyse des indicateurs d'insertion, stratégie de mise à jour des données et guide des processus d'animation du réseau.
@@ -662,7 +662,7 @@ Le guide complet est généré séparément (`Guide des Processus - Animation du
 
 ### Annexe J — Liste des endpoints API
 
-L'API expose 82 endpoints applicatifs au total (dont la racine `GET /` qui sert une bienvenue ; les routes système de documentation `/openapi.json`, `/docs`, `/redoc` s'y ajoutent hors périmètre applicatif). Les 81 endpoints métier sont regroupés ci-dessous par domaine, avec la méthode HTTP, le chemin et une description.
+L'API expose 83 endpoints applicatifs au total (dont la racine `GET /` qui sert une bienvenue ; les routes système de documentation `/openapi.json`, `/docs`, `/redoc` s'y ajoutent hors périmètre applicatif). Les 82 endpoints métier sont regroupés ci-dessous par domaine, avec la méthode HTTP, le chemin et une description.
 
 **Authentification (OTP et admin)**
 
@@ -750,6 +750,7 @@ L'API expose 82 endpoints applicatifs au total (dont la racine `GET /` qui sert 
 | POST | `/admin/demandes-rgpd/bulk/traiter` | Traitement groupé de plusieurs demandes |
 | POST | `/admin/demandes-rgpd/bulk/delete` | Suppression définitive de demandes RGPD |
 | POST | `/admin/demandes-rgpd/bulk/export` | Export groupé de plusieurs demandes (avec section « Erreurs ») |
+| GET | `/admin/demandes-rgpd/bulk/export` | Export groupé compatible avec les téléchargements natifs mobiles (`ids=1,2,3`) |
 | GET | `/admin/demandes-rgpd/purge-anonymises` | Aperçu des comptes anonymisés éligibles à la purge (lecture seule) |
 | POST | `/admin/demandes-rgpd/purge-anonymises` | Déclenche la purge définitive des comptes anonymisés éligibles |
 | POST | `/admin/demandes-rgpd/purge-cloturees` | Purge des demandes `traitee`/`rejetee` |
