@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { consentAPI, rgpdAPI } from '../../services/api';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import ErrorMessage from '../shared/ErrorMessage';
-import downloadBlob from '../../utils/downloadBlob';
+import { downloadFileByUrl } from '../../utils/downloadUrl';
 
 export default function AlumniConsent() {
   const [loading, setLoading] = useState(true);
@@ -96,8 +96,7 @@ export default function AlumniConsent() {
     setDemandeError(null);
     setDemandeSuccess(null);
     try {
-      const { blob, filename } = await rgpdAPI.exportData(formatExport);
-      downloadBlob(blob, filename);
+      downloadFileByUrl('/rgpd/export', { format: formatExport });
       setDemandeSuccess('Export généré. Une trace a été enregistrée dans vos demandes.');
       await loadDemandes();
     } catch (err) {

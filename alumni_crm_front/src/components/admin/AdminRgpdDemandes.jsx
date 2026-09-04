@@ -3,6 +3,7 @@ import { adminRgpdAPI, adminIdentityAPI } from '../../services/api';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import ErrorMessage from '../shared/ErrorMessage';
 import downloadBlob from '../../utils/downloadBlob';
+import { downloadFileByUrl } from '../../utils/downloadUrl';
 
 const MAX_BULK_LIGNES = 5;
 
@@ -241,15 +242,8 @@ export default function AdminRgpdDemandes() {
   const handleExport = async (idDemande) => {
     setExportingId(idDemande);
     setError(null);
-    try {
-      const { blob, filename } = await adminRgpdAPI.exportData(idDemande, exportFormat);
-      downloadBlob(blob, filename);
-    } catch (err) {
-      const d = err.response?.data?.detail;
-      setError(typeof d === 'string' ? d : 'Erreur lors de l\'export.');
-    } finally {
-      setExportingId(null);
-    }
+    downloadFileByUrl(`/admin/demandes-rgpd/${idDemande}/export`, { format: exportFormat });
+    setExportingId(null);
   };
 
   const openBulkAction = (action) => {

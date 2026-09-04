@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
-import { importAPI, alumniAPI, careerAPI } from '../../services/api';
+import { importAPI } from '../../services/api';
 import ErrorMessage from '../shared/ErrorMessage';
-import { downloadBlob, prepareIOSWindow } from '../../utils/downloadBlob';
+import { downloadFileByUrl } from '../../utils/downloadUrl';
 
 let xlsxModulePromise = null;
 const loadXlsx = () => {
@@ -17,8 +17,6 @@ const EXPECTED_COLUMNS = [
   'email_academique', 'parcours_anterieur', 'type_contrat', 'date_debut',
   'date_fin', 'poste_actuel',
 ];
-
-const TEMPLATE_COLUMNS = EXPECTED_COLUMNS;
 
 export default function ExcelImport() {
   const [file, setFile] = useState(null);
@@ -101,87 +99,11 @@ export default function ExcelImport() {
   };
 
   const handleExport = async () => {
-    const win = prepareIOSWindow();
-    try {
-      const response = await importAPI.exportData({});
-      const blob = new Blob([response.data], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      });
-      downloadBlob(blob, `alumni_export_${new Date().toISOString().split('T')[0]}.xlsx`, win);
-    } catch {
-      try {
-        await generateClientSideExport(win);
-      } catch {
-        setError('Erreur lors de l\'export des données.');
-      }
-    }
-  };
-
-  const generateClientSideExport = async (win) => {
-    const { utils, write } = await loadXlsx();
-    const res = await alumniAPI.getAll({});
-    const alumniList = res.data || [];
-
-    const rows = await Promise.all(
-      alumniList.map(async (a) => {
-        let experiences = [];
-        try {
-          const expRes = await careerAPI.getByAlumni(a.id);
-          experiences = expRes.data || [];
-        } catch { /* ignore */ }
-        const currentExp = experiences.find((e) => e.is_current) || experiences[0] || {};
-
-        return {
-          'prenom': a.first_name || '',
-          'nom': a.last_name || '',
-          'email': a.email || '',
-          'telephone': a.phone || '',
-          'promotion': a.promotion || '',
-          'entreprise': currentExp.company || '',
-          'poste': currentExp.position || '',
-          'secteur': currentExp.sector || a.sector || '',
-          'linkedin': a.linkedin || '',
-          'adresse': a.address || '',
-          'ville': a.city || '',
-          'pays': a.country || '',
-          'statut_disponibilite': a.availability_status || '',
-          'competences': (a.skills || []).join(', '),
-        };
-      }),
-    );
-
-    const ws = utils.json_to_sheet(rows);
-    const wb = utils.book_new();
-    utils.book_append_sheet(wb, ws, 'Alumni');
-    const wbBlob = write(wb, { bookType: 'xlsx', type: 'blob' });
-    downloadBlob(wbBlob, `alumni_export_${new Date().toISOString().split('T')[0]}.xlsx`, win);
+    downloadFileByUrl('/import/export/alumni');
   };
 
   const handleDownloadTemplate = async () => {
-    const win = prepareIOSWindow();
-    try {
-      const response = await importAPI.downloadTemplate();
-      const blob = new Blob([response.data], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      });
-      downloadBlob(blob, 'modele_import_alumni.xlsx', win);
-    } catch {
-      const { utils, write } = await loadXlsx();
-      const ws = utils.aoa_to_sheet([TEMPLATE_COLUMNS]);
-      const wb = utils.book_new();
-      utils.book_append_sheet(wb, ws, 'Modèle');
-      const exampleRow = [
-        'Jean', 'Dupont', 'jean.dupont@ionis-stm.com', '+33612345678', 'Promo 2020', '2020',
-        'Tech Corp', 'Développeur Senior', 'Technologie', 'France', 'Paris',
-        'https://linkedin.com/in/jeandupont',
-        '15 Rue de Paris', 'Paris', 'France', 'en_poste',
-        'Python, React, Management', '1995-06-15', '2021-09-01', 'jean.dupont@ionis-stm.com',
-        'Licence Informatique - Univ. Paris-Saclay', 'CDI', '2022-03-01', '', 'Oui',
-      ];
-      utils.sheet_add_aoa(ws, [exampleRow], { origin: -1 });
-      const wbBlob = write(wb, { bookType: 'xlsx', type: 'blob' });
-      downloadBlob(wbBlob, 'modele_import_alumni.xlsx', win);
-    }
+    downloadFileByUrl('/import/template');
   };
 
   return (
