@@ -763,22 +763,15 @@ def bulk_delete(body: BulkIds, db=Depends(get_db)):
         cursor.close()
 
 
-@admin_router.post("/bulk/export")
-def bulk_export(
-    body: BulkIds,
-    format: str = Query("json", description="Format de sortie (json/xlsx/csv)"),
-    db=Depends(get_db),
-):
-    """Export groupé de plusieurs demandes.
+def _bulk_export_impl(ids, format, db):
+    """Construit l'export groupé et renvoie la réponse HTTP appropriée.
 
-    json (défaut) : {"<id_demande>": export} + erreurs. xlsx/csv : un fichier
-    avec les lignes de toutes les demandes (colonne id_demande) et, le cas
-    échéant, une feuille/section « Erreurs » pour les comptes introuvables.
+    ids : liste d'id_demande. format : json (défaut) | xlsx | csv.
     """
     _verifier_format(format)
     cursor = db.cursor()
     try:
-        ids = list(dict.fromkeys(body.ids))
+        ids = list(dict.fromkeys(ids))
         placeholders = ",".join(["%s"] * len(ids))
         cursor.execute(
             f"SELECT id_demande, id_etudiant, type_demande, statut FROM DEMANDE_RGPD "
@@ -816,6 +809,42 @@ def bulk_export(
         raise HTTPException(status_code=400, detail="Impossible de générer l'export groupé.")
     finally:
         cursor.close()
+
+
+@admin_router.post("/bulk/export")
+def bulk_export(
+    body: BulkIds,
+    format: str = Query("json", description="Format de sortie (json/xlsx/csv)"),
+    db=Depends(get_db),
+):
+    """Export groupé de plusieurs demandes.
+
+    json (défaut) : {"<id_demande>": export} + erreurs. xlsx/csv : un fichier
+    avec les lignes de toutes les demandes (colonne id_demande) et, le cas
+    échéant, une feuille/section « Erreurs » pour les comptes introuvables.
+    """
+    return _bulk_export_impl(body.ids, format, db)
+
+
+@admin_router.get("/bulk/export")
+def bulk_export_get(
+    ids: str = Query(..., description="Liste d'id_demande séparés par des virgules"),
+    format: str = Query("json", description="Format de sortie (json/xlsx/csv)"),
+    db=Depends(get_db),
+):
+    """Export groupé de plusieurs demandes via GET (download natif mobile).
+
+    Même logique que POST /bulk/export mais les ids sont passés en query
+    (`ids=1,2,3`) pour permettre un téléchargement natif du navigateur sur
+    mobile (impossible d'envoyer un body JSON via un `<a href>`).
+    """
+    try:
+        ids_parses = [int(x) for x in ids.split(",") if x.strip()]
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Parametre 'ids' invalide (entiers séparés par des virgules).")
+    if not ids_parses:
+        raise HTTPException(status_code=422, detail="Aucun id_demande fourni dans 'ids'.")
+    return _bulk_export_impl(ids_parses, format, db)
 
 
 @admin_router.post("/purge-cloturees")

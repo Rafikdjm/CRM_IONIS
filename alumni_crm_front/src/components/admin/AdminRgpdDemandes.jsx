@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { adminRgpdAPI, adminIdentityAPI } from '../../services/api';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import ErrorMessage from '../shared/ErrorMessage';
-import downloadBlob from '../../utils/downloadBlob';
 import { downloadFileByUrl } from '../../utils/downloadUrl';
 
 const MAX_BULK_LIGNES = 5;
@@ -300,9 +299,16 @@ export default function AdminRgpdDemandes() {
           result = await adminRgpdAPI.bulkTraiter(ids, 'rejetee', adminName.trim(), motifRefus.trim());
           break;
         case 'bulk-export': {
-          const res = await adminRgpdAPI.bulkExport(ids, exportFormat);
-          downloadBlob(res.blob, res.filename);
-          result = res.data;
+          if (exportFormat === 'json') {
+            const res = await adminRgpdAPI.bulkExport(ids, 'json');
+            result = res.data;
+          } else {
+            downloadFileByUrl(
+              '/admin/demandes-rgpd/bulk/export',
+              { ids: ids.join(','), format: exportFormat },
+            );
+            result = null;
+          }
           break;
         }
         case 'bulk-delete':
