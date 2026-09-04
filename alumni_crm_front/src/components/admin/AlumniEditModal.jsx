@@ -227,17 +227,17 @@ export default function AlumniEditModal({ alumniId, onClose, onSaved }) {
           ) : null}
         </div>
 
-        <div className="flex justify-end gap-2 border-t border-gray-200 px-6 py-3 dark:border-slate-700">
+        <div className="flex flex-col gap-2 border-t border-gray-200 px-6 py-3 sm:flex-row sm:justify-end dark:border-slate-700">
           <button
             onClick={onClose}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 min-h-[44px]"
+            className="rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 min-h-[44px] sm:w-auto w-full"
           >
             Annuler
           </button>
           <button
             onClick={handleSave}
             disabled={saving || loading || !form}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px]"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px] sm:w-auto w-full"
           >
             {saving ? (
               <>
