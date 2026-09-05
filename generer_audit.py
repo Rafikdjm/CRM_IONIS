@@ -104,7 +104,7 @@ date_audit = datetime.date.today().strftime("%d/%m/%Y")
 
 p = doc.add_paragraph()
 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-run = p.add_run(f"Date de l'audit : {date_audit} (mise a jour du document initial du 19/08/2026)\nÉchéance soutenance : 19 septembre 2026")
+run = p.add_run(f"Date de l'audit : {date_audit} (mise a jour du document initial du 19/08/2026)\nÉchéance soutenance : 18 septembre 2026")
 run.font.size = Pt(12)
 run.font.color.rgb = RGBColor(0x55, 0x55, 0x55)
 
@@ -490,7 +490,7 @@ doc.add_page_break()
 # ═══════════════════════════════════════════════════════════════════
 # 5. PLAN D'ACTION
 # ═══════════════════════════════════════════════════════════════════
-doc.add_heading("5. PLAN D'ACTION PRIORITAIRE AVANT LA SOUTENANCE (19 septembre 2026)", level=1)
+doc.add_heading("5. PLAN D'ACTION PRIORITAIRE AVANT LA SOUTENANCE (18 septembre 2026)", level=1)
 
 doc.add_heading("Urgence CRITIQUE — Manques documentaires (rédaction)", level=2)
 critical = [

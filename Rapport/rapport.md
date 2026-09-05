@@ -5,8 +5,8 @@
 **Auteur :** Rafik Djemadi
 **Formation :** Pré-MSc — IONIS-STM
 **Tuteur pédagogique :** Joly Donfack
-**Période du stage :** stage de substitution (programme Pré-MSc 2026), mené jusqu'à la soutenance du 19 septembre 2026.
-**Soutenance :** 19 septembre 2026
+**Période du stage :** stage de substitution (programme Pré-MSc 2026), mené jusqu'à la soutenance du 18 septembre 2026.
+**Soutenance :** 18 septembre 2026
 
 ---
 

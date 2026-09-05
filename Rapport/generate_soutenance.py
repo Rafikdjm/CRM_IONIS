@@ -186,7 +186,7 @@ def build():
     _text(s, Inches(1.2), Inches(4.0), Inches(10.9), Inches(0.5),
           "IONIS-STM — Ionis Education Group", size=17, color=BLUE, align=PP_ALIGN.CENTER)
     _text(s, Inches(1.2), Inches(6.3), Inches(10.9), Inches(0.5),
-          "Soutenance — 19 septembre 2026", size=15, color=GRAY, align=PP_ALIGN.CENTER)
+          "Soutenance — 18 septembre 2026", size=15, color=GRAY, align=PP_ALIGN.CENTER)
 
     # ---------- 2. Plan ----------
     s = _blank(prs); _set_bg(s, WHITE)
