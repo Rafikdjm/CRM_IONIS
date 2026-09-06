@@ -362,11 +362,13 @@ class CleanupDryRun(BaseModel):
 # 9. SCHEMAS POUR LE QUESTIONNAIRE ANNUEL
 # ==========================================
 # Types réellement gérés par le frontend (AdminQuestionnaires.jsx et
-# AlumniSurvey.jsx) : 'text', 'choice', 'boolean', 'rating'.
+# AlumniSurvey.jsx) : 'text', 'choice', 'boolean', 'rating',
+# 'single_choice' (choix unique, affichage boutons radio),
+# 'dropdown' (liste déroulante, une seule réponse).
 class QuestionCreate(BaseModel):
     id_question: Optional[int] = None
     texte: str
-    type: Literal["text", "choice", "boolean", "rating"] = "text"
+    type: Literal["text", "choice", "boolean", "rating", "single_choice", "dropdown"] = "text"
     options: Optional[list] = []
     ordre: int = 0
     tag: Optional[str] = None
@@ -374,8 +376,8 @@ class QuestionCreate(BaseModel):
 
     @model_validator(mode="after")
     def _check_options(self):
-        if self.type == "choice" and not self.options:
-            raise ValueError("Une question de type 'choice' doit avoir au moins une option.")
+        if self.type in ("choice", "single_choice", "dropdown") and not self.options:
+            raise ValueError("Une question de type 'choice', 'single_choice' ou 'dropdown' doit avoir au moins une option.")
         return self
 
 

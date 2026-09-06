@@ -5,7 +5,7 @@ import ErrorMessage from '../shared/ErrorMessage';
 
 const EMPTY_QUESTION = { id_question: null, texte: '', type: 'text', options: [], ordre: 0, tag: '', conditionnee_statut_emploi: false };
 
-function OptionsEditor({ options, onChange }) {
+function OptionsEditor({ options, onChange, minOptions = 0 }) {
   const [newOption, setNewOption] = useState('');
 
   const addOption = () => {
@@ -32,6 +32,8 @@ function OptionsEditor({ options, onChange }) {
     }
   };
 
+  const canRemove = (options || []).length > minOptions;
+
   return (
     <div className="space-y-2">
       {(options || []).map((opt, idx) => (
@@ -45,7 +47,8 @@ function OptionsEditor({ options, onChange }) {
           <button
             type="button"
             onClick={() => removeOption(idx)}
-            className="inline-flex items-center justify-center rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors min-h-[44px] min-w-[44px]"
+            disabled={!canRemove}
+            className="inline-flex items-center justify-center rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors min-h-[44px] min-w-[44px] disabled:cursor-not-allowed disabled:opacity-40"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -73,7 +76,14 @@ function OptionsEditor({ options, onChange }) {
         </button>
       </div>
       {(!options || options.length === 0) && (
-        <p className="text-xs text-gray-400 dark:text-slate-500">Aucune option. Tapez une option puis Entrée.</p>
+        <p className="text-xs text-gray-400 dark:text-slate-500">
+          {minOptions > 0 ? `Aucune option. Ajoutez au moins ${minOptions} options.` : 'Aucune option. Tapez une option puis Entrée.'}
+        </p>
+      )}
+      {minOptions > 0 && (options || []).length > 0 && (
+        <p className="text-xs text-gray-400 dark:text-slate-500">
+          Minimum {minOptions} options — la croix de suppression est désactivée en dessous de ce seuil.
+        </p>
       )}
     </div>
   );
@@ -336,17 +346,20 @@ export default function AdminQuestionnaires() {
                     >
                       <option value="text">Texte libre</option>
                       <option value="choice">Choix multiple</option>
+                      <option value="single_choice">Choix unique</option>
+                      <option value="dropdown">Liste déroulante</option>
                       <option value="boolean">Oui / Non</option>
                       <option value="rating">Note 1-5</option>
                     </select>
                   </div>
 
-                  {q.type === 'choice' && (
+                  {['choice', 'single_choice', 'dropdown'].includes(q.type) && (
                     <div>
                       <label className="block text-xs font-medium text-gray-500 dark:text-slate-400 mb-1">Options</label>
                       <OptionsEditor
                         options={q.options}
                         onChange={(newOpts) => updateQuestion(idx, 'options', newOpts)}
+                        minOptions={q.type === 'choice' ? 0 : 2}
                       />
                     </div>
                   )}

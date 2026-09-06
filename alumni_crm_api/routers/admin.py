@@ -606,6 +606,8 @@ def _calculer_kpi_tag(db, tag: str) -> dict:
     - boolean (Oui/Non) : % de reponses "Oui".
     - choice (choix parmi une liste) : distribution en % par choix ; la
       valeur principale est le % du choix le plus frequent, avec son libelle.
+    - single_choice / dropdown (choix unique en radio / liste deroulante) :
+      meme logique que 'choice' (une seule reponse attendue par alumni).
     - rating (echelle numerique, ex. note 1-5) : moyenne (X/max) + % de notes
       au-dessus du seuil (80% de l'echelle), car un simple comptage de "oui"
       ne peut pas representer ce type de donnee.
@@ -726,8 +728,11 @@ def _calculer_kpi_tag(db, tag: str) -> dict:
                 "distribution": _distribution(compteur),
             }
 
-        # --- Question a choix : distribution, + % du choix le plus frequent
-        if q_type == "choice":
+# --- Question a choix : distribution, + % du choix le plus frequent
+        # (choice = choix multiple affiche en radio ; single_choice = choix
+        # unique en radio ; dropdown = liste deroulante, une seule reponse :
+        # meme logique d'agregation).
+        if q_type in ("choice", "single_choice", "dropdown"):
             compteur = Counter(reponses)
             dominant, dominant_nb = compteur.most_common(1)[0]
             return {

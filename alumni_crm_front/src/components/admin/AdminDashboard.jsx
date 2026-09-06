@@ -16,6 +16,8 @@ const CHART_COLORS = [
 // segment ne represente pas une donnee reelle.
 const NEUTRAL_COLOR = '#9ca3af';
 
+const TYPES_AVEC_DISTRIBUTION = ['boolean', 'choice', 'single_choice', 'dropdown'];
+
 const KPI_TAG_COLORS = ['amber', 'blue', 'green', 'purple', 'cyan', 'rose'];
 
 const formatKpiValue = (kpi) => {
@@ -1101,7 +1103,7 @@ export default function AdminDashboard() {
           </div>
           <div className="grid grid-cols-1 gap-6 lg:gap-8 sm:grid-cols-2 lg:grid-cols-3">
             {kpiTags.map((kpi, i) => {
-              const estBooleanOuChoice = kpi.question_type === 'boolean' || kpi.question_type === 'choice';
+              const estBooleanOuChoice = TYPES_AVEC_DISTRIBUTION.includes(kpi.question_type);
               const montreDistribution = estBooleanOuChoice
                 && Array.isArray(kpi.distribution)
                 && kpi.distribution.length > 0;

@@ -6,6 +6,8 @@ import ErrorMessage from '../shared/ErrorMessage';
 const QUESTION_TYPES = {
   text: 'Réponse libre',
   choice: 'Choix parmi une liste',
+  single_choice: 'Choix unique',
+  dropdown: 'Liste déroulante',
   boolean: 'Oui / Non',
   rating: 'Note (1-5)',
 };
@@ -285,7 +287,7 @@ export default function AlumniSurvey() {
                         />
                       )}
 
-                      {q.type === 'choice' && (
+                      {(q.type === 'choice' || q.type === 'single_choice') && (
                         <div className="space-y-2">
                           {(q.options || []).map((opt) => (
                             <label key={opt} className="flex items-center gap-2 cursor-pointer">
@@ -300,6 +302,19 @@ export default function AlumniSurvey() {
                             </label>
                           ))}
                         </div>
+                      )}
+
+                      {q.type === 'dropdown' && (
+                        <select
+                          value={answers[q.id_question] || ''}
+                          onChange={(e) => handleChange(q.id_question, e.target.value)}
+                          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                        >
+                          <option value="" disabled>Sélectionnez une option...</option>
+                          {(q.options || []).map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
                       )}
 
                       {q.type === 'boolean' && (
