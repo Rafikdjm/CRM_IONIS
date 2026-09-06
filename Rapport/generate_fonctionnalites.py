@@ -54,7 +54,7 @@ def generate_fonctionnalites():
 
     pdf.section_title("2.5 Questionnaires")
     pdf.bullet("Creer / Modifier / Activer - Desactiver / Supprimer un questionnaire annuel.")
-    pdf.bullet("Editeur de questions : texte, choix multiple, oui/non, note 1-5, tag KPI optionnel, conditionnement au statut d'emploi.")
+    pdf.bullet("Editeur de questions : texte, choix multiple, choix unique, liste deroulante, oui/non, note 1-5, tag KPI optionnel, conditionnement au statut d'emploi.")
     pdf.bullet("Consulter les reponses des alumni.")
     pdf.body_text("Exemple : le service Relations Entreprises cree une question 'Etes-vous en poste ?' (oui/non) avec le tag KPI 'emploi'. Les reponses alimentent automatiquement le tableau de bord.")
 

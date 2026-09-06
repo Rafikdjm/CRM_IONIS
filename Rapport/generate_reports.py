@@ -455,7 +455,7 @@ def generate_strategie():
 
     pdf.section_title("3.1 Cote administration (AdminQuestionnaires.jsx)")
     pdf.bullet("Creation, modification, suppression de questionnaires via une interface dediee.")
-    pdf.bullet("4 types de questions : texte libre, choix multiple (radio), oui/non (boolean), note 1-5 (rating).")
+    pdf.bullet("6 types de questions : texte libre, choix multiple (radio), choix unique (radio, une seule reponse), liste deroulante (select, une seule reponse), oui/non (boolean), note 1-5 (rating).")
     pdf.bullet("Systeme de Tags KPI : chaque question peut etre etiquetee (ex: 'adequation_formation') pour alimenter des indicateurs de pilotage.")
     pdf.bullet("Questions conditionnees : masquage automatique d'une question si l'alumni est en recherche active (conditionnee_statut_emploi).")
     pdf.bullet("Cycle de vie : activation / desactivation / reactivation d'un questionnaire.")
@@ -702,7 +702,7 @@ def generate_guide_animation():
     pdf.chapter_title("4", "Processus de Questionnaire Annuel")
     pdf.section_title("4.1 Creation du questionnaire (admin)")
     pdf.bullet("Declencheur : le service des Relations Entreprises definit le questionnaire annuel.")
-    pdf.bullet("Etapes : creation via l'interface (/admin/questionnaires), ajout de questions (texte, choix multiple, boolean, rating), attribution de tags KPI (ex: 'adequation_formation'), definition des conditions (masquage si en_recherche).")
+    pdf.bullet("Etapes : creation via l'interface (/admin/questionnaires), ajout de questions (texte, choix multiple, choix unique, liste deroulante, boolean, rating), attribution de tags KPI (ex: 'adequation_formation'), definition des conditions (masquage si en_recherche).")
     pdf.bullet("Cycle de vie : creation -> activation -> desactivation -> reactivation. Un seul questionnaire peut etre actif a la fois.")
     pdf.bullet("Outil CRM : page AdminQuestionnaires.jsx -> endpoint POST /admin/questionnaires/.")
     pdf.section_title("4.2 Reponse par l'alumni")

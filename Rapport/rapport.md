@@ -577,7 +577,7 @@ La stratégie complète est livrée séparément (`Strategie de Mise a Jour des 
 
 **Mise à jour manuelle par l'alumni.** Le profil (`AlumniProfile.jsx`) permet la modification de tous les champs personnels, le statut de disponibilité étant obligatoire et les compétences en tags dynamiques. Le parcours (`AlumniCareer.jsx`) gère l'ajout/suppression d'expériences et certifications, avec détection automatique du poste actuel et alerte visuelle en cas d'incohérence entre le statut `en_poste` et l'absence de poste actuel.
 
-**Questionnaire annuel automatisé.** Côté admin, création/modification/suppression de questionnaires, 4 types de questions, tags KPI, questions conditionnées et cycle de vie. Côté alumni, accès au questionnaire actif, pré-remplissage et questions conditionnées masquées.
+**Questionnaire annuel automatisé.** Côté admin, création/modification/suppression de questionnaires, 6 types de questions, tags KPI, questions conditionnées et cycle de vie. Côté alumni, accès au questionnaire actif, pré-remplissage et questions conditionnées masquées.
 
 **Pilotage par le service Relations Entreprises.** Création et administration des campagnes, tags KPI alimentant automatiquement les indicateurs, relances automatiques (`POST /admin/questionnaires/notififier`). La newsletter constitue le principal canal de réactivation, avec un appel à l'action orienté vers la mise à jour du profil.
 
@@ -632,7 +632,7 @@ Le guide complet est généré séparément (`Guide des Processus - Animation du
 - **Référentiel secteurs.** 37 catégories standardisées + « Autre » en saisie libre (constantes `SECTORS`).
 
 **Processus 3 — Questionnaire annuel.**
-- **Création (admin).** Ajout de questions (texte, choix multiple, booléen, rating), attribution de tags KPI (ex. `adequation_formation`), conditions de masquage (ex. selon la disponibilité). Cycle de vie création → activation → désactivation → réactivation, un seul questionnaire actif à la fois. Outil : `POST /admin/questionnaires/`.
+- **Création (admin).** Ajout de questions (texte, choix multiple, choix unique, liste déroulante, booléen, rating), attribution de tags KPI (ex. `adequation_formation`), conditions de masquage (ex. selon la disponibilité). Cycle de vie création → activation → désactivation → réactivation, un seul questionnaire actif à la fois. Outil : `POST /admin/questionnaires/`.
 - **Réponse (alumni).** Notification/rappel email, pré-remplissage des réponses précédentes, soumission via `POST /questionnaires/{id}/repondre` → table `REPONSE_QUESTIONNAIRE`. Les relances des non-répondants sont envoyées côté backend via `POST /admin/questionnaires/notififier` (filtre par promotion ; les alumni ayant refusé le consentement « enquetes » ou « prise_de_contact » sont exclus, RGPD), sans interface admin dédiée à ce jour. Un refus « enquetes » bloque aussi l'accès au questionnaire dans l'application (HTTP 403) et masque le lien « Enquête annuelle » du menu. Les questions conditionnées sont masquées et enregistrées « Non applicable ».
 - **Exploitation.** Les réponses taguées KPI alimentent les indicateurs du tableau de bord ; l'admin consulte les réponses par questionnaire (`GET /admin/questionnaires/{id}/reponses`) ; l'indicateur adéquation formation/emploi est calculé automatiquement.
 

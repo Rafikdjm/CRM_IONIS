@@ -36,7 +36,7 @@ Menu : **Dashboard · Annuaire · Promotions · Import/Export · Questionnaires 
 
 ### 5. Questionnaires
 - Créer / Modifier / Activer-Désactiver / Supprimer un questionnaire annuel.
-- Éditeur de questions : texte, choix multiple, oui/non, note 1-5, **tag KPI optionnel**, **conditionnement au statut d'emploi**.
+- Éditeur de questions : texte, choix multiple, choix unique, liste déroulante, oui/non, note 1-5, **tag KPI optionnel**, **conditionnement au statut d'emploi**.
 - **Voir les réponses** des alumnis.
 
 ### 6. Demandes RGPD
@@ -66,7 +66,7 @@ Menu : **Mon Profil · Mon Parcours · RGPD & Consentement · Enquête annuelle*
 - **Suivi de ses demandes** (`GET /rgpd/demandes/moi`) + rappel des droits RGPD et durée de conservation (6 mois après anonymisation).
 
 ### 4. Enquête annuelle
-- Répondre au **questionnaire actif** (types : texte, choix, oui/non, note 1-5), pré-remplissage de la dernière réponse.
+- Répondre au **questionnaire actif** (types : texte, choix, choix unique, liste déroulante, oui/non, note 1-5), pré-remplissage de la dernière réponse.
 - Questions conditionnées masquées si en recherche active.
 - **Blocage si le consentement aux enquêtes est refusé** (403).
 - Endpoints : `GET /questionnaires/actif`, `POST /questionnaires/{id}/repondre`, ...
