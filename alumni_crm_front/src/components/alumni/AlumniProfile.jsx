@@ -27,6 +27,7 @@ export default function AlumniProfile() {
     linkedin: '',
     availability_status: '',
     sector: '',
+    promotion: '',
     id_promotion: null,
     date_naissance: '',
     email_academique: '',
@@ -55,6 +56,7 @@ export default function AlumniProfile() {
             linkedin: res.data.linkedin || '',
             availability_status: res.data.availability_status || '',
             sector: res.data.sector || '',
+            promotion: res.data.promotion || '',
             id_promotion: res.data.id_promotion || null,
             date_naissance: res.data.date_naissance || '',
             email_academique: res.data.email_academique || '',
@@ -130,6 +132,7 @@ export default function AlumniProfile() {
         linkedin: refreshed.data.linkedin || '',
         availability_status: refreshed.data.availability_status || '',
         sector: refreshed.data.sector || '',
+        promotion: refreshed.data.promotion || '',
         id_promotion: refreshed.data.id_promotion || null,
         date_naissance: refreshed.data.date_naissance || '',
         email_academique: refreshed.data.email_academique || '',
@@ -201,6 +204,12 @@ export default function AlumniProfile() {
           </button>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 [&>*]:min-w-0">
+          <div className="md:col-span-2">
+            <label className={labelClass}>Promotion</label>
+            <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300">
+              {profile.promotion || 'Non renseignée'}
+            </div>
+          </div>
           <div>
             <label className={labelClass}>Prénom</label>
             <input type="text" name="first_name" value={profile.first_name} onChange={handleProfileChange} className={inputClass} />
