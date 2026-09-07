@@ -644,6 +644,7 @@ def _calculer_kpi_tag(db, tag: str) -> dict:
                 "libelle_valeur": None,
                 "distribution": None,
                 "detail": None,
+                "reponses_recentes": [],
             }
 
         q_id, q_texte, q_type, q_options, id_questionnaire = qrow
@@ -659,15 +660,17 @@ def _calculer_kpi_tag(db, tag: str) -> dict:
             options = q_options
 
         cursor.execute(
-            "SELECT r.reponses FROM REPONSE_QUESTIONNAIRE r "
+            "SELECT r.reponses, r.date_reponse FROM REPONSE_QUESTIONNAIRE r "
             "JOIN ETUDIANT e ON r.id_etudiant = e.id_etudiant "
             "WHERE r.id_questionnaire = %s AND e.date_anonymisation IS NULL;",
             (id_questionnaire,),
         )
         rows = cursor.fetchall()
         reponses = []
+        reponses_recentes = []
         for row in rows:
             raw = row[0]
+            date_reponse = row[1]
             if isinstance(raw, str):
                 try:
                     raw = json.loads(raw)
@@ -679,8 +682,16 @@ def _calculer_kpi_tag(db, tag: str) -> dict:
                 if _est_absence_poste(answer):
                     continue
                 reponses.append(answer)
+                reponses_recentes.append(
+                    {"reponse": answer, "date": str(date_reponse) if date_reponse else None}
+                )
 
         total_repondants = len(reponses)
+        # Pour une question texte : tri des reponses de la plus recente a la
+        # plus ancienne (les plus pertinentes a afficher dans le Dashboard).
+        reponses_recentes.sort(
+            key=lambda x: (x["date"] or "", x["reponse"]), reverse=True
+        )
 
         base = {
             "tag": tag,
@@ -693,7 +704,7 @@ def _calculer_kpi_tag(db, tag: str) -> dict:
         }
 
         if total_repondants == 0:
-            return {**base, "valeur": None, "libelle_valeur": None}
+            return {**base, "valeur": None, "libelle_valeur": None, "reponses_recentes": []}
 
         def _distribution(compteur) -> list:
             items = [
@@ -781,8 +792,17 @@ def _calculer_kpi_tag(db, tag: str) -> dict:
                 ),
             }
 
-        # --- Autre type (texte, etc.) : aucun KPI numerique calculable
-        return {**base, "valeur": None, "libelle_valeur": None, "unite": None}
+        # --- Autre type (texte, etc.) : aucun KPI numerique calculable.
+        # On renvoie toutefois les reponses recentes pour affichage dans le
+        # Dashboard (une question texte libre ne se prete pas a une
+        # distribution en pourcentage).
+        return {
+            **base,
+            "valeur": None,
+            "libelle_valeur": None,
+            "unite": None,
+            "reponses_recentes": reponses_recentes,
+        }
     except Exception:
         logger.exception("Erreur lors du calcul du KPI tag: %s", tag)
         raise
@@ -861,6 +881,7 @@ def calculer_kpi_tags(db=Depends(get_db)):
                 "libelle_valeur": None,
                 "distribution": None,
                 "detail": None,
+                "reponses_recentes": [],
             }
         # "pourcentage" reste le % reel pour les questions Oui/Non et a choix ;
         # pour une echelle numerique (rating), la valeur principale est une
@@ -878,6 +899,7 @@ def calculer_kpi_tags(db=Depends(get_db)):
                 "libelle_valeur": kpi.get("libelle_valeur"),
                 "distribution": kpi.get("distribution"),
                 "detail": kpi.get("detail"),
+                "reponses_recentes": kpi.get("reponses_recentes", []),
             }
         )
     return resultats

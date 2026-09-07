@@ -31,7 +31,7 @@
 
 ---
 
-## 2. Les 10 indicateurs, avec exemples chiffrés
+## 2. Les indicateurs de base, avec exemples chiffrés
 
 ### 2.1 Total Alumni actifs
 | Champ | Valeur |

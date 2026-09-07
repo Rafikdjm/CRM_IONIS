@@ -1,4 +1,5 @@
 import { useState, useEffect, useId } from 'react';
+import { Users, Briefcase, TrendingUp, UserCheck, ClipboardCheck, BarChart3 } from 'lucide-react';
 import { statsAPI } from '../../services/api';
 import KPICard from '../shared/KPICard';
 import LoadingSpinner from '../shared/LoadingSpinner';
@@ -138,7 +139,7 @@ function formatLastUpdate(ts) {
   return 'aujourd\'hui';
 }
 
-function DonutChart({ data, size = 140, total }) {
+function DonutChart({ data, size = 170, total }) {
   const maxItems = 6;
   const visible = data.slice(0, maxItems);
   const remaining = data.slice(maxItems);
@@ -147,6 +148,18 @@ function DonutChart({ data, size = 140, total }) {
     : visible;
 
   const computedTotal = total || items.reduce((s, d) => s + d.count, 0);
+  // Anneau fin : cutout ~78% (le trou central représente ~78% du diamètre
+  // extérieur), ce qui donne un anneau discret et moderne plutôt qu'un
+  // anneau épais.
+  const r = 38;
+  const cx = 50;
+  const cy = 50;
+  const strokeWidth = 9;
+  const circumference = 2 * Math.PI * r;
+  // Espace angulaire entre segments : affiche le fond de la carte, donnant
+  // l'effet d'une fine bordure de 2-3px entre chaque part.
+  const GAP_DEG = 2.6;
+
   if (computedTotal === 0) {
     return (
       <div className="flex items-center justify-center" style={{ width: size, height: size }}>
@@ -157,69 +170,74 @@ function DonutChart({ data, size = 140, total }) {
     );
   }
 
-  let acc = 0;
-  const segments = items.map((item, i) => {
-    const pct = (item.count / computedTotal) * 100;
-    const start = acc;
-    acc += pct;
-    return {
-      ...item,
-      pct,
-      start,
-      color: item.nonRenseigne ? NEUTRAL_COLOR : CHART_COLORS[i % CHART_COLORS.length],
-    };
-  });
-
-  // Donut SVG : r sur 100, angle 0° = 12h, sens horaire (identique au
-  // conic-gradient d'origine). Chaque segment se dessine via stroke-dashoffset.
-  const r = 40;
-  const cx = 50;
-  const cy = 50;
-  const circumference = 2 * Math.PI * r;
   const polar = (deg) => {
     const rad = (deg * Math.PI) / 180;
     return [cx + r * Math.sin(rad), cy - r * Math.cos(rad)];
   };
 
+  const gradientId = (i) => `donut-grad-${i}`;
+
   return (
-    <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-6">
-      <div className="dash-donut relative flex-shrink-0" style={{ width: size, height: size }}>
+    <div className="flex flex-col gap-7 lg:flex-row lg:items-center lg:gap-8">
+      <div className="dash-donut relative mx-auto flex-shrink-0 lg:mx-0" style={{ width: size, height: size }}>
         <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
           <circle
             cx={cx}
             cy={cy}
             r={r}
             fill="none"
-            strokeWidth="28"
-            className="stroke-gray-100 dark:stroke-slate-700/60"
+            strokeWidth={strokeWidth}
+            className="stroke-gray-100 dark:stroke-slate-700/50"
           />
+          <defs>
+            {items.map((item, i) => {
+              const base = item.nonRenseigne ? NEUTRAL_COLOR : CHART_COLORS[i % CHART_COLORS.length];
+              return (
+                <linearGradient key={i} id={gradientId(i)} x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor={base} stopOpacity="0.95" />
+                  <stop offset="100%" stopColor={base} stopOpacity="0.6" />
+                </linearGradient>
+              );
+            })}
+          </defs>
         </svg>
-        {segments.map((s, i) => {
-          const startDeg = (s.start / 100) * 360;
-          const endDeg = ((s.start + s.pct) / 100) * 360;
-          const [x0, y0] = polar(startDeg);
-          const [x1, y1] = polar(endDeg);
-          const largeArc = s.pct > 50 ? 1 : 0;
+        {items.map((item, i) => {
+          const pct = (item.count / computedTotal) * 100;
+          const start = items.slice(0, i).reduce((s, x) => s + (x.count / computedTotal) * 100, 0);
+          const totalGapDeg = items.length * GAP_DEG;
+          const available = 360 - totalGapDeg;
+          const segAngle = (pct / 100) * available;
+          const gapStart = GAP_DEG / 2;
+          const startAngle = gapStart + (start / 100) * available;
+          const endAngle = startAngle + segAngle;
+          const largeArc = segAngle > 180 ? 1 : 0;
+          const [x0, y0] = polar(startAngle);
+          const [x1, y1] = polar(Math.min(endAngle, 360 - gapStart));
           const d = `M ${x0.toFixed(3)} ${y0.toFixed(3)} A ${r} ${r} 0 ${largeArc} 1 ${x1.toFixed(3)} ${y1.toFixed(3)}`;
-          const segLen = Math.max(circumference * (s.pct / 100) - 0.9, 0.1);
-          const fullCircle = s.pct >= 99.95;
+          const fullCircle = segAngle >= 359;
+          const segLen = Math.max(circumference * (pct / 100), 0.1);
+          const startDeg = startAngle;
+          const endDeg = endAngle;
           const tipX = cx + r * Math.sin(((startDeg + endDeg) / 2) * (Math.PI / 180));
           const tipY = cy - r * Math.cos(((startDeg + endDeg) / 2) * (Math.PI / 180));
           return (
-            <div key={s.label} className="dash-donut-seg">
+            <div key={item.label} className="dash-donut-seg">
               <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
                 <path
-                  d={fullCircle ? `M ${cx + r} ${cy} A ${r} ${r} 0 1 1 ${cx - r} ${cy} A ${r} ${r} 0 1 1 ${cx + r} ${cy}` : d}
+                  d={fullCircle
+                    ? `M ${cx + r} ${cy} A ${r} ${r} 0 1 1 ${cx - r} ${cy} A ${r} ${r} 0 1 1 ${cx + r} ${cy}`
+                    : d}
                   fill="none"
-                  stroke={s.color}
-                  strokeWidth="28"
+                  stroke={`url(#${gradientId(i)})`}
+                  strokeWidth={strokeWidth}
+                  strokeLinecap="butt"
                   className="donut-seg"
                   style={{
                     strokeDasharray: `${segLen} ${circumference}`,
                     strokeDashoffset: segLen,
                     ['--seg-len']: segLen,
                     animation: 'donut-seg 1s cubic-bezier(0.16, 1, 0.3, 1) both',
-                    animationDelay: `${i * 140}ms`,
+                    animationDelay: `${i * 120}ms`,
                   }}
                 />
               </svg>
@@ -228,25 +246,43 @@ function DonutChart({ data, size = 140, total }) {
                 className="dash-donut-tip"
                 style={{ left: `${tipX}%`, top: `${tipY}%` }}
               >
-                {s.label} : {s.count} alumni ({s.pct.toFixed(0)}%)
+                {item.label} : {item.count} alumni ({pct.toFixed(0)}%)
               </div>
             </div>
           );
         })}
-        <div className="absolute inset-0 m-auto flex h-[70px] w-[70px] items-center justify-center rounded-full bg-white dark:bg-slate-800">
-          <span className="text-sm font-bold text-gray-900 dark:text-slate-100">
+        <div className="pointer-events-none absolute inset-0 m-auto flex h-[70px] w-[70px] flex-col items-center justify-center rounded-full">
+          <span className="dash-donut-total">
             <AnimatedKpi value={computedTotal} />
+          </span>
+          <span className="mt-0.5 text-[9px] font-medium uppercase tracking-[0.18em] text-gray-400 dark:text-slate-500">
+            Alumni
           </span>
         </div>
       </div>
-      <div className="flex flex-1 flex-wrap gap-x-4 gap-y-1.5">
-        {segments.map((s) => (
-          <div key={s.label} className="flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: s.color }} />
-            <span className="text-xs text-gray-600 dark:text-slate-400">{s.label}</span>
-            <span className="text-xs font-semibold text-gray-900 dark:text-slate-100">{s.pct.toFixed(0)}%</span>
-          </div>
-        ))}
+
+      <div className="grid flex-1 grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+        {items.map((item, i) => {
+          const base = item.nonRenseigne ? NEUTRAL_COLOR : CHART_COLORS[i % CHART_COLORS.length];
+          const pct = (item.count / computedTotal) * 100;
+          return (
+            <div
+              key={item.label}
+              className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-gray-100/70 dark:hover:bg-slate-700/40"
+            >
+              <span
+                className="inline-block h-3.5 w-3.5 flex-shrink-0 rounded-[4px] shadow-sm"
+                style={{ background: `linear-gradient(135deg, ${base}, ${base}99)` }}
+              />
+              <div className="min-w-0">
+                <p className="truncate text-xs text-gray-500 dark:text-slate-400">{item.label}</p>
+                <p className="text-lg font-bold leading-tight text-gray-900 dark:text-slate-100">
+                  {pct.toFixed(0)}%
+                </p>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -327,73 +363,33 @@ function HorizontalBarChart({ data, total }) {
   );
 }
 
-// Sparkline SVG (sans dépendance) : trace l'évolution du taux d'emploi.
-// Prête à l'emploi avec un historique de points ; avec une seule valeur
-// ponctuelle elle affiche un palier en pointillés + point pulsant.
-function Sparkline({ value, points }) {
-  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
-  const W = 200;
-  const H = 56;
-  const PAD = 5;
-  const hasHistory = Array.isArray(points) && points.length >= 2;
-  const series = hasHistory ? points.slice(0, 24) : [Number(value) || 0];
-  const yAt = (v) => PAD + (H - PAD * 2) * (1 - Math.max(0, Math.min(100, v)) / 100);
-  const xAt = (i) => PAD + (i / Math.max(series.length - 1, 1)) * (W - PAD * 2);
+function RecentResponses({ reponses, limite = 5 }) {
+  const items = Array.isArray(reponses) ? reponses.slice(0, limite) : [];
+  if (items.length === 0) return null;
 
-  const pts = series.map((v, i) => [xAt(i), yAt(v)]);
-  const linePath = pts.map(([px, py], i) => `${i === 0 ? 'M' : 'L'} ${px.toFixed(1)} ${py.toFixed(1)}`).join(' ');
-  const last = pts[pts.length - 1];
-
-  const segLen = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
-  const totalLen = hasHistory
-    ? pts.slice(1).reduce((s, p, i) => s + segLen(pts[i], p), 0)
-    : W - PAD * 2;
+  const formatDate = (d) => {
+    if (!d) return null;
+    const date = new Date(d);
+    if (Number.isNaN(date.getTime())) return null;
+    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+  };
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="h-full w-full" preserveAspectRatio="none" aria-hidden="true">
-      <defs>
-        <linearGradient id={`spark-fill-${uid}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#10b981" stopOpacity="0.30" />
-          <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-        </linearGradient>
-        <linearGradient id={`spark-line-${uid}`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#34d399" />
-          <stop offset="100%" stopColor="#047857" />
-        </linearGradient>
-      </defs>
-      {!hasHistory && (
-        <line
-          x1={PAD}
-          y1={last[1]}
-          x2={W - PAD}
-          y2={last[1]}
-          stroke="#94a3b8"
-          strokeWidth="1.5"
-          strokeDasharray="4 4"
-          opacity="0.5"
-        />
-      )}
-      {hasHistory && (
-        <path
-          d={`${linePath} L ${last[0].toFixed(1)} ${(H - PAD).toFixed(1)} L ${pts[0][0].toFixed(1)} ${(H - PAD).toFixed(1)} Z`}
-          fill={`url(#spark-fill-${uid})`}
-        />
-      )}
-      <path
-        d={linePath}
-        fill="none"
-        stroke={`url(#spark-line-${uid})`}
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        style={{
-          strokeDasharray: totalLen,
-          strokeDashoffset: totalLen,
-          ['--spark-len']: totalLen,
-          animation: 'spark-draw 1.1s cubic-bezier(0.16, 1, 0.3, 1) both',
-        }}
-      />
-    </svg>
+    <div className="rounded-xl border border-gray-200/70 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/60 p-3.5 shadow-sm">
+      <p className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-slate-500">
+        Réponses récentes
+      </p>
+      <ul className="space-y-2">
+        {items.map((r, i) => (
+          <li key={i} className="rounded-lg bg-gray-50 px-3 py-2 dark:bg-slate-700/40">
+            <p className="text-sm text-gray-700 dark:text-slate-200">{r.reponse}</p>
+            {formatDate(r.date) && (
+              <p className="mt-0.5 text-[10px] text-gray-400 dark:text-slate-500">{formatDate(r.date)}</p>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -1020,11 +1016,7 @@ export default function AdminDashboard() {
                 </div>
               ) : null
             }
-            icon={
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-              </svg>
-            }
+            icon={<Users className="h-6 w-6" strokeWidth={1.5} />}
           />
         </div>
 
@@ -1036,11 +1028,7 @@ export default function AdminDashboard() {
             progress={mockKPIs.employment_rate_6m}
             color="green"
             highlighted
-            icon={
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-              </svg>
-            }
+            icon={<Briefcase className="h-6 w-6" strokeWidth={1.5} />}
           />
         </div>
 
@@ -1051,15 +1039,8 @@ export default function AdminDashboard() {
             subtitle="Tous diplômés confondus"
             progress={mockKPIs.employment_rate_brut}
             color="green"
-            icon={
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605" />
-              </svg>
-            }
+            icon={<TrendingUp className="h-6 w-6" strokeWidth={1.5} />}
           />
-          <div className="pointer-events-none absolute bottom-4 right-4 h-10 w-1/3">
-            <Sparkline value={mockKPIs.employment_rate_brut} />
-          </div>
         </div>
 
         <div className="dash-card-in xl:col-span-4" style={{ animationDelay: '280ms' }}>
@@ -1068,11 +1049,7 @@ export default function AdminDashboard() {
             value={<AnimatedKpi value={mockKPIs.active_alumni} />}
             subtitle="Au moins 1 expérience"
             color="cyan"
-            icon={
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z" />
-              </svg>
-            }
+            icon={<UserCheck className="h-6 w-6" strokeWidth={1.5} />}
           />
         </div>
 
@@ -1083,11 +1060,7 @@ export default function AdminDashboard() {
             subtitle="Profil avec expérience"
             progress={mockKPIs.avg_response_rate}
             color="purple"
-            icon={
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15a2.25 2.25 0 0 1 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
-              </svg>
-            }
+            icon={<ClipboardCheck className="h-6 w-6" strokeWidth={1.5} />}
           />
         </div>
       </div>
@@ -1110,6 +1083,9 @@ export default function AdminDashboard() {
               const montreRating = kpi.question_type === 'rating'
                 && kpi.valeur != null
                 && kpi.nb_repondants > 0;
+              const montreReponsesRecentes = kpi.question_type === 'text'
+                && Array.isArray(kpi.reponses_recentes)
+                && kpi.reponses_recentes.length > 0;
               return (
                 <div
                   key={kpi.tag}
@@ -1121,14 +1097,11 @@ export default function AdminDashboard() {
                     value={formatKpiValue(kpi)}
                     subtitle={formatKpiSubtitle(kpi)}
                     color={KPI_TAG_COLORS[i % KPI_TAG_COLORS.length]}
-                    icon={
-                      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5" />
-                      </svg>
-                    }
+                    icon={<BarChart3 className="h-6 w-6" strokeWidth={1.5} />}
                   />
                   {montreRating && <RatingVisual valeur={kpi.valeur} unite={kpi.unite} />}
                   {montreDistribution && <DistributionBars distribution={kpi.distribution} />}
+                  {montreReponsesRecentes && <RecentResponses reponses={kpi.reponses_recentes} />}
                 </div>
               );
             })}

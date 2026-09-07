@@ -7,7 +7,6 @@ import ionisStmLogo from '../assets/ionis-stm-logo.png';
 
 const OTP_LENGTH = 6;
 const OTP_MODE = import.meta.env.VITE_OTP_MODE || 'console';
-const IS_CONSOLE_MODE = OTP_MODE === 'console';
 const IS_RESEND_MODE = OTP_MODE === 'resend';
 // Doit rester aligné sur le rate-limit serveur (60 s entre deux demandes OTP)
 // pour que le bouton « Renvoyer le code » ne se réactive pas avant que le
@@ -420,11 +419,6 @@ export default function AuthPage() {
                     resetKey={otpResetKey}
                     success={otpSuccess}
                   />
-                  {!otpSuccess && import.meta.env.DEV && IS_CONSOLE_MODE && (
-                    <p className={`mt-3 text-center text-xs ${isDark ? 'text-blue-200/30' : 'text-gray-400'}`}>
-                      (En mode développement, le code correct est affiché dans la console du navigateur)
-                    </p>
-                  )}
                   {!otpSuccess && IS_RESEND_MODE && (
                     <p className={`mt-3 text-center text-xs ${isDark ? 'text-blue-200/50' : 'text-gray-500'}`}>
                       Vérifier votre email

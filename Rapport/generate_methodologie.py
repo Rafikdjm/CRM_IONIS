@@ -180,7 +180,7 @@ def generate():
     bullet(doc, "Une date de fin deja passee exclut toujours l'experience, meme si poste_actuel = TRUE.")
 
     # 2. Indicateurs
-    chapitre(doc, 2, "Les 10 indicateurs avec exemples chiffres")
+    chapitre(doc, 2, "Les indicateurs de base avec exemples chiffres")
 
     section(doc, "2.1 Total Alumni actifs")
     indicateur_table(doc, [

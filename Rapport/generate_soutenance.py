@@ -296,7 +296,7 @@ def build():
     goals = [
         ("O1", "Un CRM complet : espace admin (pilotage) + espace alumni (self-service)"),
         ("O2", "Une base SQL modélisée : MCD/MLD, 14 tables, 16 migrations versionnées"),
-        ("O3", "Un tableau de bord avec 8 indicateurs d'insertion reproductibles"),
+        ("O3", "Un tableau de bord avec 8 indicateurs de base, extensibles par tags KPI"),
         ("O4", "Une conformité RGPD réelle : consentements, export, suppression, audit"),
         ("O5", "L'import/export automatisé par fichier (Excel / CSV / JSON)"),
     ]
@@ -452,7 +452,7 @@ def build():
     s = _blank(prs); _set_bg(s, WHITE)
     _top_bar(s, "Indicateurs d'insertion professionnelle")
     _bullets(s, Inches(0.9), Inches(1.35), Inches(5.9), Inches(3.4), [
-        "8 indicateurs reproductibles : formule, source et champ explicites.",
+        "8 indicateurs de base reproductibles : formule, source et champ explicites.",
         "Taux d'emploi à 6 mois = postes actifs / cohorte mature.",
         "Adéquation formation/emploi : tags KPI sur les expériences.",
         "Salaire moyen / min / max (champ annuel saisi par l'alumni).",
@@ -472,7 +472,7 @@ def build():
     s = _blank(prs); _set_bg(s, WHITE)
     _top_bar(s, "Bilan et perspectives")
     _bullets(s, Inches(0.9), Inches(1.35), Inches(7.0), Inches(3.6), [
-        "Livré : app full-stack opérationnelle (admin + alumni), 83 endpoints, 14 tables, 8 indicateurs.",
+        "Livré : app full-stack opérationnelle (admin + alumni), 83 endpoints, 14 tables, 8 indicateurs (extensibles par tags KPI).",
         "Documentation « comme du code » : rapport généré, MCD/MLD, guide des processus, ce support.",
         "Compétences : full-stack, sécurité applicative (JWT, OTP, anti-IDOR), migrations, RGPD.",
         "Perspectives : tests automatisés, automatisation du questionnaire, newsletter, mentorat, PWA.",

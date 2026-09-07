@@ -16,7 +16,7 @@ Ce stage, réalisé au sein d'IONIS-STM dans le cadre du programme Pré-MSc 2026
 
 La problématique partait d'un constat simple. L'établissement ne disposait d'aucun outil pour suivre le cycle de vie complet d'un étudiant, de son inscription jusqu'à son évolution professionnelle. Les données d'insertion étaient dispersées, les indicateurs calculés manuellement, le réseau alumni inactif et la conformité RGPD non formalisée. Le sujet posait donc quatre défis : centraliser les données, fiabiliser les indicateurs d'insertion, animer le réseau, et intégrer la conformité réglementaire dès la conception.
 
-La démarche a suivi un cycle itératif : modélisation de la base de données, développement du backend, développement du frontend, audit de sécurité, puis rédaction des livrables documentaires. Le système repose sur une architecture trois tiers (FastAPI, React/Vite, PostgreSQL) et compte 14 tables, 83 endpoints API, 14 routes frontend et 8 indicateurs d'insertion professionnelle.
+La démarche a suivi un cycle itératif : modélisation de la base de données, développement du backend, développement du frontend, audit de sécurité, puis rédaction des livrables documentaires. Le système repose sur une architecture trois tiers (FastAPI, React/Vite, PostgreSQL) et compte 14 tables, 83 endpoints API, 14 routes frontend et 8 indicateurs de base d'insertion professionnelle, complétés d'un indicateur dérivé pour chaque question taguée KPI active.
 
 Le projet a abouti à un prototype fonctionnel couvrant l'intégralité du périmètre défini dans le sujet de stage. La conformité RGPD a été intégrée dès la conception : consentements traçables, workflow de demandes de suppression et d'anonymisation, journal d'audit et durée de conservation affichée. Un audit de sécurité a permis de corriger des failles d'authentification et de protéger des routes initialement ouvertes. Les livrables documentaires complémentaires (cartographie des données, charte RGPD, stratégie de mise à jour, analyse des indicateurs d'insertion et guide des processus d'animation du réseau) couvrent le volet Management du sujet. Le principal chantier restant avant la production est l'introduction d'une suite de tests automatisés, absente du dépôt à l'issue du stage.
 
@@ -232,16 +232,16 @@ L'audit de sécurité a permis de corriger plusieurs failles :
 
 **Mission 5 — Indicateurs d'insertion et documentation**
 
-J'ai défini et implémenté **8 indicateurs d'insertion professionnelle**, chacun avec une formule et une source précises :
+J'ai défini et implémenté **8 indicateurs de base d'insertion professionnelle**, chacun avec une formule et une source précises. S'y ajoutent des indicateurs dérivés, générés automatiquement une fois par question taguée KPI des questionnaires actifs :
 
 |**Indicateur**|**Formule / Source**|**Exemple**|
 |---|---|---|
 | Taux d'emploi à 6 mois | Expériences actives à la date de référence ÷ total alumni | Promo 2025 : 9/12 en poste = 75 % |
 | Taux d'emploi global brut | (Alumni avec expérience ÷ total alumni) × 100 | 30 en poste / 40 = 75 % |
-| Adéquation formation/emploi | Réponses à la question taguée `adequation_formation` | 3 réponses Oui / 4 = 75 % |
+| Répartition par type de contrat | `COUNT(*)` des expériences en cours | CDI 8, CDD 3, Freelance 2 |
 | Salaire moyen | Calcul sur `salary_annuel` avec repli sur le champ texte historique | (38000+42000+50000)/3 = 43333 |
 | Alumni actifs | Alumni avec ≥ 1 expérience enregistrée | 45 alumni actifs sur 60 |
-| Taux de complétion | Alumni ayant complété profil + parcours | 32 profils complets / 60 = 53 % |
+| Taux de complétion | Alumni avec ≥ 1 expérience enregistrée dans `EXPERIENCE_PRO` | 45 alumni avec expérience / 60 = 75 % |
 | Alumni par promotion | Comptage par `id_promotion` | 2025 : 12 / 75 % |
 | Répartition par secteur | Agrégation du champ `secteur_activite` | Info 3, Finance 2, Santé 1 |
 
@@ -254,7 +254,7 @@ Le prototype couvre l'intégralité du périmètre fonctionnel défini dans le s
 - **14 tables** de base de données, validées par introspection et rejeu complet des 16 migrations sur une base vide (aucune différence structurelle constatée).
 - **83 endpoints** API avec authentification OTP et JWT et protection admin.
 - **14 routes** frontend couvrant les espaces admin et alumni.
-- **8 indicateurs** d'insertion professionnelle, dont 6 exposés via des endpoints dédiés.
+- **8 indicateurs de base** d'insertion professionnelle, exposés via des endpoints dédiés (`/admin/indicateurs`, `/admin/indicateurs/secteurs`, `/admin/indicateurs/types-contrat`), complétés d'un endpoint agrégé partenaire et d'un indicateur dérivé par question taguée active (variable).
 - **5 documents** de livraison complémentaires couvrant le volet Management du sujet : cartographie des données, charte RGPD, analyse des indicateurs d'insertion, stratégie de mise à jour des données et guide des processus d'animation du réseau.
 
 Le dispositif le plus notable est le système de **tags KPI**. Chaque question de questionnaire peut être étiquetée (par exemple `adequation_formation`) pour alimenter automatiquement un indicateur de pilotage. Ce mécanisme est extensible : ajouter un tag à une question fait apparaître l'indicateur correspondant dans le tableau de bord, sans modifier le code backend.
@@ -266,7 +266,7 @@ Le système répond aux quatre problèmes identifiés dans la section 1.4.
 |**Problème**|**Solution apportée**|
 |---|---|
 | Données dispersées | Base centralisée de 14 tables avec import Excel/CSV |
-| Indicateurs non fiables | 8 indicateurs automatisés, fiabilisés par filtrage temporel |
+| Indicateurs non fiables | 8 indicateurs de base automatisés, fiabilisés par filtrage temporel, plus 1 indicateur dérivé par question taguée |
 | Réseau inanimé | Espace alumni : inscription, profil, parcours, questionnaire annuel, newsletter |
 | Conformité RGPD non formalisée | Consentements traçables, workflow de demandes, journal d'audit, durée de conservation, contact DPO |
 
@@ -594,7 +594,7 @@ L'analyse complète est livrée séparément (`Analyse des Indicateurs d'Inserti
 - **Salaire** : `salary_annuel` (numérique) prioritaire, avec repli sur le champ texte historique.
 - **Seuils d'affichage** : secteur et type de contrat vides regroupés sous « Non renseigné » ; au-delà de 6 catégories, regroupement sous « Autres ».
 
-**Les 10 indicateurs et leurs endpoints.**
+**Les indicateurs de base et leurs endpoints.** Le tableau ci-dessous recense les indicateurs calculés indépendamment des questionnaires ; le total affiché dans le dashboard s'y ajoute d'un indicateur par question taguée active.
 
 |**Indicateur**|**Calcul / endpoint**|
 |---|---|
@@ -603,7 +603,6 @@ L'analyse complète est livrée séparément (`Analyse des Indicateurs d'Inserti
 | Taux de complétion | (alumni avec ≥ 1 expérience / total) × 100 |
 | Taux d'emploi à 6 mois | expérience active à la date de référence (fenêtre 6 mois) ; promo non mature → `null` |
 | Taux d'emploi global | (étudiants en poste / total) × 100 par promotion |
-| Adéquation formation/emploi | réponses « Oui » / réponses exploitables (question taguée) |
 | Répartition par secteur | `COUNT(DISTINCT id_etudiant)` par secteur (poste actuel) |
 | Alumni par promotion | effectif, % en poste, taux de couverture, salaire moyen |
 | Salaire moyen | `AVG` de `salary_annuel` (ou repli) ; jauge avec échantillon ≥ 5 |
@@ -611,7 +610,7 @@ L'analyse complète est livrée séparément (`Analyse des Indicateurs d'Inserti
 
 **Endpoints API.** `GET /admin/indicateurs`, `/admin/indicateurs/secteurs`, `/admin/indicateurs/types-contrat`, `/admin/indicateurs/kpi-tag`, `/admin/indicateurs/kpi-tags`, `/admin/indicateurs/kpi-tags-actifs`, `/admin/indicateurs/partenaires`.
 
-**Cas limites.** Promotion sans fenêtre de 6 mois écoulée → `null` + statut « en_attente » ; échantillon de salaire < 5 → fourchette élargie et mention « échantillon limité » ; adéquation sans réponse → état vide.
+**Cas limites.** Promotion sans fenêtre de 6 mois écoulée → `null` + statut « en_attente » ; échantillon de salaire < 5 → fourchette élargie et mention « échantillon limité » ; tag KPI sans réponse → état vide.
 
 ### Annexe I — Guide des processus d'animation du réseau (extrait)
 

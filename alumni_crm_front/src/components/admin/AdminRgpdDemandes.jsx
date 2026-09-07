@@ -152,6 +152,14 @@ export default function AdminRgpdDemandes() {
     [demandes],
   );
 
+  // Si toutes les demandes sélectionnées sont déjà « traitées » (export auto),
+  // « Marquer comme traitée » et « Rejeter » n'ont plus de sens : on ne propose
+  // alors que « Exporter » et « Supprimer ». Dès qu'au moins une demande
+  // sélectionnée est encore « envoyée » (en attente), tous les boutons réapparaissent.
+  const allSelectedTraitees =
+    selectedIds.size > 0 &&
+    Array.from(selectedIds).every((id) => demandesById.get(id)?.statut === 'traitee');
+
   const pendingCount = demandes.filter(
     (d) => d.statut === 'envoyee' || d.statut === 'en_traitement',
   ).length;
@@ -507,18 +515,22 @@ export default function AdminRgpdDemandes() {
           <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
             {selectedIds.size} demande(s) sélectionnée(s)
           </span>
-          <button
-            onClick={() => openBulkAction('traitee')}
-            className="min-h-[44px] rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
-          >
-            Marquer comme traitée
-          </button>
-          <button
-            onClick={() => openBulkAction('rejetee')}
-            className="min-h-[44px] rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600"
-          >
-            Rejeter
-          </button>
+          {!allSelectedTraitees && (
+            <>
+              <button
+                onClick={() => openBulkAction('traitee')}
+                className="min-h-[44px] rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700"
+              >
+                Marquer comme traitée
+              </button>
+              <button
+                onClick={() => openBulkAction('rejetee')}
+                className="min-h-[44px] rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600"
+              >
+                Rejeter
+              </button>
+            </>
+          )}
           <button
             onClick={() => openBulkAction('export')}
             className="min-h-[44px] rounded-lg bg-gray-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-700"
