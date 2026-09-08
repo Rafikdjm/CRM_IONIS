@@ -114,7 +114,7 @@ export default function AlumniRegistration() {
   const sectionFields = useMemo(() => [
     ['first_name', 'last_name', 'email'],
     ['id_promotion'],
-    [],
+    ['linkedin'],
   ], []);
 
   const stepCompletion = useMemo(() => {

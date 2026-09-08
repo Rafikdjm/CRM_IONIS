@@ -525,20 +525,25 @@ L'alumni CRM propose deux modes d'authentification : un accès administrateur pa
 
 ### Annexe C — Dashboard administrateur (captures d'écran)
 
-Les captures d'écran présentent le tableau de bord administrateur : bento grid de KPI, indicateurs, annuaire filtrable et traitement des demandes RGPD. Chaque écran est présenté en mode clair et mode sombre.
+Les captures d'écran présentent le tableau de bord administrateur : bento grid de KPI, indicateurs, annuaire filtrable, traitement des demandes RGPD, gestion des promotions, gestion des questionnaires et import Excel. Chaque écran est présenté en mode clair et mode sombre.
 
-- `image/anB_dashboard_light.png` / `image/anB_dashboard_dark.png` — Tableau de bord administrateur (KPI, indicateurs, bento grid).
-- `image/anB_annuaire_light.png` / `image/anB_annuaire_dark.png` — Annuaire des alumni filtrable (promotion, secteur, entreprise, disponibilité, compétence).
+- `image/anB_dashboard_light_1.png` / `image/anB_dashboard_light_2.png` / `image/anB_dashboard_light_3.png` et `image/anB_dashboard_dark_1.png` / `image/anB_dashboard_dark_2.png` / `image/anB_dashboard_dark_3.png` — Tableau de bord administrateur (KPI, indicateurs, bento grid), capture intégrale en trois parties.
+- `image/anB_annuaire_light.png` / `image/anB_annuaire_dark.png` — Annuaire des alumni filtrable (12 colonnes : nom, prénom, email, promotion, entreprise, poste, secteur, disponibilité, contact, certifications, compétences, actions), capture intégrale (lignes et colonnes complètes).
 - `image/anB_demandes_rgpd_light.png` / `image/anB_demandes_rgpd_dark.png` — Gestion des demandes RGPD (workflow de traitement).
+- `image/anB_promotions_light.png` / `image/anB_promotions_dark.png` — Gestion des promotions (création, édition, suivi des effectifs).
+- `image/anB_questionnaires_light.png` / `image/anB_questionnaires_dark.png` — Gestion des questionnaires (6 types de questions, tags KPI, conditions).
+- `image/anB_import_light.png` / `image/anB_import_dark.png` — Import Excel des alumni (template, rapport d'erreurs).
 
 ### Annexe D — Espace alumni (captures d'écran)
 
-Les captures d'écran présentent l'espace alumni : profil, parcours professionnel, consentement RGPD et questionnaire annuel. Chaque écran est présenté en mode clair et mode sombre.
+Les captures d'écran présentent l'espace alumni : inscription multi-étapes, profil, parcours professionnel, consentement RGPD et questionnaire annuel. Chaque écran est présenté en mode clair et mode sombre.
 
-- `image/anC_profil_light.png` / `image/anC_profil_dark.png` — Profil alumni (identité, statut de disponibilité, compétences).
-- `image/anC_parcours_light.png` / `image/anC_parcours_dark.png` — Parcours professionnel (expériences et certifications).
-- `image/anC_consentement_light.png` / `image/anC_consentement_dark.png` — Gestion du consentement RGPD (4 types, export, demande de suppression).
-- `image/anC_questionnaire_light.png` / `image/anC_questionnaire_dark.png` — Questionnaire annuel pré-rempli.
+- `image/anC_inscription_light_1.png` / `image/anC_inscription_light_2.png` et `image/anC_inscription_dark_1.png` / `image/anC_inscription_dark_2.png` — Inscription multi-étapes (données personnelles, promotion, consentements RGPD), capture intégrale en deux parties.
+- `image/anC_profil_light_1.png` / `image/anC_profil_light_2.png` et `image/anC_profil_dark_1.png` / `image/anC_profil_dark_2.png` — Profil alumni (identité, statut de disponibilité, promotion, compétences), capture intégrale en deux parties.
+- `image/anC_parcours_light_1.png` / `image/anC_parcours_light_2.png` et `image/anC_parcours_dark_1.png` / `image/anC_parcours_dark_2.png` — Parcours professionnel (expériences et certifications), capture intégrale en deux parties.
+- `image/anC_consentement_light_1.png` / `image/anC_consentement_light_2.png` et `image/anC_consentement_dark_1.png` / `image/anC_consentement_dark_2.png` — Gestion du consentement RGPD (4 types, export, demande de suppression), capture intégrale en deux parties.
+- `image/anC_questionnaire_light_1.png` / `image/anC_questionnaire_light_2.png` et `image/anC_questionnaire_dark_1.png` / `image/anC_questionnaire_dark_2.png` — Questionnaire annuel pré-rempli, capture intégrale en deux parties.
+- `image/anC_questionnaire_recherche_light_1.png` / `image/anC_questionnaire_recherche_light_2.png` et `image/anC_questionnaire_recherche_dark_1.png` / `image/anC_questionnaire_recherche_dark_2.png` — Questionnaire annuel pour un alumni en recherche active (questions conditionnées marquées "Non applicable"), capture intégrale en deux parties.
 
 ### Annexe E — Cartographie des données (synthèse)
 

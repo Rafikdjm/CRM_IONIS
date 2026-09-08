@@ -276,7 +276,7 @@ def build():
         "Constat : données éparpillées (Excel, mails), indicateurs calculés à la main, aucun processus RGPD formalisé, annuaire inactif.",
         "Bénéfice visé : une base unique et fiable, des KPI reproductibles, un self-service pour les alumni.",
     ], size=14, gap=7)
-    _screenshot_cap(s, os.path.join(FIG_DIR, "anB_dashboard_light.png"),
+    _screenshot_cap(s, os.path.join(FIG_DIR, "anB_dashboard_light_1.png"),
                     Inches(8.5), Inches(1.55), Inches(4.2),
                     "Tableau de bord admin : KPI d'insertion, annuaire filtrable et indicateurs.",
                     color=BLUE, label="L'outil livré")
@@ -301,7 +301,7 @@ def build():
         ("O5", "L'import/export automatisé par fichier (Excel / CSV / JSON)"),
     ]
     _numbered_rows(s, Inches(1.35), goals, ACCENT, step=Inches(0.74), text_w=Inches(6.2))
-    _screenshot_cap(s, os.path.join(FIG_DIR, "anC_profil_light.png"),
+    _screenshot_cap(s, os.path.join(FIG_DIR, "anC_profil_light_1.png"),
                     Inches(8.5), Inches(1.6), Inches(4.2),
                     "Espace alumni : profil, parcours et consentements en auto-service.",
                     color=ACCENT, label="Objectif O1")
@@ -405,7 +405,7 @@ def build():
         "Droits : export en auto-service (JSON/Excel/CSV), suppression avec workflow verrouillé (anti-double traitement) puis anonymisation différée.",
         "Traçabilité : journaux d'audit horodatés, purge des comptes anonymisés, conformité aux exigences RGPD.",
     ], size=13.5, gap=4)
-    _add_image(s, os.path.join(FIG_DIR, "anC_consentement_light.png"), Inches(0.9), Inches(3.0), Inches(5.5))
+    _add_image(s, os.path.join(FIG_DIR, "anC_consentement_light_1.png"), Inches(0.9), Inches(3.0), Inches(5.5))
     _add_image(s, os.path.join(FIG_DIR, "anB_demandes_rgpd_light.png"), Inches(6.7), Inches(3.0), Inches(5.5))
     _text(s, Inches(0.95), Inches(5.55), Inches(11.6), Inches(0.35),
           "À gauche : consentements en auto-service (alumni) — à droite : traitement des demandes RGPD (admin).",
@@ -418,7 +418,7 @@ def build():
     # ---------- 9. Démo Admin ----------
     s = _blank(prs); _set_bg(s, WHITE)
     _top_bar(s, "Démonstration — Espace Administration", "Tableau de bord, annuaire, RGPD")
-    shot = os.path.join(FIG_DIR, "anB_dashboard_light.png")
+    shot = os.path.join(FIG_DIR, "anB_dashboard_light_1.png")
     if os.path.exists(shot):
         h_demo = Inches(4.6)
         w_demo = int(h_demo * 1.6)
@@ -434,7 +434,7 @@ def build():
     # ---------- 10. Démo Alumni ----------
     s = _blank(prs); _set_bg(s, WHITE)
     _top_bar(s, "Démonstration — Espace Alumni", "Profil, parcours, consentement, questionnaire")
-    shot = os.path.join(FIG_DIR, "anC_parcours_light.png")
+    shot = os.path.join(FIG_DIR, "anC_parcours_light_1.png")
     if os.path.exists(shot):
         h_demo = Inches(4.6)
         w_demo = int(h_demo * 1.6)
@@ -462,7 +462,7 @@ def build():
     _example(s, "Calcul",
              "taux à 6 mois de la promotion 2025 = diplômés en poste actif à la date de "
              "référence / diplômés de la promo (cohorte mature).", y=Inches(5.7))
-    _add_image(s, os.path.join(FIG_DIR, "anB_dashboard_light.png"), Inches(7.0), Inches(1.9), Inches(5.6))
+    _add_image(s, os.path.join(FIG_DIR, "anB_dashboard_light_1.png"), Inches(7.0), Inches(1.9), Inches(5.6))
     _text(s, Inches(7.05), Inches(5.0), Inches(5.5), Inches(0.35),
           "Dashboard : KPI, graphiques secteur/contrat, adéquation via tags KPI.",
           size=11.5, color=GRAY)
@@ -477,7 +477,7 @@ def build():
         "Compétences : full-stack, sécurité applicative (JWT, OTP, anti-IDOR), migrations, RGPD.",
         "Perspectives : tests automatisés, automatisation du questionnaire, newsletter, mentorat, PWA.",
     ], size=13.5, gap=8)
-    _screenshot_cap(s, os.path.join(FIG_DIR, "anC_parcours_light.png"),
+    _screenshot_cap(s, os.path.join(FIG_DIR, "anC_parcours_light_1.png"),
                     Inches(8.3), Inches(1.7), Inches(4.3),
                     "Parcours alumni saisi : expériences, certifications, salaire — la donnée qui alimente les indicateurs.",
                     color=ACCENT, label="Perspective")
