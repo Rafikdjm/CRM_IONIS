@@ -399,11 +399,15 @@ def archiver_consentement_refuse(db=Depends(get_db)):
                 WHERE id_etudiant = %s;
             """, (eid,))
 
-            # Anonymiser les expériences liées (salaire → 0, intitulé → masqué)
+            # Anonymiser les expériences liées (salaire/salary_annuel → 0, intitulé → masqué)
             cursor.execute("""
                 UPDATE EXPERIENCE_PRO
                 SET intitule_poste = 'ANONYMISE',
-                    salaire = 0
+                    type_contrat = 'ANONYMISE',
+                    date_debut = '1900-01-01',
+                    date_fin = NULL,
+                    salaire = 0,
+                    salary_annuel = 0
                 WHERE id_etudiant = %s;
             """, (eid,))
 

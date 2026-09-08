@@ -140,7 +140,11 @@ def _anonymiser_compte(cursor, id_etudiant: int) -> None:
         """
         UPDATE EXPERIENCE_PRO
         SET intitule_poste = 'ANONYMISE',
-            salaire = 0
+            type_contrat = 'ANONYMISE',
+            date_debut = '1900-01-01',
+            date_fin = NULL,
+            salaire = 0,
+            salary_annuel = 0
         WHERE id_etudiant = %s;
         """,
         (id_etudiant,),

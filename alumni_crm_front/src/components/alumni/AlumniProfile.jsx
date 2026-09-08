@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { alumniAPI } from '../../services/api';
+import { alumniAPI, promotionsAPI } from '../../services/api';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import ErrorMessage from '../shared/ErrorMessage';
 
@@ -36,6 +36,7 @@ export default function AlumniProfile() {
 
   const [skills, setSkills] = useState([]);
   const [skillInput, setSkillInput] = useState('');
+  const [promotions, setPromotions] = useState([]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -44,25 +45,29 @@ export default function AlumniProfile() {
         const storedId = localStorage.getItem('alumni_id');
         if (storedId) {
           setAlumniId(storedId);
-          const res = await alumniAPI.getById(storedId);
+          const [profileRes, promoRes] = await Promise.all([
+            alumniAPI.getById(storedId),
+            promotionsAPI.getAll().catch(() => ({ data: [] })),
+          ]);
+          setPromotions(promoRes.data || []);
           setProfile({
-            first_name: res.data.first_name || '',
-            last_name: res.data.last_name || '',
-            email: res.data.email || '',
-            phone: res.data.phone || '',
-            address: res.data.address || '',
-            city: res.data.city || '',
-            country: res.data.country || '',
-            linkedin: res.data.linkedin || '',
-            availability_status: res.data.availability_status || '',
-            sector: res.data.sector || '',
-            promotion: res.data.promotion || '',
-            id_promotion: res.data.id_promotion || null,
-            date_naissance: res.data.date_naissance || '',
-            email_academique: res.data.email_academique || '',
-            parcours_anterieur: res.data.parcours_anterieur || '',
+            first_name: profileRes.data.first_name || '',
+            last_name: profileRes.data.last_name || '',
+            email: profileRes.data.email || '',
+            phone: profileRes.data.phone || '',
+            address: profileRes.data.address || '',
+            city: profileRes.data.city || '',
+            country: profileRes.data.country || '',
+            linkedin: profileRes.data.linkedin || '',
+            availability_status: profileRes.data.availability_status || '',
+            sector: profileRes.data.sector || '',
+            promotion: profileRes.data.promotion || '',
+            id_promotion: profileRes.data.id_promotion || null,
+            date_naissance: profileRes.data.date_naissance || '',
+            email_academique: profileRes.data.email_academique || '',
+            parcours_anterieur: profileRes.data.parcours_anterieur || '',
           });
-          setSkills(res.data.skills || []);
+          setSkills(profileRes.data.skills || []);
         }
       } catch {
         setError('Impossible de charger votre profil. Veuillez réessayer.');
@@ -76,6 +81,16 @@ export default function AlumniProfile() {
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePromotionChange = (e) => {
+    const selectedId = e.target.value ? Number(e.target.value) : null;
+    const selected = promotions.find((p) => p.id === selectedId);
+    setProfile((prev) => ({
+      ...prev,
+      id_promotion: selectedId,
+      promotion: selected ? selected.name : '',
+    }));
   };
 
   const addSkill = () => {
@@ -206,9 +221,12 @@ export default function AlumniProfile() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 [&>*]:min-w-0">
           <div className="md:col-span-2">
             <label className={labelClass}>Promotion</label>
-            <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm text-gray-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300">
-              {profile.promotion || 'Non renseignée'}
-            </div>
+            <select value={profile.id_promotion ?? ''} onChange={handlePromotionChange} className={inputClass}>
+              <option value="">Sélectionner...</option>
+              {promotions.map((p) => (
+                <option key={p.id} value={p.id}>{p.name} ({p.year})</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className={labelClass}>Prénom</label>
