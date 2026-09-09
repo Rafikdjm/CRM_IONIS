@@ -830,87 +830,28 @@ La liste exhaustive des routes est consultable en ligne via la documentation Swa
 
 #### Exemples d'appels (`curl`) et réponses
 
-Quelques appels significatifs avec les réponses JSON retournées par l'API.
+Quelques appels significatifs, avec le corps de requête envoyé et la réponse JSON réellement retournée par l'API. `<token>` désigne le jeton JWT obtenu à l'étape 1 (admin) ou 3 (alumni), transmis dans l'en-tête `Authorization: Bearer <token>`.
 
 **1. Authentification admin — `POST /auth/admin/login`**
+
+Connexion de l'administrateur par code d'accès. Réponse : jeton JWT + rôle. Ce token protège toutes les routes `/admin/*`.
 
 ```bash
 curl -X POST http://localhost:8000/auth/admin/login \
   -H "Content-Type: application/json" \
-  -d '{"code": "***"}'
+  -d '{"code": "s3cr3t"}'
 ```
 
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "role": "admin"
 }
 ```
 
-**2. Indicateurs par promotion — `GET /admin/indicateurs`**
+**2. Demande d'un code OTP — `POST /auth/otp/request`**
 
-```bash
-curl -X GET http://localhost:8000/admin/indicateurs \
-  -H "Authorization: Bearer <token>"
-```
-
-```json
-{
-  "indicateurs_par_promotion": [
-    {
-      "nom_promotion": "Promotion 2023",
-      "total_etudiants": 4,
-      "taux_emploi_pourcentage": 50.0,
-      "salaire_moyen": 3550.0
-    }
-  ],
-  "taux_emploi_6mois": 73.33,
-  "salaire_moyen": 46909.09,
-  "taux_reponse": 100.0
-}
-```
-
-**3. Répartition par secteur — `GET /admin/indicateurs/secteurs`**
-
-```bash
-curl -X GET http://localhost:8000/admin/indicateurs/secteurs \
-  -H "Authorization: Bearer <token>"
-```
-
-```json
-{
-  "secteurs": [
-    {"secteur": "Technologie", "count": 3},
-    {"secteur": "Conseil", "count": 2},
-    {"secteur": "Marketing", "count": 2}
-  ],
-  "total_alumni": 15
-}
-```
-
-**4. KPI tags — `GET /admin/indicateurs/kpi-tags`**
-
-```bash
-curl -X GET http://localhost:8000/admin/indicateurs/kpi-tags \
-  -H "Authorization: Bearer <token>"
-```
-
-```json
-[
-  {
-    "tag": "adequation_formation",
-    "libelle": "Adéquation formation/emploi",
-    "valeur": 75.0,
-    "unite": "%",
-    "distribution": [
-      {"label": "Oui", "nb": 9, "pourcentage": 75.0},
-      {"label": "Non", "nb": 3, "pourcentage": 25.0}
-    ]
-  }
-]
-```
-
-**5. Demande OTP — `POST /auth/otp/request`**
+Déclenche l'envoi par email d'un code à 6 chiffres (10 min de validité). La réponse est volontairement identique que le compte existe ou non (anti-énumération d'adresses) ; l'appel initialise le flux de connexion alumni.
 
 ```bash
 curl -X POST http://localhost:8000/auth/otp/request \
@@ -924,7 +865,135 @@ curl -X POST http://localhost:8000/auth/otp/request \
 }
 ```
 
-**6. Questionnaire actif — `GET /questionnaires/actif?id_etudiant=1`**
+**3. Vérification du code OTP — `POST /auth/otp/verify`**
+
+Échange du code reçu contre un jeton de session alumni (JWT, rôle `alumni`, validité 24 h), accompagné des informations minimales du compte.
+
+```bash
+curl -X POST http://localhost:8000/auth/otp/verify \
+  -H "Content-Type: application/json" \
+  -d '{"email": "jean.dupont@example.com", "code": "483920"}'
+```
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "alumni": {
+    "id_etudiant": 1,
+    "nom": "Dupont",
+    "prenom": "Jean",
+    "email": "jean.dupont@example.com"
+  },
+  "role": "alumni"
+}
+```
+
+**4. Indicateurs du tableau de bord — `GET /admin/indicateurs`** *(route admin)*
+
+Indicateurs globaux : taux d'emploi, salaires, couverture, par promotion. Les champs `hypothese` et `source_de_verite` documentent les règles de calcul ; la réponse complète est tronquée (`...`) pour la lisibilité.
+
+```bash
+curl -X GET http://localhost:8000/admin/indicateurs \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "hypothese": "diplomation juin, delai approxime : date de reference = annee_diplome-12-01 (+6 mois)...",
+  "source_de_verite": "EXPERIENCE_PRO : experience non terminee... ; availability_status est declaratif...",
+  "indicateurs_par_promotion": [
+    {
+      "nom_promotion": "Promotion 2023",
+      "annee_diplome": 2023,
+      "total_etudiants": 4,
+      "etudiants_en_poste": 2,
+      "etudiants_avec_experience": 3,
+      "salaire_moyen": 3550.0,
+      "taux_emploi_pourcentage": 50.0,
+      "taux_couverture": 75.0
+    }
+  ],
+  "taux_emploi_6mois_par_promotion": [
+    {
+      "nom_promotion": "Promotion 2023",
+      "annee_diplome": 2023,
+      "date_reference": "2023-12-01",
+      "statut_maturite": "mature",
+      "total_diplomes": 4,
+      "emplois_6_mois": 3,
+      "taux_emploi_6mois_pourcentage": 75.0,
+      "taux_couverture": 75.0
+    }
+  ],
+  "taux_emploi_6mois": 73.33,
+  "total_diplomes_matures": 15,
+  "emplois_6_mois_matures": 11,
+  "alumni_actifs": 22,
+  "taux_reponse": 91.67,
+  "total_alumni": 24,
+  "salaire_moyen": 46909.09,
+  "salaires_renseignes": 11,
+  "salaire_min": 32000.0,
+  "salaire_max": 70000.0
+}
+```
+
+**5. Répartition par secteur — `GET /admin/indicateurs/secteurs`** *(route admin)*
+
+Nombre d'alumni par secteur d'activité (secteur de l'expérience en cours). Un secteur absent est agrégé sous `"secteur": null` (affiché « Non renseigné » côté frontend).
+
+```bash
+curl -X GET http://localhost:8000/admin/indicateurs/secteurs \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+{
+  "secteurs": [
+    {"secteur": "Technologie", "count": 3},
+    {"secteur": "Conseil", "count": 2},
+    {"secteur": "Marketing", "count": 2},
+    {"secteur": null, "count": 1}
+  ],
+  "total_alumni": 24
+}
+```
+
+**6. Tags KPI des questionnaires actifs — `GET /admin/indicateurs/kpi-tags`** *(route admin)*
+
+Chacun des indicateurs dérivés, calculé automatiquement à partir des réponses des questionnaires actifs. Un tag sans réponse est toujours renvoyé (valeurs `null`).
+
+```bash
+curl -X GET http://localhost:8000/admin/indicateurs/kpi-tags \
+  -H "Authorization: Bearer <token>"
+```
+
+```json
+[
+  {
+    "tag": "adequation_formation",
+    "question_texte": "Votre formation vous a-t-elle préparé au monde professionnel ?",
+    "question_type": "boolean",
+    "total_repondants": 12,
+    "valeur": 75.0,
+    "unite": "%",
+    "libelle_valeur": "Oui",
+    "distribution": [
+      {"label": "Oui", "nb": 9, "pourcentage": 75.0},
+      {"label": "Non", "nb": 3, "pourcentage": 25.0}
+    ],
+    "detail": null,
+    "reponses_recentes": [
+      {"reponse": "oui", "date": "2026-06-01"},
+      {"reponse": "non", "date": "2026-05-28"}
+    ]
+  }
+]
+```
+
+**7. Questionnaire actif — `GET /questionnaires/actif?id_etudiant=1`** *(route alumni)*
+
+Questionnaire en cours de collecte, avec ses questions dans l'ordre (`ordre`), le type (`boolean`, `choice`, `single_choice`, `dropdown`, `rating`, `text`), les options (`options`) et le tag KPI éventuel (`tag`).
 
 ```bash
 curl -X GET "http://localhost:8000/questionnaires/actif?id_etudiant=1" \
@@ -933,36 +1002,79 @@ curl -X GET "http://localhost:8000/questionnaires/actif?id_etudiant=1" \
 
 ```json
 {
-  "titre": "Enquete Alumni 2026",
+  "id_questionnaire": 3,
+  "titre": "Enquête Alumni 2026",
+  "description": "Situation professionnelle un an après l'obtention du diplôme.",
+  "date_creation": "2026-06-01",
+  "actif": true,
   "questions": [
     {
-      "texte": "Votre formation vous a-t-elle prepare au monde pro ?",
+      "id_question": 11,
+      "id_questionnaire": 3,
+      "texte": "Votre formation vous a-t-elle préparé au monde professionnel ?",
       "type": "boolean",
-      "tag": "adequation_formation"
+      "options": [],
+      "ordre": 1,
+      "tag": "adequation_formation",
+      "conditionnee_statut_emploi": false
     },
     {
+      "id_question": 12,
+      "id_questionnaire": 3,
       "texte": "Dans quel secteur exercez-vous ?",
-      "type": "choice",
-      "options": ["Technologie","Finance","Sante",...],
-      "tag": "statut_professionnel"
+      "type": "dropdown",
+      "options": ["Technologie", "Finance", "Santé", "Éducation", "Autre"],
+      "ordre": 2,
+      "tag": "secteur_emploi",
+      "conditionnee_statut_emploi": true
     }
   ]
 }
 ```
 
-**7. Consentements — `GET /consentements/etudiant/{id}`**
+**8. Consentements RGPD d'un alumni — `GET /consentements/etudiant/1`** *(alumni ou admin)*
+
+Historique des choix, du plus récent au plus ancien. Chaque ligne est horodatée et porte le canal de collecte (`web`) ; pour lire l'état courant il faut conserver la ligne la plus récente de chaque `type_consentement`.
 
 ```bash
 curl -X GET http://localhost:8000/consentements/etudiant/1 \
-  -H "Authorization: Bearer <alumni_token>"
+  -H "Authorization: Bearer <token>"
 ```
 
 ```json
 [
-  {"type_consentement": "prise_de_contact", "statut": "actif", "canal": "web"},
-  {"type_consentement": "partage_donnees",  "statut": "actif", "canal": "web"},
-  {"type_consentement": "enquetes",         "statut": "actif", "canal": "web"},
-  {"type_consentement": "newsletter",        "statut": "actif", "canal": "web"}
+  {
+    "id_consentement": 42,
+    "date_consentement": "2026-06-15",
+    "type_consentement": "newsletter",
+    "statut": "actif",
+    "canal": "web",
+    "id_etudiant": 1
+  },
+  {
+    "id_consentement": 38,
+    "date_consentement": "2026-06-10",
+    "type_consentement": "prise_de_contact",
+    "statut": "actif",
+    "canal": "web",
+    "id_etudiant": 1
+  },
+  {
+    "id_consentement": 37,
+    "date_consentement": "2026-06-10",
+    "type_consentement": "enquetes",
+    "statut": "actif",
+    "canal": "web",
+    "id_etudiant": 1
+  },
+  {
+    "id_consentement": 36,
+    "date_consentement": "2026-06-10",
+    "type_consentement": "partage_donnees",
+    "statut": "actif",
+    "canal": "web",
+    "id_etudiant": 1
+  }
 ]
 ```
 
