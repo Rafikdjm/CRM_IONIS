@@ -167,7 +167,7 @@
 \begin{titlepage}
 \thispagestyle{empty}
 \begin{tikzpicture}[remember picture,overlay]
-  % Bandeau supérieur \hyperlink{abbr-IONIS}{IONIS (18)}
+  % Bandeau supérieur IONIS (18)
   \fill[axonbase] (current page.north west) rectangle ([yshift=-4.2cm]current page.north east);
   \fill[axonaccent] ([yshift=-4.2cm]current page.north west) rectangle ([yshift=-4.35cm]current page.north east);
   \fill[axonlight] ([yshift=-4.35cm]current page.north west) rectangle ([yshift=-4.5cm]current page.north east);
@@ -1373,7 +1373,7 @@ curl -X POST http://localhost:8000/auth/admin/login \
 }
 \end{lstlisting}
 
-% ── 2. Demande d'un code \hyperlink{abbr-OTP}{OTP (28)} ─────────────────────────────────────
+% ── 2. Demande d'un code OTP (28) ─────────────────────────────────────
 \subsubsection*{2. Demande d'un code OTP — \texttt{POST /auth/otp/request}}
 \emph{Déclenche l'envoi par email d'un code à 6 chiffres (10 min de validité). La réponse est volontairement identique que le compte existe ou non (anti-énumération d'adresses).}
 
@@ -1388,7 +1388,7 @@ curl -X POST http://localhost:8000/auth/otp/request \
 }
 \end{lstlisting}
 
-% ── 3. Vérification du code \hyperlink{abbr-OTP}{OTP (28)} ──────────────────────────────────
+% ── 3. Vérification du code OTP (28) ──────────────────────────────────
 \subsubsection*{3. Vérification du code OTP — \texttt{POST /auth/otp/verify}}
 \emph{Échange du code reçu contre un jeton de session alumni (\hyperlink{abbr-JWT}{JWT (22)}, rôle \texttt{alumni}, validité 24 h), accompagné des informations minimales du compte.}
 
@@ -1479,7 +1479,7 @@ curl -X GET http://localhost:8000/admin/indicateurs/secteurs \
 }
 \end{lstlisting}
 
-% ── 6. Tags \hyperlink{abbr-KPI}{KPI (23)} des questionnaires actifs ────────────────────────
+% ── 6. Tags KPI (23) des questionnaires actifs ────────────────────────
 \subsubsection*{6. Tags KPI des questionnaires actifs — \texttt{GET /admin/indicateurs/kpi-tags} \emph{(route admin)}}
 \emph{Indicateurs dérivés calculés automatiquement à partir des réponses des questionnaires actifs. Un tag sans réponse est toujours renvoyé (valeurs \texttt{null}).}
 
