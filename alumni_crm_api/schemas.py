@@ -259,6 +259,16 @@ class NouvelleExperience(BaseModel):
         return self
 
 
+class ExperienceProUpdate(NouvelleExperience):
+    """Mise à jour complète (atomique) d'une expérience existante.
+
+    Même contrat que NouvelleExperience (entreprise résolue par
+    nom_entreprise, champs obligatoires) : le remplacement est effectué en
+    une seule transaction côté route PUT /experiences/{id_experience} — pas
+    de delete+recreate en deux requêtes.
+    """
+
+
 class CertificationAlumniCreate(BaseModel):
     nom: str
     organisme: str = ""

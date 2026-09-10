@@ -348,6 +348,23 @@ export const alumniAPI = {
   anonymise: (id, acteur) => api.post(`/etudiants/${id}/anonymiser`, { acteur }),
 };
 
+const mapCareerToPayload = (data) => {
+  const salaryVal = parseFloat(data.salary_range) || 0;
+  return {
+    intitule_poste: data.position || data.intitule_poste || '',
+    type_contrat: data.type_contrat || 'CDI',
+    date_debut: toFullDate(data.start_date || data.date_debut) || '2024-01-01',
+    date_fin: toFullDate(data.end_date || data.date_fin) || null,
+    salaire: salaryVal,
+    salary_annuel: salaryVal,
+    nom_entreprise: data.company || data.nom_entreprise || '',
+    secteur_activite: data.sector || data.secteur_activite || '',
+    poste_actuel: data.is_current || data.poste_actuel || false,
+    pays: data.pays || '',
+    ville: data.ville || '',
+  };
+};
+
 export const careerAPI = {
   getByAlumni: async (alumniId) => {
     const res = await api.get(`/etudiants/${alumniId}/experiences`);
@@ -355,28 +372,10 @@ export const careerAPI = {
     return { data: items.map(mapExperienceToCareer) };
   },
 
-  add: (alumniId, data) => {
-    const salaryVal = parseFloat(data.salary_range) || 0;
-    const payload = {
-      intitule_poste: data.position || data.intitule_poste || '',
-      type_contrat: data.type_contrat || 'CDI',
-      date_debut: toFullDate(data.start_date || data.date_debut) || '2024-01-01',
-      date_fin: toFullDate(data.end_date || data.date_fin) || null,
-      salaire: salaryVal,
-      salary_annuel: salaryVal,
-      nom_entreprise: data.company || data.nom_entreprise || '',
-      secteur_activite: data.sector || data.secteur_activite || '',
-      poste_actuel: data.is_current || data.poste_actuel || false,
-      pays: data.pays || '',
-      ville: data.ville || '',
-    };
-    return api.post(`/etudiants/${alumniId}/experiences`, payload);
-  },
+  add: (alumniId, data) => api.post(`/etudiants/${alumniId}/experiences`, mapCareerToPayload(data)),
 
-  update: async (alumniId, careerId, data) => {
-    await api.delete(`/experiences/${careerId}`);
-    return careerAPI.add(alumniId, data);
-  },
+  update: (alumniId, careerId, data) =>
+    api.put(`/experiences/${careerId}`, mapCareerToPayload(data)),
 
   delete: (alumniId, careerId) => api.delete(`/experiences/${careerId}`),
 

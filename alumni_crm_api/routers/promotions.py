@@ -142,7 +142,12 @@ def update_promotion(id_promotion: int, promotion: schemas.PromotionCreate, db=D
             db.rollback()
             raise HTTPException(status_code=404, detail="Promotion introuvable.")
         db.commit()
-        return {**promotion.model_dump(), "id_promotion": id_promotion}
+        cursor.execute(
+            "SELECT COUNT(*) FROM ETUDIANT WHERE id_promotion = %s;",
+            (id_promotion,),
+        )
+        nb_etudiants = cursor.fetchone()[0]
+        return {**promotion.model_dump(), "id_promotion": id_promotion, "nb_etudiants": nb_etudiants}
     except HTTPException:
         raise
     except Exception:

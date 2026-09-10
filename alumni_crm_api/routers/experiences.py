@@ -166,6 +166,111 @@ def delete_experience(
         cursor.close()
 
 
+@router.put("/experiences/{id_experience}", response_model=schemas.ExperiencePro)
+def update_experience(
+    id_experience: int,
+    experience: schemas.ExperienceProUpdate,
+    db=Depends(get_db),
+    identity: dict = Depends(current_identity),
+):
+    """Modifie (atomiquement) une expérience.
+
+    Remplace le delete+recreate du frontend : ici une seule transaction,
+    aucune fenêtre de perte de données en cas d'échec intermédiaire.
+    L'entreprise est résolue/créée par nom_entreprise comme à la création,
+    et si le poste devient actuel, les autres postes du même étudiant sont
+    repassés à FALSE.
+    """
+    cursor = db.cursor()
+    try:
+        cursor.execute(
+            "SELECT id_etudiant FROM EXPERIENCE_PRO WHERE id_experience = %s;",
+            (id_experience,),
+        )
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Expérience introuvable.")
+        id_etudiant = row[0]
+        check_owner_or_admin(identity, id_etudiant)
+        refuser_compte_anonymise(cursor, id_etudiant)
+
+        # Résolution/création de l'entreprise (même logique que la création).
+        cursor.execute(
+            "SELECT id_entreprise FROM ENTREPRISE WHERE nom_entreprise ILIKE %s ORDER BY id_entreprise LIMIT 1",
+            (experience.nom_entreprise,),
+        )
+        ent_row = cursor.fetchone()
+        if ent_row:
+            id_entreprise = ent_row[0]
+            if experience.pays or experience.ville:
+                cursor.execute(
+                    "UPDATE ENTREPRISE SET "
+                    "pays = CASE WHEN pays = 'Non renseigné' THEN COALESCE(%s, pays) ELSE pays END, "
+                    "ville = CASE WHEN ville = 'Non renseigné' THEN COALESCE(%s, ville) ELSE ville END "
+                    "WHERE id_entreprise = %s",
+                    (experience.pays, experience.ville, id_entreprise),
+                )
+            if experience.secteur_activite:
+                cursor.execute(
+                    "UPDATE ENTREPRISE SET secteur_activite = %s WHERE id_entreprise = %s",
+                    (experience.secteur_activite, id_entreprise),
+                )
+        else:
+            cursor.execute(
+                "INSERT INTO ENTREPRISE (nom_entreprise, secteur_activite, pays, ville) "
+                "VALUES (%s, %s, %s, %s) RETURNING id_entreprise",
+                (
+                    experience.nom_entreprise,
+                    experience.secteur_activite or "Non renseigné",
+                    experience.pays or "Non renseigné",
+                    experience.ville or "Non renseigné",
+                ),
+            )
+            id_entreprise = cursor.fetchone()[0]
+
+        if experience.poste_actuel:
+            cursor.execute(
+                "UPDATE EXPERIENCE_PRO SET poste_actuel = FALSE "
+                "WHERE id_etudiant = %s AND id_experience != %s",
+                (id_etudiant, id_experience),
+            )
+
+        cursor.execute(
+            "UPDATE EXPERIENCE_PRO SET "
+            "intitule_poste = %s, type_contrat = %s, date_debut = %s, date_fin = %s, "
+            "salaire = %s, salary_annuel = %s, poste_actuel = %s, id_entreprise = %s "
+            "WHERE id_experience = %s;",
+            (
+                experience.intitule_poste,
+                experience.type_contrat,
+                experience.date_debut,
+                experience.date_fin,
+                experience.salaire,
+                experience.salary_annuel,
+                experience.poste_actuel,
+                id_entreprise,
+                id_experience,
+            ),
+        )
+
+        db.commit()
+        return {**experience.model_dump(exclude={"nom_entreprise", "secteur_activite", "pays", "ville"}),
+                "id_experience": id_experience, "id_etudiant": id_etudiant, "id_entreprise": id_entreprise}
+
+    except HTTPException:
+        db.rollback()
+        raise
+    except pg8000.dbapi.IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="L'étudiant ou l'entreprise spécifié n'existe pas.")
+    except Exception:
+        db.rollback()
+        logger.exception("Erreur lors de la modification de l'expérience %s", id_experience)
+        raise HTTPException(status_code=400, detail="Impossible de modifier l'expérience.")
+    finally:
+        cursor.close()
+
+
 @router.post("/etudiants/{id_etudiant}/experiences", tags=["Interface Étudiant / Alumni"])
 def ajouter_experience(
     id_etudiant: int,

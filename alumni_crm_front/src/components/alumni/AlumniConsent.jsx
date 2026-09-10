@@ -277,7 +277,7 @@ export default function AlumniConsent() {
           <p className="mt-2 font-medium">Questions ?</p>
           <p className="mt-1">
             Contactez le DPO :
-            <a href="mailto:contact@ionis-stm.com" className="ml-1 font-medium underline">contact@ionis-stm.com</a>
+            <a href="mailto:dpo@ionis-stm.com" className="ml-1 font-medium underline">dpo@ionis-stm.com</a>
           </p>
         </div>
       </div>

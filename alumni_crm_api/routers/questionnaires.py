@@ -41,7 +41,7 @@ def creer_questionnaire(data: schemas.QuestionnaireCreate, db=Depends(get_db)):
             cursor.execute(
                 "INSERT INTO QUESTION (id_questionnaire, texte, type, options, ordre, tag, conditionnee_statut_emploi) "
                 "VALUES (%s, %s, %s, %s::jsonb, %s, %s, %s);",
-                (id_q, q.texte, q.type, options_json, q.ordre if q.ordre else i, q.tag, q.conditionnee_statut_emploi),
+                (id_q, q.texte, q.type, options_json, q.ordre if q.ordre is not None else i, q.tag, q.conditionnee_statut_emploi),
             )
 
         db.commit()
@@ -259,6 +259,13 @@ def modifier_questionnaire(id_questionnaire: int, data: schemas.QuestionnaireCre
         db.commit()
 
         cursor.execute(
+            "SELECT actif FROM QUESTIONNAIRE WHERE id_questionnaire = %s;",
+            (id_questionnaire,),
+        )
+        actif_row = cursor.fetchone()
+        actif_reel = bool(actif_row[0]) if actif_row else True
+
+        cursor.execute(
             "SELECT id_question, id_questionnaire, texte, type, options, ordre, tag, conditionnee_statut_emploi "
             "FROM QUESTION WHERE id_questionnaire = %s ORDER BY ordre;",
             (id_questionnaire,),
@@ -273,7 +280,7 @@ def modifier_questionnaire(id_questionnaire: int, data: schemas.QuestionnaireCre
             qr["conditionnee_statut_emploi"] = bool(qr.get("conditionnee_statut_emploi"))
 
         return {"id_questionnaire": id_questionnaire, "titre": data.titre,
-                "description": data.description, "actif": True, "questions": questions_raw}
+                "description": data.description, "actif": actif_reel, "questions": questions_raw}
     except HTTPException:
         db.rollback()
         raise
@@ -417,15 +424,26 @@ def repondre_questionnaire(
         if not row[0]:
             raise HTTPException(status_code=400, detail="Ce questionnaire n'est plus actif.")
 
-        # Cohérence a minima : chaque clé de `reponses` doit correspondre à une
-        # question du questionnaire visé. Choix documenté : erreur 422 explicite
-        # (plutôt qu'un rejet silencieux) pour que l'alumni corrige son envoi.
+        # Cohérence des réponses : chaque clé doit correspondre à une question
+        # du questionnaire visé ET la valeur doit être compatible avec le type
+        # de la question (options, Oui/Non, note 1-5). Choix documenté : erreur
+        # 422 explicite (plutôt qu'un rejet silencieux) pour que l'alumni
+        # corrige son envoi.
         cursor.execute(
-            "SELECT id_question FROM QUESTION WHERE id_questionnaire = %s;",
+            "SELECT id_question, type, options FROM QUESTION WHERE id_questionnaire = %s;",
             (id_questionnaire,),
         )
-        questions_valides = {str(rowq[0]) for rowq in cursor.fetchall()}
-        cles_inconnues = [str(k) for k in data.reponses if str(k) not in questions_valides]
+        questions_meta = {}
+        for qid, qtype, qopts in cursor.fetchall():
+            opts = qopts
+            if isinstance(opts, str):
+                try:
+                    opts = json.loads(opts)
+                except (json.JSONDecodeError, TypeError):
+                    opts = []
+            questions_meta[str(qid)] = {"type": qtype, "options": opts or []}
+
+        cles_inconnues = [str(k) for k in data.reponses if str(k) not in questions_meta]
         if cles_inconnues:
             db.rollback()
             raise HTTPException(
@@ -434,6 +452,36 @@ def repondre_questionnaire(
                     "La réponse contient des clés qui ne correspondent à aucune "
                     f"question de ce questionnaire : {', '.join(sorted(cles_inconnues))}."
                 ),
+            )
+
+        erreurs_valeurs = []
+        for k, v in data.reponses.items():
+            qtype = questions_meta[str(k)]["type"]
+            if v == "Non applicable":
+                continue
+            if qtype in ("choice", "single_choice", "dropdown"):
+                options_valides = {str(o) for o in questions_meta[str(k)]["options"]}
+                if str(v) not in options_valides:
+                    erreurs_valeurs.append(
+                        f"question {k}: la valeur « {v} » n'est pas une option prévue."
+                    )
+            elif qtype == "boolean":
+                if v not in ("Oui", "Non"):
+                    erreurs_valeurs.append(
+                        f"question {k}: réponse booléenne « {v} » invalide (Oui/Non attendus)."
+                    )
+            elif qtype == "rating":
+                if str(v) not in ("1", "2", "3", "4", "5"):
+                    erreurs_valeurs.append(
+                        f"question {k}: note « {v} » hors de l'échelle 1-5."
+                    )
+            elif qtype == "text" and not isinstance(v, str):
+                erreurs_valeurs.append(f"question {k}: réponse texte non valide.")
+        if erreurs_valeurs:
+            db.rollback()
+            raise HTTPException(
+                status_code=422,
+                detail="Réponses invalides. " + " ".join(sorted(erreurs_valeurs)),
             )
 
         reponses_json = json.dumps(data.reponses)

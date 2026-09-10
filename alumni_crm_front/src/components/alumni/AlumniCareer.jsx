@@ -439,24 +439,40 @@ export default function AlumniCareer() {
       const existingCertsRes = await careerAPI.getCertifications(alumniId).catch(() => ({ data: [] }));
       const existingCerts = existingCertsRes.data || [];
 
-      const deleteCareerOps = existingCareers.map((c) =>
-        careerAPI.delete(alumniId, c.id).catch(() => null),
-      );
-      const deleteCertOps = existingCerts.map((c) =>
-        careerAPI.deleteCertification(alumniId, c.id).catch(() => null),
-      );
-      await Promise.all([...deleteCareerOps, ...deleteCertOps]);
+      // Postes : mise à jour atomique par item (PUT pour l'existant, POST pour
+      // le nouveau). On ne supprime QUE les postes réellement retirés de la
+      // liste — plus de delete+recreate en bloc (n'était pas atomique).
+      const existingCareerIds = existingCareers.map((c) => c.id).filter(Boolean);
+      const keptCareerIds = new Set(careers.filter((c) => c.id).map((c) => c.id));
+      const removedCareerIds = existingCareerIds.filter((id) => !keptCareerIds.has(id));
 
-      const newCareerOps = careers
+      const deleteCareerOps = removedCareerIds.map((id) =>
+        careerAPI.delete(alumniId, id).catch(() => null),
+      );
+      await Promise.all(deleteCareerOps);
+
+      const careerOps = careers
         .filter((c) => !isBlankCareer(c))
         .map((career) => {
           const sectorToSend = career.sector === 'Autre' && career.custom_sector
             ? career.custom_sector
             : career.sector;
-          return careerAPI.add(alumniId, { ...career, sector: sectorToSend }).catch((err) => {
+          const payload = { ...career, sector: sectorToSend };
+          if (career.id) {
+            return careerAPI.update(alumniId, career.id, payload).catch((err) => {
+              throw new Error(`Modification poste "${career.company}" échouée: ${err.response?.data?.detail || err.message}`);
+            });
+          }
+          return careerAPI.add(alumniId, payload).catch((err) => {
             throw new Error(`Ajout poste "${career.company}" échoué: ${err.response?.data?.detail || err.message}`);
           });
         });
+
+      const deleteCertOps = existingCerts.map((c) =>
+        careerAPI.deleteCertification(alumniId, c.id).catch(() => null),
+      );
+      await Promise.all(deleteCertOps);
+
       const newCertOps = certifications
         .filter((c) => c.name)
         .map((cert) =>
@@ -465,7 +481,7 @@ export default function AlumniCareer() {
           }),
         );
 
-      await Promise.all([...newCareerOps, ...newCertOps]);
+      await Promise.all([...careerOps, ...newCertOps]);
 
       const [refreshedCareersRes, refreshedCertsRes] = await Promise.all([
         careerAPI.getByAlumni(alumniId),
