@@ -49,12 +49,21 @@ class ReportPDF(FPDF):
         self.ln(2)
 
     def bullet(self, text, indent=10):
-        x = self.get_x()
         self.set_font("SegoeUI", "", 10)
         self.set_text_color(55, 65, 81)
-        self.set_x(x + indent)
-        self.cell(4, 5.5, "\u2022")
-        self.multi_cell(0, 5.5, f"  {text}")
+        x0 = self.l_margin + indent
+        bullet_w = 6
+        text_x = x0 + bullet_w
+        width = self.w - self.r_margin - text_x
+        line_h = 5.5
+        lines = self.multi_cell(width, line_h, text, dry_run=True, output="LINES")
+        self.set_xy(x0, self.get_y())
+        self.cell(bullet_w, line_h, "\u2022")
+        for line in lines:
+            if self.get_y() + line_h > self.page_break_trigger:
+                self.add_page()
+            self.set_x(text_x)
+            self.cell(width, line_h, line, new_x="LMARGIN", new_y="NEXT")
         self.ln(1)
 
     TABLE_LINE_H = 5.8
@@ -280,7 +289,7 @@ def generate_cartographie():
     pdf.bullet("L'alumni peut modifier ses preferences a tout moment via l'interface de consentement.")
     pdf.bullet("Le retrait du consentement est modelise par un nouveau vote 'refuse' avec la date courante.")
     pdf.bullet("Enregistrement de la date exacte du recueil et identification du canal de collecte pour tout audit de conformite.")
-    pdf.bullet("Information de l'alumni dans l'interface de consentement (AlumniConsent.jsx) : duree de conservation des donnees (suppression 6 mois apres anonymisation) et contact du DPO (contact@ionis-stm.com).")
+    pdf.bullet("Information de l'alumni dans l'interface de consentement (AlumniConsent.jsx) : duree de conservation des donnees (suppression 6 mois apres anonymisation) et contact du DPO (dpo@ionis-stm.com).")
 
     pdf.section_title("5.4 Droits RGPD Implementes")
     pdf.bullet("Droit d'acces a vos donnees personnelles : page de profil en lecture seule, suivi des demandes via GET /rgpd/demandes/moi et export json/Excel/CSV auto-service via GET /rgpd/export.")
@@ -346,7 +355,7 @@ def generate_rgpd():
     pdf.bullet("Canal secondaire prevu : questionnaire annuel (AlumniSurvey.jsx) ; a ce jour seul le canal 'web' est reellement emis par le frontend.")
     pdf.bullet("Chaque consentement est enregistre avec : type_consentement, statut (actif/refuse), date_consentement, canal, id_etudiant.")
     pdf.bullet("L'endpoint POST /consentements/ cree ou met a jour le consentement pour chaque type.")
-    pdf.bullet("L'interface de consentement informe l'alumni de la duree de conservation des donnees (suppression 6 mois apres anonymisation) et affiche le contact du DPO (contact@ionis-stm.com).")
+    pdf.bullet("L'interface de consentement informe l'alumni de la duree de conservation des donnees (suppression 6 mois apres anonymisation) et affiche le contact du DPO (dpo@ionis-stm.com).")
 
     pdf.section_title("3.2 Modification et retrait")
     pdf.bullet("L'alumni peut modifier ses preferences a tout moment via l'interface de consentement.")
@@ -445,7 +454,7 @@ def generate_strategie():
     pdf.bullet("Les tags de competences (skills) sont geres via un systeme d'ajout/suppression dynamique.")
 
     pdf.section_title("2.2 Gestion du parcours (AlumniCareer.jsx)")
-    pdf.bullet("Ajout/suppression d'experiences professionnelles (entreprise, poste, secteur, contrat, dates, salaire, localisation). La modification directe d'une experience existante n'est pas disponible a ce jour : il faut la supprimer puis la recreer (limite assumee du prototype).")
+    pdf.bullet("Ajout/suppression d'experiences professionnelles (entreprise, poste, secteur, contrat, dates, salaire, localisation) et modification d'une experience existante via PUT /experiences/{id_experience} : mise a jour en une seule transaction atomique (plus besoin de supprimer puis recreer).")
     pdf.bullet("Ajout/suppression de certifications (nom, organisme, date d'obtention).")
     pdf.bullet("Detection automatique du 'poste actuel' : si aucun poste n'est coche comme actuel, le systeme affiche l'experience la plus recente.")
     pdf.bullet("Alerte visuelle si le statut est 'en_poste' mais aucun poste n'est coche comme actuel.")
@@ -527,7 +536,7 @@ def generate_indicateurs():
     pdf.chapter_title("2", "Indicateurs Cles de Pilotage")
 
     headers = ["Indicateur", "Definition (simplifiee)", "Metier / Utilisation", "Exemple"]
-    widths = [32, 76, 41, 41]
+    widths = [40, 68, 41, 41]
     pdf.table_header(headers, widths)
     rows = [
         ["Taux d'emploi a 6 mois", "Diplomes en activite 6 mois apres la sortie (CDI, CDD...).", "Rapports ministeriels et audits.", "Promo 2025 : 9/12 en poste = 75 %"],
@@ -549,16 +558,16 @@ def generate_indicateurs():
     pdf.section_title("3.1 Endpoints API")
 
     headers2 = ["Endpoint", "Description (simplifiee)", "Donnees retournees (extrait)"]
-    widths2 = [35, 62, 93]
+    widths2 = [50, 56, 84]
     pdf.table_header(headers2, widths2)
     rows2 = [
         ["GET /admin/indicateurs", "Indicateurs principaux du tableau de bord.", "total_alumni, taux_emploi_6mois, taux_couverture, alumni_actifs, taux_reponse, salaire_moyen/min/max."],
-        ["GET /admin/indicateurs/secteurs", "Repartition par secteur d'activite.", "{secteur, count}, total_alumni."],
-        ["GET /admin/indicateurs/types-contrat", "Repartition par type de contrat (des experiences en cours).", "{type_contrat, count} ; vides = 'Non renseigne'."],
-        ["GET /admin/indicateurs/kpi-tag?tag=X", "Valeur d'un indicateur KPI (question taggee).", "valeur, unite (% ou moyenne), total_repondants, question_texte, distribution."],
-        ["GET /admin/indicateurs/kpi-tags", "Tous les tags KPI des questionnaires actifs.", "[{tag, libelle, pourcentage, nb_repondants, valeur, unite, distribution}]."],
-        ["GET /admin/indicateurs/kpi-tags-actifs", "Liste des tags DISTINCT utilises.", "{tags: [...]}"],
-        ["GET /admin/indicateurs/partenaires", "Indicateurs anonymises pour les partenaires (partage_donnees actif).", "nb_consentants, taux_emploi_pourcentage, en_emploi, salaire_moyen, par_promotion, top_secteurs."],
+        ["GET /admin/indicateurs/\nsecteurs", "Repartition par secteur d'activite.", "{secteur, count}, total_alumni."],
+        ["GET /admin/indicateurs/\ntypes-contrat", "Repartition par type de contrat (des experiences en cours).", "{type_contrat, count} ; vides = 'Non renseigne'."],
+        ["GET /admin/indicateurs/\nkpi-tag?tag=X", "Valeur d'un indicateur KPI (question taggee).", "valeur, unite (% ou moyenne), total_repondants, question_texte, distribution."],
+        ["GET /admin/indicateurs/\nkpi-tags", "Tous les tags KPI des questionnaires actifs.", "[{tag, libelle, pourcentage, nb_repondants, valeur, unite, distribution}]."],
+        ["GET /admin/indicateurs/\nkpi-tags-actifs", "Liste des tags DISTINCT utilises.", "{tags: [...]}"],
+        ["GET /admin/indicateurs/\npartenaires", "Indicateurs anonymises pour les partenaires (partage_donnees actif).", "nb_consentants, taux_emploi_pourcentage, en_emploi, salaire_moyen, par_promotion, top_secteurs."],
     ]
     for i, r in enumerate(rows2):
         pdf.table_row(r, widths2, fill=(i % 2 == 0))
@@ -612,7 +621,7 @@ def generate_indicateurs():
 
     pdf.section_title("5.2 Indicateurs Cles du Rapport")
     headers_kpi = ["Indicateur", "Valeur attendue", "Calcul (simplifie)", "Exemple"]
-    widths_kpi = [34, 48, 68, 40]
+    widths_kpi = [40, 48, 62, 40]
     pdf.table_header(headers_kpi, widths_kpi)
     kpi_rows = [
         ["Effectif de la promotion", "Nombre total d'inscrits", "COUNT(etudiants WHERE id_promotion = X)", "Promo 2025 : 128"],
@@ -628,6 +637,7 @@ def generate_indicateurs():
         pdf.table_row(r, widths_kpi, fill=(i % 2 == 0))
     pdf.ln(4)
 
+    pdf.section_title("5.3 Diffusion du rapport")
     pdf.bullet("Frequence : annuelle, coincidant avec la campagne de collecte du questionnaire.")
     pdf.bullet("Destinataires : Ministere de l'Enseignement Superieur, organes de certification (CTI, HCERES), direction de l'etablissement.")
     pdf.bullet("Diffusion : via le tableau de bord admin (AdminDashboard.jsx) avec bouton d'export.")
@@ -690,9 +700,9 @@ def generate_guide_animation():
     pdf.chapter_title("3", "Processus de Suivi de l'Insertion Professionnelle")
     pdf.section_title("3.1 Mise a jour du parcours par l'alumni")
     pdf.bullet("Declencheur : l'alumni change de poste ou obtient une certification.")
-    pdf.bullet("Etapes : acces a la page Parcours (/alumni/career), ajout/suppression d'une experience (entreprise, poste, secteur, contrat, dates, salaire, localisation), ajout de certifications (nom, organisme, date). La modification directe d'une experience existante n'est pas disponible a ce jour : il faut la supprimer puis la recreer (limite assumee du prototype). Ces mises a jour s'effectuent exclusivement depuis l'interface web ; aucune application mobile n'existe a ce jour.")
+    pdf.bullet("Etapes : acces a la page Parcours (/alumni/career), ajout/modification/suppression d'une experience (entreprise, poste, secteur, contrat, dates, salaire, localisation), ajout de certifications (nom, organisme, date). La modification d'une experience existante passe par PUT /experiences/{id_experience} (transaction atomique, plus de delete+recreate en bloc). Ces mises a jour s'effectuent exclusivement depuis l'interface web ; aucune application mobile n'existe a ce jour.")
     pdf.bullet("Detection du poste actuel : si aucun poste n'est coche comme actuel, le systeme affiche automatiquement l'experience la plus recente. Une alerte ambrée est affichee si le statut est 'en_poste' mais aucun poste actuel n'est coche.")
-    pdf.bullet("Outil CRM : page AlumniCareer.jsx -> endpoints POST /etudiants/{id}/experiences et /etudiants/{id}/certifications.")
+    pdf.bullet("Outil CRM : page AlumniCareer.jsx -> endpoints POST /etudiants/{id}/experiences, PUT /experiences/{id_experience} (mise a jour atomique) et /etudiants/{id}/certifications.")
     pdf.section_title("3.2 Enrichissement du referentiel secteurs")
     pdf.bullet("Declencheur : un alumni saisit un secteur non encore enregistre.")
     pdf.bullet("Etape : le systeme propose 37 categories standardisees + 'Autre' avec saisie libre.")

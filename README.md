@@ -12,9 +12,9 @@ Alumni CRM est une application web 3-tiers qui permet à un établissement d'ens
 
 | Couche | Technologie |
 |---|---|
-| Backend | Python / FastAPI (16 routeurs montés dans 14 fichiers, 83 endpoints REST documentés via Swagger) |
+| Backend | Python / FastAPI (16 routeurs montés dans 14 fichiers, 84 endpoints REST documentés via Swagger) |
 | Frontend | React + Vite (espace admin + espace alumni) |
-| Base de données | PostgreSQL (14 tables, 16 migrations versionnées) |
+| Base de données | PostgreSQL (14 tables, 17 migrations versionnées) |
 | Emails | Resend (OTP + newsletter), mode console en développement |
 
 ## Fonctionnalités
@@ -30,7 +30,7 @@ Alumni CRM est une application web 3-tiers qui permet à un établissement d'ens
 ```
 alumni_crm_api/     Backend FastAPI (+ README détaillé : routes, sécurité, corrections)
   docs/             erd_alumni_crm.mmd / .docx (MLD régénéré par introspection)
-  migrations/       Migrations SQL numérotées 000 → 015
+  migrations/       Migrations SQL numérotées 000 → 016
 alumni_crm_front/   Frontend React/Vite (espace admin + espace alumni)
 Rapport/            Rapport de stage (LaTeX) + livrables — voir ci-dessous
 image/              Captures d'écran du rapport (26 fichiers PNG)
@@ -95,5 +95,5 @@ npm run lint     # oxlint
 ## Documentation complémentaire
 
 - [`alumni_crm_api/README.md`](alumni_crm_api/README.md) — architecture backend, liste des routers, test E2E, limites connues.
-- [`AUDIT_COHERENCE_TABLES.txt`](alumni_crm_api/AUDIT_COHERENCE_TABLES.txt) — audit base/API par introspection SQL.
+- [`AUDIT_COHERENCE.md`](Rapport/AUDIT_COHERENCE.md) — audit base/API par introspection SQL : synthèse du correctif 10/09 + détail table-par-champ (PDF : `Rapport/AUDIT_COHERENCE.pdf`).
 - [`Rapport/`](Rapport/) — rapport de stage (LaTeX) et livrables PDF/DOCX du sujet de stage.

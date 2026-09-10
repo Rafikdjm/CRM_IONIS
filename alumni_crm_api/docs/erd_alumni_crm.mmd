@@ -7,7 +7,7 @@
 %% 010_email_academique_unique.sql) : DEMANDE_RGPD complétée (009) et
 %% CONSENTEMENT_RGPD enrichi (006).
 %%
-%% Mis à jour le 25/08/2026 : renumérotation continue des migrations (000→015),
+%% Mis à jour le 25/08/2026 : renumérotation continue des migrations (000→016),
 %% l'ancien trou « 003 absent » est comblé), puis :
 %%   - 011 : REPONSE_QUESTIONNAIRE.id_etudiant passe en ON DELETE CASCADE
 %%     (harmonisation avec la base live, fix du drift de la migration 003)
@@ -15,6 +15,8 @@
 %%   - 013 : OTP_CODES formalisée dans le versionnage (CREATE TABLE IF NOT EXISTS)
 %%   - 014 : QUESTIONNAIRE.actif BOOLEAN DEFAULT TRUE (formalisé)
 %%   - 015 : QUESTION.texte — correction d'encodage (fix data, pas de DDL)
+%%   - 016 : contraintes CHECK alignées sur la base (016_contraintes_check.sql :
+%%     statut consentement, salaires, dates d'expérience, type de question)
 %%
 %% Re-audité le 27/08/2026 contre la base réelle (introspection PostgreSQL) :
 %%   - CONSENTEMENT_RGPD.canal est NULLABLE (l'API renseigne le canal si dispo)

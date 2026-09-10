@@ -16,7 +16,7 @@ Ce stage, réalisé au sein d'IONIS-STM dans le cadre du programme Pré-MSc 2026
 
 La problématique partait d'un constat simple. L'établissement ne disposait d'aucun outil pour suivre le cycle de vie complet d'un étudiant, de son inscription jusqu'à son évolution professionnelle. Les données d'insertion étaient dispersées, les indicateurs calculés manuellement, le réseau alumni inactif et la conformité RGPD non formalisée. Le sujet posait donc quatre défis : centraliser les données, fiabiliser les indicateurs d'insertion, animer le réseau, et intégrer la conformité réglementaire dès la conception.
 
-La démarche a suivi un cycle itératif : modélisation de la base de données, développement du backend, développement du frontend, audit de sécurité, puis rédaction des livrables documentaires. Le système repose sur une architecture trois tiers (FastAPI, React/Vite, PostgreSQL) et compte 14 tables, 83 endpoints API, 14 routes frontend et 8 indicateurs de base d'insertion professionnelle, complétés d'un indicateur dérivé pour chaque question taguée KPI active.
+La démarche a suivi un cycle itératif : modélisation de la base de données, développement du backend, développement du frontend, audit de sécurité, puis rédaction des livrables documentaires. Le système repose sur une architecture trois tiers (FastAPI, React/Vite, PostgreSQL) et compte 14 tables, 84 endpoints API, 14 routes frontend et 8 indicateurs de base d'insertion professionnelle, complétés d'un indicateur dérivé pour chaque question taguée KPI active.
 
 Le projet a abouti à un prototype fonctionnel couvrant l'intégralité du périmètre défini dans le sujet de stage. La conformité RGPD a été intégrée dès la conception : consentements traçables, workflow de demandes de suppression et d'anonymisation, journal d'audit et durée de conservation affichée. Un audit de sécurité a permis de corriger des failles d'authentification et de protéger des routes initialement ouvertes. Les livrables documentaires complémentaires (cartographie des données, charte RGPD, stratégie de mise à jour, analyse des indicateurs d'insertion et guide des processus d'animation du réseau) couvrent le volet Management du sujet. Le principal chantier restant avant la production est l'introduction d'une suite de tests automatisés, absente du dépôt à l'issue du stage.
 
@@ -183,11 +183,11 @@ J'ai conçu un modèle de données relationnel couvrant cinq domaines fonctionne
 | Questionnaires | QUESTIONNAIRE, QUESTION, REPONSE_QUESTIONNAIRE |
 | Infrastructure | otp_codes, schema_migrations |
 
-Le passage du MCD au MLD a respecté les règles de transformation standard (entité forte vers table, association N:M vers table de jonction). J'ai versionné **16 migrations SQL**, appliquées par un script maison (`run_migrations.py`) qui ne rejoue que les migrations non encore exécutées (table de suivi `schema_migrations`).
+Le passage du MCD au MLD a respecté les règles de transformation standard (entité forte vers table, association N:M vers table de jonction). J'ai versionné **17 migrations SQL** (16 à la date de l'audit de conformité, auxquelles s'ajoute la migration corrective 016 `016_contraintes_check.sql` du 10/09/2026), appliquées par un script maison (`run_migrations.py`) qui ne rejoue que les migrations non encore exécutées (table de suivi `schema_migrations`).
 
 **Mission 2 — Développement du backend API**
 
-J'ai développé une API REST complète avec FastAPI (Python). L'API compte **16 routeurs** et **83 endpoints** :
+J'ai développé une API REST complète avec FastAPI (Python). L'API compte **16 routeurs** et **84 endpoints** :
 
 - Authentification OTP par email (code à 6 chiffres) côté alumni, code d'accès et clé API côté admin, sessions JWT.
 - Gestion des promotions et des étudiants, avec CRUD complet.
@@ -205,7 +205,7 @@ J'ai développé une interface utilisateur complète avec React et Vite, structu
 
 L'espace administrateur comprend un tableau de bord avec KPI et graphiques, un annuaire filtrable, la gestion des promotions, l'import/export Excel, la gestion des questionnaires et le traitement des demandes RGPD.
 
-L'espace alumni comprend l'inscription multi-étapes, la vérification OTP, l'édition du profil, le parcours professionnel, le consentement RGPD et le questionnaire annuel. La modification directe d'une expérience existante n'est pas disponible à ce jour : l'alumni doit la supprimer puis la recréer. C'est une limite assumée du prototype, à traiter dans une évolution.
+L'espace alumni comprend l'inscription multi-étapes, la vérification OTP, l'édition du profil, le parcours professionnel, le consentement RGPD et le questionnaire annuel. Le parcours permet désormais la modification directe d'une expérience existante via la route `PUT /experiences/{id_experience}` (mise à jour atomique, plus de suppression-recerecréation).
 
 Le frontend compte **14 routes principales** et des composants partagés (thème clair/sombre, protection de routes par rôle). La validation reposait sur des tests manuels, la vérification du build de production (`vite build`) et le lint (`oxlint`). Aucune suite de tests automatisés n'est conservée dans le dépôt à l'issue du stage.
 
@@ -251,8 +251,8 @@ Le calcul du taux d'emploi à 6 mois a nécessité une fiabilisation. L'ancien c
 
 Le prototype couvre l'intégralité du périmètre fonctionnel défini dans le sujet officiel.
 
-- **14 tables** de base de données, validées par introspection et rejeu complet des 16 migrations sur une base vide (aucune différence structurelle constatée).
-- **83 endpoints** API avec authentification OTP et JWT et protection admin.
+- **14 tables** de base de données, validées par introspection et rejeu complet des migrations sur une base vide (aucune différence structurelle constatée).
+- **84 endpoints** API avec authentification OTP et JWT et protection admin.
 - **14 routes** frontend couvrant les espaces admin et alumni.
 - **8 indicateurs de base** d'insertion professionnelle, exposés via des endpoints dédiés (`/admin/indicateurs`, `/admin/indicateurs/secteurs`, `/admin/indicateurs/types-contrat`), complétés d'un endpoint agrégé partenaire et d'un indicateur dérivé par question taguée active (variable).
 - **5 documents** de livraison complémentaires couvrant le volet Management du sujet : cartographie des données, charte RGPD, analyse des indicateurs d'insertion, stratégie de mise à jour des données et guide des processus d'animation du réseau.
@@ -286,7 +286,7 @@ Le système répond aux quatre problèmes identifiés dans la section 1.4.
 
 **Approche de développement.** J'ai suivi une démarche itérative : modélisation → backend → frontend → audit → documentation. Chaque fonctionnalité était développée, testée manuellement puis consolidée avant de passer à la suivante. Cette approche a permis de détecter tôt des incohérences de modélisation, par exemple le drift de migration sur `reponse_questionnaire.id_etudiant`, dont la contrainte `ON DELETE CASCADE` était présente en base réelle mais absente du fichier de migration d'origine.
 
-**Audit de fiabilité base/API.** J'ai réalisé un audit complet de la table ETUDIANT et des 9 autres tables. J'y ai découvert des champs acceptés en écriture mais jamais persistés, un endpoint `DELETE /entreprises/{id}` cassé, et le drift de migration mentionné plus haut. Le rejeu complet des 16 migrations sur une base vide a servi de test de validation. Cet audit a aussi relevé des points secondaires laissés ouverts et assumés : statut des consentements libre, date d'obtention des certifications non validée, réponses de questionnaire stockées en JSONB sans vérification des clés, absence de purge des tables `otp_codes` et `AUDIT_LOG`. L'ensemble est consigné dans `AUDIT_COHERENCE_TABLES.txt`.
+**Audit de fiabilité base/API.** J'ai réalisé un audit complet de la table ETUDIANT et des 9 autres tables. J'y ai découvert des champs acceptés en écriture mais jamais persistés, un endpoint `DELETE /entreprises/{id}` cassé, et le drift de migration mentionné plus haut. Le rejeu complet des migrations sur une base vide (16 à la date de l'audit, 17 avec la migration 016) a servi de test de validation. Cet audit a aussi relevé des points secondaires, depuis résolus au 10/09/2026 : statut des consentements contraint (`Literal` côté API et `CHECK` en base via la migration 016), date d'obtention des certifications validée (pas de date future), réponses de questionnaire contrôlées contre le type de la question, mise à jour atomique d'une expérience (`PUT /experiences/{id_experience}`), ordre `0` respecté, `actif` et `nb_etudiants` réels. Restent deux points de maintenance en P3 : la purge des tables `otp_codes` et `AUDIT_LOG`, et l'échec silencieux de `_write_audit_log`. L'ensemble est consigné dans `AUDIT_COHERENCE.md` (synthèse + détail table-par-champ).
 
 **Modélisation par introspection.** J'ai régénéré le schéma MCD/MLD par introspection réelle de la base (14 tables), plutôt qu'à partir du fichier de conception initial. Cette approche a permis de détecter un ancien fichier obsolète (11 tables au lieu de 14, tables manquantes : DEMANDE_RGPD, OTP_CODES, SCHEMA_MIGRATIONS), depuis supprimé.
 
@@ -349,7 +349,7 @@ Le projet était stocké sous OneDrive sans dépôt Git. Un conflit de synchroni
 
 L'interface alumni ne propose pas de mise à jour directe d'une expérience. L'alumni doit la supprimer puis la recréer, soit deux transactions HTTP distinctes. Si la recréation échoue, l'expérience est perdue. L'audit de cohérence a relevé ce point comme non atomique.
 
-*Solution.* Fonctionnalité non livrée dans le délai du stage. Une route PUT/PATCH et un formulaire de modification côté frontend sont prévus en évolution (section 4.2).
+*Solution.* Ajout de la route `PUT /experiences/{id_experience}` : mise à jour atomique en une seule transaction (résolution ou création de l'entreprise, exclusivité du poste actuel, refus sur un compte anonymisé). Côté frontend, la sauvegarde du parcours (`AlumniCareer.jsx`) met désormais à jour chaque expérience existante par un `PUT` au lieu d'une suppression-recerecréation.
 
 **Difficulté 7 — Messages d'erreur trompeurs.**
 
@@ -361,7 +361,7 @@ L'audit a révélé des messages d'erreur peu explicites. Par exemple, sur une a
 
 Dans la liste admin des demandes RGPD, un paramètre de filtre invalide (statut ou type de demande inconnu) était silencieusement ignoré : l'API renvoyait la liste complète au lieu d'une erreur. Ce comportement masquait les fautes de frappe dans les requêtes.
 
-*Solution.* Point relevé dans l'audit et laissé ouvert en l'état, consigné dans `AUDIT_COHERENCE_TABLES.txt` pour traitement ultérieur.
+*Solution.* Validation explicite des paramètres : un statut ou un type de demande inconnu renvoie désormais une erreur `422` avec les valeurs attendues, au lieu de la liste complète. Le point a été relevé dans l'audit puis corrigé.
 
 **Difficulté 9 — Dérive de stockage des données temporaires.**
 
@@ -404,7 +404,7 @@ La route d'import de données acceptait un téléversement de fichier sans véri
 | Conflit de traitement RGPD | Statut intermédiaire + verrou | Tracer toute prise en charge |
 | Indicateur surestimé | Filtrage temporel | Refuser d'afficher un chiffre trompeur |
 | Perte de fichiers | Démarrage d'un dépôt Git | Versionner avant de développer |
-| Modification non atomique | Route de mise à jour à créer | Traiter chaque écriture comme une transaction |
+| Modification non atomique | `PUT /experiences/{id_experience}` + sauvegarde différenciée | Traiter chaque écriture comme une transaction |
 | Messages d'erreur trompeurs | Vraies exceptions HTTP | Ne jamais mélanger statut et corps d'erreur |
 | Filtres invalides ignorés | Validation des paramètres | Rejeter explicitement les entrées invalides |
 | Données temporaires sans purge | Rétention à ajouter | Prévoir la rétention dès la conception |
@@ -429,7 +429,7 @@ Ces améliorations relèvent de correctifs à appliquer avant toute mise en prod
 
 **Composant frontend d'envoi de newsletter.** L'endpoint `POST /newsletter/envoyer` est opérationnel, mais le composant de rédaction et d'envoi depuis l'interface n'est pas développé. Le mécanisme de désinscription automatique n'est pas non plus implémenté.
 
-**Standardisation des contraintes de validation.** Le statut des consentements reste libre (ni `Literal` côté API, ni `CHECK` côté base). La date d'obtention des certifications n'est pas validée. La mise en place de contraintes à la source est une bonne pratique à généraliser.
+**Standardisation des contraintes de validation.** Ce point a été traité au 10/09/2026 : le statut des consentements est désormais un `Literal` côté API doublé d'une contrainte `CHECK` en base (migration 016), la date d'obtention des certifications ne peut plus être dans le futur, les réponses de questionnaire sont contrôlées contre le type de la question, et des contraintes `CHECK` garantissent la cohérence des dates, du salaire et du poste actuel des expériences ainsi que le type des questions. La généralisation des contraintes aux longueurs minimales et à l'unicité des libellés reste une bonne pratique à poursuivre.
 
 ### 4.2 Évolutions fonctionnelles à moyen terme
 
@@ -437,7 +437,7 @@ Ces améliorations relèvent de correctifs à appliquer avant toute mise en prod
 
 **Chiffrement applicatif des données sensibles.** Les données personnelles ne font l'objet d'aucun chiffrement spécifique au niveau applicatif. Leur protection repose sur les mécanismes standard de PostgreSQL. Un chiffrement au repos renforcerait la protection en cas d'accès non autorisé.
 
-**Route de mise à jour d'une expérience professionnelle.** La modification directe d'une expérience n'est pas disponible : l'alumni doit la supprimer puis la recréer. Une route PUT/PATCH et un formulaire de modification amélioreraient l'expérience utilisateur.
+**Formulaire d'édition d'une expérience professionnelle.** La route `PUT /experiences/{id_experience}` et la sauvegarde différenciée du parcours (alumni et admin) permettent désormais la mise à jour directe d'une expérience, en une seule transaction (plus de suppression-recerecréation). Une évolution restante : un formulaire de modification dédié et une route `PATCH` pour la mise à jour partielle amélioreraient encore l'expérience utilisateur.
 
 ### 4.3 Perspectives à plus long terme
 
@@ -510,7 +510,7 @@ Le schéma ci-dessous a été **régénéré par introspection directe de la bas
 | Parcours professionnel | ENTREPRISE, EXPERIENCE_PRO, CERTIFICATION, OBTIENT | EXPERIENCE_PRO → ETUDIANT et ENTREPRISE (N:1, avec `salary_annuel NUMERIC`) ; OBTIENT = association N:M ETUDIANT ↔ CERTIFICATION |
 | RGPD | CONSENTEMENT_RGPD, DEMANDE_RGPD, AUDIT_LOG | CONSENTEMENT_RGPD → ETUDIANT ; DEMANDE_RGPD → ETUDIANT en SET NULL pour préserver l'historique après anonymisation ; AUDIT_LOG journalise anonymisations, purges et nettoyages |
 | Questionnaires | QUESTIONNAIRE, QUESTION, REPONSE_QUESTIONNAIRE | QUESTION → QUESTIONNAIRE (N:1, avec tags KPI) ; REPONSE_QUESTIONNAIRE → ETUDIANT + QUESTIONNAIRE (réponses stockées en JSON) |
-| Infrastructure | otp_codes, schema_migrations | otp_codes : codes OTP hachés identifiés par l'email ; schema_migrations : suivi des 16 migrations versionnées |
+| Infrastructure | otp_codes, schema_migrations | otp_codes : codes OTP hachés identifiés par l'email ; schema_migrations : suivi des migrations versionnées (17 fichiers) |
 
 **Règles d'intégrité :** clés étrangères avec CASCADE sur les données dépendant d'un étudiant (expériences, certifications obtenues, consentements, réponses), SET NULL sur les demandes RGPD, contraintes d'unicité (ex. email étudiant), contraintes CHECK sur les énumérations (statuts de demande RGPD, types de consentement).
 
@@ -630,9 +630,9 @@ Le guide complet est généré séparément (`Guide des Processus - Animation du
 
 **Processus 2 — Suivi de l'insertion professionnelle.**
 - **Déclencheur.** L'alumni change de poste ou obtient une certification.
-- **Étapes.** Accès à la page Parcours, ajout/suppression d'une expérience (entreprise, poste, secteur, contrat, dates, salaire, localisation) et de certifications (nom, organisme, date). Limite connue du prototype : pas de modification directe d'une expérience existante, il faut la supprimer puis la recréer. Mise à jour exclusivement depuis l'interface web (aucune application mobile).
+- **Étapes.** Accès à la page Parcours, ajout, modification ou suppression d'une expérience (entreprise, poste, secteur, contrat, dates, salaire, localisation) et de certifications (nom, organisme, date). La modification est atomique via `PUT /experiences/{id_experience}` : la sauvegarde met à jour chaque poste modifié, supprime un poste retiré et ajoute un nouveau poste. Mise à jour exclusivement depuis l'interface web (aucune application mobile).
 - **Détection du poste actuel.** Si aucun poste n'est coché comme actuel, le système affiche l'expérience la plus récente ; une alerte s'affiche si le statut est `en_poste` sans poste actuel coché.
-- **Outils CRM.** Page `AlumniCareer.jsx` → `POST /etudiants/{id}/experiences` et `/etudiants/{id}/certifications`.
+- **Outils CRM.** Page `AlumniCareer.jsx` → `POST /etudiants/{id}/experiences`, `PUT /experiences/{id_experience}` et `/etudiants/{id}/certifications`.
 - **Référentiel secteurs.** 37 catégories standardisées + « Autre » en saisie libre (constantes `SECTORS`).
 
 **Processus 3 — Questionnaire annuel.**
@@ -666,7 +666,7 @@ Le guide complet est généré séparément (`Guide des Processus - Animation du
 
 ### Annexe J — Liste des endpoints API
 
-L'API expose 83 endpoints applicatifs au total (dont la racine `GET /` qui sert une bienvenue ; les routes système de documentation `/openapi.json`, `/docs`, `/redoc` s'y ajoutent hors périmètre applicatif). Les 82 endpoints métier sont regroupés ci-dessous par domaine, avec la méthode HTTP, le chemin et une description.
+L'API expose 84 endpoints applicatifs au total (dont la racine `GET /` qui sert une bienvenue ; les routes système de documentation `/openapi.json`, `/docs`, `/redoc` s'y ajoutent hors périmètre applicatif). Les 83 endpoints métier sont regroupés ci-dessous par domaine, avec la méthode HTTP, le chemin et une description.
 
 **Authentification (OTP et admin)**
 
@@ -716,6 +716,7 @@ L'API expose 83 endpoints applicatifs au total (dont la racine `GET /` qui sert 
 | GET | `/experiences/` | Liste paginée des expériences (admin) |
 | POST | `/experiences/` | Création d'une expérience pour un étudiant (admin) |
 | POST | `/etudiants/{id_etudiant}/experiences` | Ajout d'une expérience par l'alumni (création automatique de l'entreprise si absente) |
+| PUT | `/experiences/{id_experience}` | Mise à jour atomique d'une expérience (alumni propriétaire ou admin) |
 | DELETE | `/experiences/{id_experience}` | Suppression d'une expérience |
 
 **Certifications**
@@ -1080,7 +1081,7 @@ curl -X GET http://localhost:8000/consentements/etudiant/1 \
 
 ### Annexe K — Différentiel de migration et audit de conformité
 
-L'audit de conformité a croisé l'état réel de la base PostgreSQL (`information_schema.columns`, `pg_constraint`, `pg_indexes`) avec les routers, les schémas Pydantic (`schemas.py`) et les fichiers de migration SQL. Il a mis en évidence un **drift entre le modèle versionné et la base réelle**, corrigé depuis, ainsi qu'une validation par **rejeu complet des 16 migrations sur une base vide**.
+L'audit de conformité a croisé l'état réel de la base PostgreSQL (`information_schema.columns`, `pg_constraint`, `pg_indexes`) avec les routers, les schémas Pydantic (`schemas.py`) et les fichiers de migration SQL. Il a mis en évidence un **drift entre le modèle versionné et la base réelle**, corrigé depuis, ainsi qu'une validation par **rejeu complet des 16 migrations sur une base vide (à la date de l'audit ; 17 avec la migration corrective 016)**.
 
 **Drift de migration corrigé**
 
@@ -1091,7 +1092,7 @@ L'audit de conformité a croisé l'état réel de la base PostgreSQL (`informati
 
 Le principe retenu est celui d'une discipline stricte : **une migration déjà appliquée ne se modifie jamais** ; une correction passe par une nouvelle migration, elle-même écrite de façon idempotente.
 
-**Inventaire des 16 migrations**
+**Inventaire des 17 migrations**
 
 |**N°**|**Fichier**|**Objet**|
 |---|---|---|
@@ -1111,11 +1112,12 @@ Le principe retenu est celui d'une discipline stricte : **une migration déjà a
 | 013 | `otp_codes.sql` | Table des codes OTP (avec TTL) |
 | 014 | `questionnaire_actif.sql` | Gestion du questionnaire actif |
 | 015 | `fix_question_texte_encoding.sql` | **Corrective** : correction de l'encodage du texte des questions |
+| 016 | `contraintes_check.sql` | **Corrective** : contraintes `CHECK` (statut consentement, cohérence dates/salaire/poste actuel des expériences, type de question, année de promotion) |
 
-**Rejeu des 16 migrations sur une base vide**
+**Rejeu des migrations sur une base vide**
 
-Le script `run_migrations.py` applique séquentiellement les migrations non encore exécutées (suivi par la table `schema_migrations`). Le rejeu a été réalisé **sur une base vide**, de façon à reconstruire l'intégralité du schéma à partir des seuls fichiers SQL : il a créé les **14 tables** du modèle et abouti à **aucune différence structurelle** entre le schéma reconstruit et la base de développement réelle. Ce rejeu a ainsi servi de test de validation de l'intégrité du socle de données, complété par l'exercice des parcours utilisateur de manière manuelle.
+Le script `run_migrations.py` applique séquentiellement les migrations non encore exécutées (suivi par la table `schema_migrations`). Le rejeu a été réalisé **sur une base vide**, de façon à reconstruire l'intégralité du schéma à partir des seuls fichiers SQL (16 fichiers à la date de l'audit, 17 depuis la migration corrective 016) : il a créé les **14 tables** du modèle et abouti à **aucune différence structurelle** entre le schéma reconstruit et la base de développement réelle. Ce rejeu a ainsi servi de test de validation de l'intégrité du socle de données, complété par l'exercice des parcours utilisateur de manière manuelle.
 
-**Points secondaires laissés ouverts et assumés**
+**Points secondaires — état au 10/09/2026**
 
-L'audit a également relevé des points de niveau P2/P3, documentés et non traités dans le cadre du stage : statut des consentements RGPD en chaîne libre (pas de contrainte), date d'obtention des certifications non validée (dates futures possibles), réponses de questionnaire stockées en JSONB sans vérification des clés vis-à-vis des questions, champs acceptés en écriture mais jamais persistés, absence de purge des tables `otp_codes` et `AUDIT_LOG`. L'intégralité des constats est consignée dans `alumni_crm_api/AUDIT_COHERENCE_TABLES.txt`.
+Les points P2 relevés ont été résolus : statut des consentements RGPD désormais contraint (`Literal` côté API et `CHECK` en base via la migration 016), date d'obtention des certifications validée (pas de date future sur les trois points d'écriture), réponses de questionnaire contrôlées contre le type de la question (valeur incohérente rejetée), mise à jour atomique d'une expérience (`PUT /experiences/{id_experience}`), respect de l'ordre `0`, et réponses réelles du `actif` du questionnaire et du `nb_etudiants` des promotions. Deux points de maintenance restent en P3 : la purge des tables `otp_codes` et `AUDIT_LOG`, et l'échec silencieux de `_write_audit_log` dans le module de nettoyage. L'intégralité des constats est consignée dans `Rapport/AUDIT_COHERENCE.md` (synthèse + détail table-par-champ, également disponible en PDF : `Rapport/AUDIT_COHERENCE.pdf`).

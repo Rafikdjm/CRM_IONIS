@@ -1,3 +1,113 @@
+# Audit de cohérence — API FastAPI ↔ base PostgreSQL
+
+**Alumni CRM** · base `alumni_crm` · audit initial du 16/08/2026, relecture du 10/09/2026 après corrections.
+
+> Document unique : fusion de l'ancien `AUDIT_COHERENCE_TABLES.txt` (détail
+> table-par-champ, « l'instantané » de l'audit) et de `AUDIT_SIMPLE.md` (version
+> synthétique). Une seule source de vérité, également disponible en PDF
+> (`AUDIT_COHERENCE.pdf`).
+
+---
+
+## Verdict global
+
+| Résultat | Nombre |
+|---|--:|
+| [OK] État conforme | 6 tables |
+| [CORRIGÉ] Problèmes graves (P1) résolus | 2 |
+| [CORRIGÉ] Problèmes moyens (P2) résolus au 10/09 | 5 |
+| [A CORRIGER] Points restants (maintenance, P3) | 2 |
+
+**Aucun problème critique restant.** Les points P3 sont des améliorations
+cosmétiques / de maintenance, pas des bugs.
+
+## État table par table
+
+| Table | État | Ce qui compte |
+|---|---|---|
+| `PROMOTION` | [OK] | Lecture/écriture OK. |
+| `ENTREPRISE` | [CORRIGÉ] | Suppression cassée → corrigé (un simple DELETE, la FK est en CASCADE). |
+| `EXPERIENCE_PRO` | [CORRIGÉ] | Création transactionnelle + **nouvelle route de modification atomique**. Suppression OK. |
+| `CERTIFICATION` / `OBTIENT` | [OK] | Dates validées (pas de futur), messages d'erreur corrects. |
+| `CONSENTEMENT_RGPD` | [OK] | Statut limité à `actif` / `refuse` (API **et** base). |
+| `QUESTIONNAIRE` / `QUESTION` / `REPONSE` | [OK] | Types de question limités, réponses contrôlées, cascade corrigée. |
+| `DEMANDE_RGPD` | [OK] | Cycle de statuts contrôlé, filtres admin validés. |
+| `AUDIT_LOG` / `OTP_CODES` | [OK] | Fonctionnels ; TTL OTP bien vérifié. |
+
+---
+
+## Ce qui a été corrigé
+
+### Problèmes critiques (P1) — résolus avant le 10/09
+
+1. **Delete d'une entreprise cassé** dès qu'une expérience la référençait
+   (`entreprises.py` faisait un `UPDATE ... SET id_entreprise = NULL` sur une
+   colonne `NOT NULL` → erreur 400). → Remplacement par un `DELETE` direct.
+2. **Drift de migration** : `reponse_questionnaire.id_etudiant` avait
+   `ON DELETE CASCADE` en base mais pas dans la migration 003 → rejeu complet
+   des migrations plantait. → Nouvelle migration qui recrée la FK en CASCADE.
+
+### Problèmes moyens (P2) — résolus le 10/09/2026
+
+3. **Expérience professionnelle : aucune route de modification**
+   (`EXPERIENCE_PRO`). Le front faisait delete + recréation = *non atomique*
+   (l'expérience pouvait être supprimée sans être recréée).
+   → Correction :
+   - API : nouvelle route **`PUT /experiences/{id_experience}`** qui modifie
+     l'expérience en **une seule transaction** (entreprise réutilisée ou créée,
+     poste actuel exclusif). `routers/experiences.py`
+   - Front : « Mon Parcours » met désormais à jour les postes existants au
+     lieu de tout supprimer puis récréer — il ne supprime que ce qui a
+     vraiment été retiré. `AlumniCareer.jsx` + `api.js`
+
+4. **Réponses questionnaire non vérifiées** : les valeurs n'étaient pas
+   contrôlées contre le type de question.
+   → Correction : contrôle complet dans `POST /questionnaires/{id}/repondre` :
+   - réponse = une **option prévue** pour `choice` / `single_choice` / `dropdown`
+   - réponse égale à `Oui` / `Non` pour `boolean`
+   - note de 1 à 5 pour `rating`
+   - clés étrangères au questionnaire → erreur 422 explicite
+
+5. **`ordre = 0` ignoré** à la création d'un questionnaire (retombait sur
+   l'index de la liste). → Traité fidèlement.
+
+6. **`PUT /admin/questionnaires/{id}` renvoyait `actif: true` en dur** même si
+   le questionnaire était désactivé. → Renvoie la vraie valeur de la base.
+
+7. **`PUT /promotions/{id}` renvoyait `nb_etudiants = 0` en dur**.
+   → Renvoie le vrai nombre d'étudiants.
+
+### Alignement base de données (migration 016)
+
+La migration **`016_contraintes_check.sql`** fait porter les mêmes règles que
+l'API directement par PostgreSQL (le SQL direct ne peut plus les contourner) :
+
+- `CONSENTEMENT_RGPD.statut` dans `('actif','refuse')`
+- `EXPERIENCE_PRO.date_fin >= date_debut` (ou NULL)
+- pas de `date_fin` si `poste_actuel = true`
+- `salaire >= 0` et `salary_annuel >= 0`
+- `QUESTION.type` dans les types gérés par le frontend
+- `PROMOTION.annee_diplome` de 1950 à 2100
+
+---
+
+## Points restants (améliorations, non bloquants)
+
+| # | Point | Où | Effet si ignoré |
+|---|---|---|---|
+| A | `_write_audit_log` avale les erreurs d'écriture | `cleanup.py` | Un échec d'audit passe inaperçu |
+| B | Pas de purge automatique des OTP expirés ni de l'historique d'audit | `otp.py` / `cleanup.py` | La table `otp_codes` grossit indéfiniment |
+
+Ces deux points relèvent de la maintenance, pas de bugs utilisateurs.
+
+---
+
+## Détail table par champ (instantané du 16/08/2026)
+
+> Extraits verbatim de l'audit initial, conservés pour la traçabilité.
+> Les constats déjà corrigés sont marqués `[CORRIGÉ ...]` en place.
+
+```text
 ================================================================================
 AUDIT DE COHÉRENCE API <-> BASE DE DONNÉES — TABLES MÉTIER
 ================================================================================
@@ -13,6 +123,18 @@ Contrainte : audit uniquement — AUCUN code modifié.
 MISE À JOUR 22/08/2026 : les 2 P1 listés ci-dessous ont été corrigés depuis
 l'audit (marqués [CORRIGÉ]). Le reste du document est conservé tel quel
 (instantané du 16/08/2026).
+
+MISE À JOUR 10/09/2026 : la plupart des P2 et P3 ont été corrigés dans le
+code (détail en synthèse dans la première partie de ce document) :
+- P2 #5 : ajout de PUT /experiences/{id_experience} (modification atomique)
+  + « Mon Parcours » (front) utilise désormais la mise à jour, plus de
+  delete+recreate en bloc ;
+- P2 #6 : réponses questionnaire contrôlées contre le type de la question ;
+- P2 #3/#4/#7/#8 étaient déjà corrigés au niveau des schémas/routes ;
+- P3 : ordre=0 respecté, actif réel sur PUT questionnaire, nb_etudiants réel
+  sur PUT promotion ;
+- migration 016 : contraintes CHECK alignées (statut consentement, salaires,
+  dates expérience, type question, année promotion).
 
 État de la base au moment de l'audit :
   1 promotion, 4 entreprises, 3 expériences pro, 1 certification, 1 obtient,
@@ -57,7 +179,7 @@ intitule_poste / type_contrat / date_debut | Oui | Obligatoires    | Oui        
 date_fin          | Oui            | Optionnel                        | Oui (NULL)   | P2 : aucune validation date_fin >= date_debut ; "poste_actuel=true" + date_fin accepté (contradiction)
 salaire           | Oui            | ge=0 (Pydantic)                  | Oui (NUMERIC)| P3 : aucun CHECK DB >= 0
 poste_actuel      | Oui            | Requis (bool)                    | Oui (def=true) | P3 : aucune unicité du poste actuel
-MODIFICATION      | —              | —                                | —            | P2 : AUCUNE route d'update d'une expérience. Le delete+recreate côté front = 2 transactions HTTP distinctes -> NON ATOMIQUE (expérience supprimée + recréation échouée = perte). La création (POST /etudiants/{id}/experiences) est en revanche transactionnelle : un seul commit() + rollback global (experiences.py:171-241).
+MODIFICATION      | —              | —                                | —            | P2 : AUCUNE route d'update d'une expérience. Le delete+recreate côté front = 2 transactions HTTP distinctes -> NON ATOMIQUE (expérience supprimée + recréation échouée = perte). La création (POST /etudiants/{id}/experiences) est en revanche transactionnelle : un seul commit() + rollback global (experiences.py:171-241). [CORRIGÉ 10/09/2026 : PUT /experiences/{id_experience} mis à jour atomique en une transaction ; le front utilise désormais la mise à jour au lieu du delete+recreate en bloc.]
 
 ================================================================================
 4. CERTIFICATION / OBTIENT (1 + 1 lignes)
@@ -141,6 +263,9 @@ P2 — Validations manquantes / messages trompeurs :
      admin/cleanup comptent sur 'actif'/'refuse'.
   5. EXPERIENCE_PRO : aucune validation date_fin/poste_actuel ; aucune route
      d'update (le delete+recreate front est non atomique).
+     [CORRIGÉ 10/09/2026 : PUT /experiences/{id_experience} atomique + validation
+      date_fin >= date_debut et poste actuel exclusif ; voir la 1re partie de
+      ce document.]
   6. REPONSE_QUESTIONNAIRE.reponses : aucune vérification clés/valeurs vs
      questions.
   7. DEMANDE_RGPD : filtres admin invalides ignorés silencieusement (liste
@@ -158,6 +283,8 @@ RÉPONSES AUX 5 QUESTIONS DE L'UTILISATEUR
 ================================================================================
 1. Update EXPERIENCE_PRO : AUCUNE route d'update ; le delete+recreate front
    est non atomique (2 transactions) ; la création est transactionnelle.
+   [CORRIGÉ 10/09/2026 : PUT /experiences/{id_experience} — modification
+   atomique en une transaction.]
 2. date_obtention : non validée (date future acceptée).
 3. CONSENTEMENT_RGPD.statut : string libre, non contraint (pas de Literal).
 4. Cycle statuts DEMANDE_RGPD : synchronisé avec le CHECK de la migration 009
@@ -165,3 +292,27 @@ RÉPONSES AUX 5 QUESTIONS DE L'UTILISATEUR
 5. TTL OTP (10 min) : vérifié à chaque validation (verify_otp), pas seulement
    à la création.
 ================================================================================
+```
+
+---
+
+## Application de la migration (état)
+
+La migration **016** a été appliquée le **10/09/2026** :
+
+```bash
+cd alumni_crm_api
+python run_migrations.py   # 17 migrations : la 016 est détectée et appliquée
+```
+
+L'outil ne rejoue jamais une migration déjà présente dans `schema_migrations`.
+
+## Test rapide conseillé après déploiement
+
+1. `PUT /promotions/{id}` → `nb_etudiants` réel.
+2. `PUT /experiences/{id}` (alumni propriétaire) → modification prise en
+   compte sans perte de données.
+3. `POST /questionnaires/{id}/repondre` avec une valeur hors options → 422
+   avec message explicite.
+4. `INSERT INTO CONSENTEMENT_RGPD (..., 'autre')` en SQL direct → la base
+   refuse la ligne.

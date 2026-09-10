@@ -297,7 +297,7 @@ doc.add_heading("MCD/MLD existant", level=3)
 mcd_files = [
     ("erd_alumni_crm.mmd", "14 tables", "COMPLET et à jour (généré 10/08/2026, vérifié 15/08, 22/08 et re-audité 27/08/2026)", "FAIT"),
     ("erd_alumni_crm.docx", "Word", "Version Word régénérée depuis le .mmd (27/08/2026)", "FAIT"),
-    ("000_schema_initial.sql + migrations 001-015", "16 fichiers SQL", "Rejeu complet validé sur base vide : les 14 tables sont recréées", "FAIT"),
+    ("000_schema_initial.sql + migrations 001-016", "17 fichiers SQL", "Rejeu complet validé sur base vide : les 14 tables sont recréées", "FAIT"),
     ("MCD_MLD V2.loo", "Binaire Looping", "Phase initiale de conception (28/07/2026), supplanté par Mermaid ; les autres fichiers Looping (.loo/.lo1 doublons) ont été supprimés", "Source historique"),
 ]
 make_table(doc, ["Fichier", "Description", "Statut", "Verdict"], mcd_files)
@@ -419,7 +419,7 @@ mcd_livrable = [
     ("Fichier principal", "alumni_crm_api/docs/erd_alumni_crm.mmd — 14 tables, re-audité 27/08/2026"),
     ("Version Word", "alumni_crm_api/docs/erd_alumni_crm.docx — régénéré depuis le .mmd (27/08/2026)"),
     ("Fichier Looping", "MCD_MLD V2.loo (28/07/2026) — phase initiale, supplanté par Mermaid"),
-    ("Rejeu base vide", "000_schema_initial.sql + migrations 000-015 : les 16 migrations reconstruisent intégralement le schéma"),
+    ("Rejeu base vide", "000_schema_initial.sql + migrations 000-016 : les 17 migrations reconstruisent intégralement le schéma"),
 ]
 for title, desc in mcd_livrable:
     doc.add_paragraph(f"• {title} : {desc}", style="List Bullet")
@@ -432,9 +432,9 @@ run.bold = True
 run.font.color.rgb = RGBColor(0x27, 0xAE, 0x60)
 
 proto_items = [
-    "Backend FastAPI opérationnel (16 routeurs montés, 85 endpoints)",
+    "Backend FastAPI opérationnel (16 routeurs montés, 84 endpoints)",
     "Frontend React/Vite complet (dist/ présent avec build production)",
-    "Base PostgreSQL (14 tables, 16 migrations)",
+    "Base PostgreSQL (14 tables, 17 migrations)",
     "Auth OTP + JWT (alumni), API Key + JWT (admin)",
     "Tests : aucune suite de tests automatisés conservée dans le dépôt à l'issue du stage (les tests pytest backend ont été retirés) ; validation par scripts ad hoc, rejeu des migrations et tests manuels",
     "Import/Export Excel, RGPD bout en bout, questionnaire annuel",
@@ -480,7 +480,7 @@ recap = [
     ("8", "Import / Export", "FAIT", "import_export.py (COLUMN_MAP 25 colonnes), ExcelImport.jsx"),
     ("9", "Rapport de stage", "FAIT", "Rapport/rapport.md + Rapport de Stage - Alumni CRM.pdf (compléments rédactionnels en cours)"),
     ("10", "MCD / MLD", "FAIT", "erd_alumni_crm.mmd, erd_alumni_crm.docx, MCD_MLD V2.loo"),
-    ("11", "Prototype fonctionnel", "FAIT", "dist/, requirements.txt, 16 routeurs montés (14 fichiers), 85 endpoints"),
+    ("11", "Prototype fonctionnel", "FAIT", "dist/, requirements.txt, 16 routeurs montés (14 fichiers), 84 endpoints"),
     ("12", "Guide animation réseau", "FAIT", "Guide des Processus - Animation du Reseau Alumni.pdf (standalone)"),
 ]
 make_table(doc, ["#", "Point", "Statut", "Fichiers / Routes concernés"], recap)
@@ -521,8 +521,9 @@ make_table(doc, ["#", "Action", "Justification", "Estimation", "Détails"], medi
 
 doc.add_paragraph("")
 doc.add_heading("Attention — Non bloquant", level=2)
-doc.add_paragraph("Rejouabilité base vide rétablie : migration 000_schema_initial.sql (bootstrap des tables métier) + 013_otp_codes.sql (table OTP, anciennement créée hors migrations) — rejeu complet 000→015 (16 migrations) validé sur base vide, 14/14 tables recréées", style="List Bullet")
+doc.add_paragraph("Rejouabilité base vide rétablie : migration 000_schema_initial.sql (bootstrap des tables métier) + 013_otp_codes.sql (table OTP, anciennement créée hors migrations) — rejeu complet 000→016 (17 migrations) validé sur base vide, 14/14 tables recréées", style="List Bullet")
 doc.add_paragraph("Les fichiers Looping obsolètes (MCD_MLD.loo, MCD_MLD.lo1) ont été supprimés — seul MCD_MLD V2.loo est conservé comme source", style="List Bullet")
+doc.add_paragraph("Points secondaires de l'audit base/API corrigés au 10/09/2026 : PUT /experiences/{id_experience} atomique, réponses questionnaire contrôlées contre le type de la question, migration 016_contraintes_check.sql (CHECK consentement/salaires/dates/type/année), ordre 0 respecté, actif et nb_etudiants réels — document unique : Rapport/AUDIT_COHERENCE.md (PDF : Rapport/AUDIT_COHERENCE.pdf)", style="List Bullet")
 doc.add_paragraph("Suites techniques documentées dans le README API : reconstituer le script E2E (la démarche est décrite), introduire des tests backend automatisés (pytest)", style="List Bullet")
 
 # ── Sauvegarde ────────────────────────────────────────────────────

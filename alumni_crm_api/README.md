@@ -20,12 +20,12 @@ utils.py               # helper de sérialisation cursor -> dict
 main.py                 # assemble les routers + CORS
 run_migrations.py      # exécute les migrations SQL numérotées avec tracking (schema_migrations)
 purge.py               # CLI : purge définitive différée des comptes anonymisés RGPD (--dry-run)
-migrations/            # migrations SQL numérotées 000 → 015
+migrations/            # migrations SQL numérotées 000 → 016
 routers/
   promotions.py         # /promotions          : CRUD des promotions
   etudiants.py          # /etudiants           : CRUD étudiants + profil alumni
   entreprises.py        # /entreprises         : CRUD des entreprises
-  experiences.py        # /etudiants/{id}/experiences, /experiences : parcours professionnel (postes, salaires)
+  experiences.py        # /etudiants/{id}/experiences, /experiences : parcours professionnel (postes, salaires), création + mise à jour atomique PUT /experiences/{id_experience}
   certifications.py     # /certifications      : certifications + obtentions par étudiant
   rgpd.py               # /consentements       : choix RGPD (prise_de_contact, newsletter, etc.)
   otp.py                # /auth/otp            : connexion alumni par code à 6 chiffres (rate-limiting)
@@ -61,6 +61,17 @@ routers/
 
 **4. Maintenabilité**
 - Le fichier unique de ~590 lignes a été découpé en un router `APIRouter` par domaine métier (Promotions, Étudiants, Entreprises, Expériences, Certifications, RGPD, Admin), `main.py` ne fait plus qu'assembler les routers.
+
+## Mise à jour 10/09/2026 (corrections base/API)
+
+Corrections liées aux points secondaires de l'audit de cohérence (document
+unique : `Rapport/AUDIT_COHERENCE.md` — synthèse + détail table-par-champ, PDF
+`Rapport/AUDIT_COHERENCE.pdf`) :
+
+- **Modification atomique d'une expérience** : ajout de `PUT /experiences/{id_experience}` (une seule transaction — entreprise réutilisée ou créée, poste actuel exclusif). La récréation après suppression (delete+recreate) n'est plus nécessaire.
+- **Réponses de questionnaire** : les valeurs saisies sont désormais contrôlées contre le type de la question (valeur incohérente rejetée en 422).
+- **Contraintes en base** : la migration `016_contraintes_check.sql` aligne les `CHECK` (statut consentement `Literal`/`CHECK`, salaires, dates d'expérience, type de question, année de promotion).
+- **Détails métier fiabilisés** : `ordre` `0` respecté, `actif` du questionnaire relu en base sur `PUT`, `nb_etudiants` réel sur `PUT /promotions/{id}`.
 
 ## Tests
 

@@ -1,11 +1,14 @@
 -- ============================================================================
 -- LDD COMPLET — CRM Alumni (PostgreSQL)
--- État final après migrations 000 → 015
+-- État après migrations 000 → 015 (instantané re-audité le 27/08/2026)
 -- Re-audité le 27/08/2026 contre le schéma réel (introspection PostgreSQL) :
 --   - consentement_rgpd.canal : NULLABLE
 --   - reponse_questionnaire.id_questionnaire : FK en NO ACTION (pas CASCADE)
 --   - reponse_questionnaire : UNIQUE (id_etudiant, id_questionnaire)
 --   - otp_codes.email : index non-unique (idx_otp_email), pas de contrainte UNIQUE
+-- MISE À JOUR 10/09/2026 : la migration 016_contraintes_check.sql ajoute les
+--   CHECK (statut consentement, salaires, dates d'expérience, type de question,
+--   année de promotion) — à rejeter ici après application (run_migrations.py).
 -- ============================================================================
 
 -- ============================================================================
