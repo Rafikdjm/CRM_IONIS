@@ -113,6 +113,8 @@ class ReportPDF(FPDF):
     def table_header(self, cols, widths):
         self._t_cols = list(cols)
         self._t_widths = self._normalize_widths(list(widths))
+        if self.get_y() + 12 > self.page_break_trigger:
+            self.add_page()
         self._draw_table_row(self._t_cols, self._t_widths,
                              fill=self.TABLE_HEADER_FILL, bold=True, min_h=8.0,
                              text_color=self.TABLE_HEADER_TEXT)
