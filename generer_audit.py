@@ -228,7 +228,7 @@ run.font.color.rgb = RGBColor(0x27, 0xAE, 0x60)
 
 doc.add_heading("Questionnaire annuel — FAIT", level=3)
 doc.add_paragraph(
-    "Le système de questionnaire annuel existe et fonctionne :"
+    "Le questionnaire annuel existe et tourne réellement :"
 )
 doc.add_paragraph("Tables : QUESTIONNAIRE, QUESTION, REPONSE_QUESTIONNAIRE — migration 003_questionnaire_annuel.sql", style="List Bullet")
 doc.add_paragraph("Création admin : AdminQuestionnaires.jsx + questionnaires.py", style="List Bullet")
@@ -397,13 +397,14 @@ run.bold = True
 run.font.color.rgb = RGBColor(0x27, 0xAE, 0x60)
 
 doc.add_paragraph(
-    "Le rapport de stage existe : source Markdown (Rapport/rapport.md) et PDF "
-    "généré par script (Rapport/generate_reports.py)."
+    "Le rapport de stage est rédigé : sources Markdown (Rapport/rapport.md) et LaTeX "
+    "(Rapport/rapport.tex), PDF généré par script (Rapport/generate_reports.py). L'auteur "
+    "relit encore certains passages (tuteur, dates, captures des annexes)."
 )
 rapport_items = [
     "Structure complète : résumé/abstract, contexte IONIS-STM, missions, bilan de compétences, difficultés/solutions, bibliographie, annexes",
     "Couvre les 5 domaines de mission du sujet (modélisation, backend, frontend, RGPD, indicateurs)",
-    "Quelques compléments rédactionnels restent à porter par l'auteur (tuteur, dates, captures des annexes)",
+    "Le texte a été relu pour qu'il sonne naturel (première personne, pas de tournures génériques)",
 ]
 for item in rapport_items:
     doc.add_paragraph(item, style="List Bullet")

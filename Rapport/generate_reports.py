@@ -157,18 +157,18 @@ def generate_cartographie():
     # 1. Contexte
     pdf.chapter_title("1", "Contexte et Objectifs")
     pdf.body_text(
-        "Conformement au cahier des charges du projet de conception et de developpement d'un systeme "
-        "de suivi du parcours etudiant et de valorisation du reseau des anciens, cette cartographie "
-        "definit precisement les donnees traitees par le systeme. L'objectif est de structurer la "
-        "collecte d'informations a l'entree (inscription) et a la sortie (insertion professionnelle) "
-        "tout en garantissant la stricte conformite RGPD exigee pour le pilotage de l'insertion."
+        "Ce document part du cahier des charges du projet : conception et developpement d'un systeme "
+        "de suivi du parcours etudiant et de valorisation du reseau des anciens. Il precise, de facon "
+        "exhaustive, les donnees que le systeme collecte et conserve : celles recueillies a l'entree "
+        "(inscription) et celles ajoutees a la sortie (insertion professionnelle), le tout dans le "
+        "cadre de la conformite RGPD exigee pour le pilotage de l'insertion."
     )
 
     # 2. Donnees Entree
     pdf.chapter_title("2", "Donnees collectees a l'entree (Phase d'Inscription)")
     pdf.body_text(
-        "Ces donnees permettent de creer le profil initial de l'etudiant au moment de son integration "
-        "dans l'etablissement, en s'appuyant sur les entites ETUDIANT et PROMOTION du modele de donnees."
+        "Ce sont les donnees qui servent a creer le profil initial de l'etudiant au moment de son "
+        "integration, en s'appuyant sur les entites ETUDIANT et PROMOTION du modele."
     )
 
     headers = ["Categorie", "Champs (Code)", "Description (simplifiee)", "Exemple"]
@@ -196,9 +196,9 @@ def generate_cartographie():
     # 3. Donnees Sortie
     pdf.chapter_title("3", "Donnees collectees a la sortie (Evolution Post-Diplome)")
     pdf.body_text(
-        "Le systeme assure un suivi rigoureux de l'evolution de la carriere professionnelle des alumni "
-        "via les tables EXPERIENCE_PRO, ENTREPRISE et CERTIFICATION, completees par les entites "
-        "QUESTIONNAIRE et REPONSE pour les donnees declaratives collectees chaque annee."
+        "Apres le diplome, le systeme suit l'evolution de la carriere des alumni a partir des tables "
+        "EXPERIENCE_PRO, ENTREPRISE et CERTIFICATION. S'y ajoutent les donnees declaratives recueillies "
+        "chaque annee via QUESTIONNAIRE et REPONSE."
     )
 
     headers = ["Categorie", "Champs (Code)", "Description (simplifiee)", "Exemple"]
@@ -229,7 +229,7 @@ def generate_cartographie():
     # 4. Donnees RGPD
     pdf.chapter_title("4", "Donnees de Consentement RGPD")
     pdf.body_text(
-        "La table CONSENTEMENT_RGPD assure une traçabilité native et inaltérable des choix de "
+        "La table CONSENTEMENT_RGPD garde une trace complete et inalterable des choix de "
         "confidentialite de chaque alumni."
     )
 
@@ -258,15 +258,16 @@ def generate_cartographie():
 
     pdf.section_title("5.1 Contexte Juridique")
     pdf.body_text(
-        "Le principal defi juridique d'un annuaire d'anciens reside dans le respect strict des donnees "
-        "personnelles. Le CRM integre une tracabilite native et inalterable via la table CONSENTEMENT_RGPD, "
-        "conforme au Reglement (UE) 2016/679 (RGPD) et a la loi Informatique et Libertes."
+        "Le point le plus sensible d'un annuaire d'anciens, juridiquement, c'est le traitement des "
+        "donnees personnelles. Le CRM repond avec une tracabilite complete des choix via la table "
+        "CONSENTEMENT_RGPD, en restant dans le cadre du Reglement (UE) 2016/679 (RGPD) et de la loi "
+        "Informatique et Libertes."
     )
 
     pdf.section_title("5.2 Les 4 Types de Consentement")
     pdf.body_text(
-        "Le systeme differencie quatre categories precises de consentement, chacune etant geree "
-        "independamment via des toggles dedies dans l'interface alumni (AlumniConsent.jsx)."
+        "Quatre consentements distincts sont proposes, chacun gere independamment par un toggle "
+        "dedie dans l'interface alumni (AlumniConsent.jsx)."
     )
     headers_rgpd = ["Type (Backend)", "Cle Frontend", "Description (simplifiee)", "Exemple"]
     widths_rgpd = [27, 34, 74, 55]
@@ -319,19 +320,19 @@ def generate_rgpd():
     # 1. Contexte
     pdf.chapter_title("1", "Contexte Juridique")
     pdf.body_text(
-        "Le principal defi juridique d'un annuaire d'anciens reside dans le respect strict des donnees "
-        "personnelles. Le CRM integre une tracabilite native et inalterable via la table CONSENTEMENT_RGPD, "
-        "conforme au Reglement (UE) 2016/679 (RGPD) et a la loi Informatique et Libertes. Le chiffrement "
-        "specifique des donnees de consentement n'est pas implemente au niveau applicatif (protection confiee "
-        "aux mecanismes de l'infrastructure), et aucune fonctionnalite de notification de violation de donnees "
-        "n'existe a ce jour."
+        "Un annuaire d'anciens manipule avant tout des donnees personnelles, c'est le point de "
+        "vigilance principal. La conformite repose ici sur une tracabilite complete des choix via la "
+        "table CONSENTEMENT_RGPD, dans le cadre du Reglement (UE) 2016/679 (RGPD) et de la loi "
+        "Informatique et Libertes. A ce jour, les donnees de consentement ne font pas l'objet d'un "
+        "chiffrement applicatif specifique (leur protection est confiee aux mecanismes de "
+        "l'infrastructure), et aucune fonctionnalite de notification de violation de donnees n'existe."
     )
 
     # 2. Types de consentement
     pdf.chapter_title("2", "Les 4 Types de Consentement Implementes")
     pdf.body_text(
-        "Le systeme differencie quatre categories precises de consentement, chacune etant gerée "
-        "independamment via des toggles dedies dans l'interface alumni (AlumniConsent.jsx)."
+        "Quatre consentements distincts sont proposes. Chacun est gere independamment par un toggle "
+        "dedie dans l'interface alumni (AlumniConsent.jsx)."
     )
 
     headers = ["Type (Backend)", "Cle Frontend", "Description (simplifiee)", "Exemple"]
@@ -370,11 +371,12 @@ def generate_rgpd():
 
     pdf.section_title("3.4 Consommation des consentements (relations fonctionnelles)")
     pdf.body_text(
-        "Chaque consentement est reellement consomme par une fonctionnalite du systeme : un refus "
-        "(statut 'refuse') desactive l'usage correspondant. Un alumni sans vote sur un type reste "
-        "eligible ('inconnu' tolere), par coherence avec l'emission du consentement. Le vote le plus "
-        "recent est determine par une sous-requete correlee identique partout (ORDER BY "
-        "date_consentement DESC, id_consentement DESC LIMIT 1)."
+        "Chaque consentement correspond a un usage reel du systeme : un refus (statut 'refuse') "
+        "desactive l'usage concerne. Si l'alumni n'a pas encore vote pour un type, il reste eligible "
+        "('inconnu' tolere), ce qui est coherent avec la suppression d'un consentement par "
+        "DELETE /consentements/{id_consentement} (proprietaire ou admin). Le vote le plus recent est "
+        "toujours determine par la meme sous-requete correlee (ORDER BY date_consentement DESC, "
+        "id_consentement DESC LIMIT 1)."
     )
     pdf.bullet("'newsletter' : recevoir les newsletters (POST /newsletter/envoyer, ciblage par promotion / secteur / consents actifs).")
     pdf.bullet("'enquetes' : acceder au questionnaire actif (GET /questionnaires/actif) et recevoir les relances (POST /admin/questionnaires/notififier). Un refus bloque la restitution du questionnaire (HTTP 403) et masque le lien 'Enquete annuelle' dans la navigation alumni (AlumniLayout.jsx).")
@@ -410,8 +412,8 @@ def generate_rgpd():
     # 6. Workflow des demandes RGPD
     pdf.chapter_title("6", "Workflow des Demandes RGPD (Effacement et Portabilite)")
     pdf.body_text(
-        "Au-dela du consentement, le CRM met en oeuvre un workflow complet de traitement des droits "
-        "d'acces, d'effacement et de portabilite, base sur la table DEMANDE_RGPD :"
+        "Au-dela des consentements, le CRM met en place un vrai circuit de traitement des droits "
+        "d'acces, d'effacement et de portabilite, appuye sur la table DEMANDE_RGPD :"
     )
     pdf.bullet("Depot auto-service : POST /rgpd/demandes (types 'export' ou 'suppression') ; suivi et annulation par l'alumni via GET /rgpd/demandes/moi et DELETE /rgpd/demandes/{id}.")
     pdf.bullet("Cycle de statuts : envoyee -> en_traitement -> traitee/rejetee (contrainte SQL, migration 009), avec verrou anti-traitement parallele (prise_en_charge_par, date_prise_en_charge).")
@@ -439,10 +441,10 @@ def generate_strategie():
     # 1. Defi
     pdf.chapter_title("1", "Le Defi de l'Obsolescence des Donnees")
     pdf.body_text(
-        "Le principal defi d'un annuaire d'anciens est la peremption rapide des informations. Sans un "
-        "processus proactif, les donnees d'insertion (postes, entreprises, salaires) deviennent "
-        "rapidement obsoletes. La gouvernance du CRM repose sur un processus concu pour inciter "
-        "continuellement les diplomes a actualiser leurs profils."
+        "Le probleme de fond d'un annuaire d'anciens, c'est que les informations periment vite. "
+        "Sans rien faire, les donnees d'insertion (postes, entreprises, salaires) deviennent "
+        "rapidement fausses. La gouvernance du CRM part donc d'une idee simple : inciter "
+        "regulierement les diplomes a mettre a jour leur profil."
     )
 
     # 2. Mise a jour manuelle
@@ -493,8 +495,9 @@ def generate_strategie():
 
     pdf.section_title("4.3 Newsletter Alumni - Processus Detaille")
     pdf.body_text(
-        "La newsletter est un levier strategique d'animation du reseau et de mise a jour des donnees. "
-        "Elle doit etre geree comme un processus managérial structuré, pas comme un envoi ponctuel."
+        "La newsletter est un des leviers les plus directs pour animer le reseau et faire remonter "
+        "des donnees a jour. Autant la traiter comme un vrai processus, avec un rythme et un contenu "
+        "definis, plutot que comme un envoi de temps en temps."
     )
     pdf.bullet("Ciblage : seuls les alumni ayant active le consentement 'newsletter' (type_consentement = 'newsletter', statut = 'actif') sont contactes.")
     pdf.bullet("Frequence : mensuelle ou bimestrielle, avec un calendrier editorial defini par le service des Relations Entreprises.")
@@ -526,10 +529,9 @@ def generate_indicateurs():
     # 1. Objectif
     pdf.chapter_title("1", "Objectif de la Modelisation")
     pdf.body_text(
-        "Conformement aux exigences du cahier des charges, cette section modelise les rapports "
-        "d'insertion professionnelle requis par les organismes de certification et les autorites de "
-        "tutelle. L'enjeu est de transformer les donnees brutes collectees dans le CRM en indicateurs "
-        "de performance strategiques pour le pilotage de l'ecole."
+        "Le cahier des charges impose de produire des rapports d'insertion professionnelle pour les "
+        "organismes de certification et les autorites de tutelle. Le but de cette modelisation est de "
+        "passer des donnees brutes du CRM a des indicateurs de pilotage utilisables par l'ecole."
     )
 
     # 2. Indicateurs
@@ -599,9 +601,9 @@ def generate_indicateurs():
     # 5. Modele de Rapport Ministeriel
     pdf.chapter_title("5", "Modele de Rapport d'Insertion pour les Autorites de Tutelle")
     pdf.body_text(
-        "Conformement aux exigences du cahier des charges, les rapports d'insertion professionnelle "
-        "doivent etre transmis aux ministères et organismes de certification (CTI, HCERES). "
-        "Voici le format standardise genere a partir des indicateurs du CRM."
+        "Les rapports d'insertion professionnelle doivent pouvoir etre transmis aux ministères et aux "
+        "organismes de certification (CTI, HCERES). Voici le gabarit dans lequel les indicateurs du "
+        "CRM viennent se loger."
     )
 
     pdf.section_title("5.1 Informations Generales du Rapport")
@@ -676,10 +678,10 @@ def generate_guide_animation():
     # Introduction
     pdf.chapter_title("1", "Objectif du Guide")
     pdf.body_text(
-        "Ce document decrit les processus operationnels pour animer et maintenir vivant le reseau "
-        "des anciens eleves via l'Alumni CRM. Il s'adresse au service des Relations Entreprises et "
-        "a l'equipe pedagogique. Chaque processus identifie les acteurs, les etapes, les outils "
-        "utilises et les indicateurs de suivi."
+        "Ce guide decrit les processus qui permettent d'animer le reseau des anciens eleves et de le "
+        "garder a jour via l'Alumni CRM. Il est destine au service Relations Entreprises et a "
+        "l'equipe pedagogique. Chaque processus indique qui fait quoi : acteurs, etapes, outils "
+        "utilises et indicateurs de suivi."
     )
 
     # Processus 1 : Inscription

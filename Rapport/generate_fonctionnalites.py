@@ -16,7 +16,7 @@ def generate_fonctionnalites():
     pdf.cell(0, 12, "Cartographie des Fonctionnalites - Alumni CRM", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.set_font("SegoeUI", "", 10)
     pdf.set_text_color(107, 114, 128)
-    pdf.cell(0, 7, "Vue d'ensemble des fonctionnalites, cote administration et cote alumni, avec des exemples simplifies.", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.cell(0, 7, "Le point sur les fonctionnalites du systeme, cote administration et cote alumni, chaque bloc illustre par un exemple concret.", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.ln(8)
 
     # 1. Authentification
@@ -24,7 +24,7 @@ def generate_fonctionnalites():
     pdf.bullet("Connexion par email vers un code OTP, verifie cote backend.")
     pdf.bullet("Espaces separes : admin (JWT admin) et alumni (JWT alumni).")
     pdf.bullet("Inscription alumni en 3 sections (infos personnelles / parcours academique / reseaux sociaux) avec stepper de progression et validation a la volee.")
-    pdf.body_text("Exemple : Karim, recemment diplome, cree son compte. Il indique son nom, son ecole puis ses reseaux sociaux. A chaque etape, un code OTP recu par email lui permet de se connecter en toute securite.")
+    pdf.body_text("Exemple : Karim, tout juste diplome, cree son compte. Il renseigne son nom, son ecole puis ses reseaux sociaux. Chaque connexion passe par un code OTP recu par email, ce qui evite d'avoir a retenir un mot de passe.")
 
     # 2. Espace Admin
     pdf.chapter_title("2", "Espace ADMINISTRATION - /admin")
@@ -34,7 +34,7 @@ def generate_fonctionnalites():
     pdf.bullet("KPI cards : Total Alumni actifs, Taux d'emploi 6 mois, Taux d'emploi global, Taux de completion.")
     pdf.bullet("Indicateurs d'enquete generes depuis les tags KPI des questions actives.")
     pdf.bullet("Graphiques : donut des secteurs, barres des promotions (avec maturite des cohortes), jauge salaire moyen, barres des types de contrat.")
-    pdf.body_text("Exemple : la promotion 2024 affiche 85% d'emploi a 6 mois, le donut montre que 40% des alumni travaillent dans l'informatique et 20% dans la finance.")
+    pdf.body_text("Exemple : sur la promotion 2024, le taux d'emploi a 6 mois ressort a 85%. Le donut des secteurs montre que 40% des alumni travaillent dans l'informatique et 20% dans la finance.")
 
     pdf.section_title("2.2 Annuaire")
     pdf.bullet("Recherche et filtres : promotion, secteur, entreprise, disponibilite, contact autorise, statut du compte, competence.")
@@ -56,7 +56,7 @@ def generate_fonctionnalites():
     pdf.bullet("Creer / Modifier / Activer - Desactiver / Supprimer un questionnaire annuel.")
     pdf.bullet("Editeur de questions : texte, choix multiple, choix unique, liste deroulante, oui/non, note 1-5, tag KPI optionnel, conditionnement au statut d'emploi.")
     pdf.bullet("Consulter les reponses des alumni.")
-    pdf.body_text("Exemple : le service Relations Entreprises cree une question 'Etes-vous en poste ?' (oui/non) avec le tag KPI 'emploi'. Les reponses alimentent automatiquement le tableau de bord.")
+    pdf.body_text("Exemple : le service Relations Entreprises cree la question 'Etes-vous en poste ?' (oui/non) et la tagge KPI 'emploi'. Des que les premiers alumni repondent, la reponse apparait toute seule dans le tableau de bord.")
 
     pdf.section_title("2.6 Demandes RGPD")
     pdf.bullet("Suivi des demandes (export / suppression) avec filtres.")
@@ -97,7 +97,7 @@ def generate_fonctionnalites():
     pdf.bullet("Le dashboard admin est alimente par les donnees des alumni (profil, parcours, enquetes).")
     pdf.bullet("L'anonymisation RGPD retire un alumni de tous les indicateurs.")
     pdf.bullet("L'identite alumni est lue dans localStorage, le token JWT ajoute automatiquement par l'intercepteur axios.")
-    pdf.body_text("Exemple : quand Karim remplit son parcours et repond a l'enquete, le tableau de bord des emplois se met a jour automatiquement cote admin.")
+    pdf.body_text("Exemple : quand Karim complete son parcours puis repond a l'enquete, le tableau de bord des emplois se met a jour cote admin sans aucune intervention manuelle.")
 
     pdf.output(os.path.join(OUTPUT_DIR, "FONCTIONNALITES.pdf"))
     print("FONCTIONNALITES genere.")

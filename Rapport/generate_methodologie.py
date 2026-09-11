@@ -170,7 +170,7 @@ def generate():
     sec.bottom_margin = Cm(2.6)
     titre(doc, "Methodologie des indicateurs d'insertion")
     sous_titre(doc, "CRM Alumni (IONIS STM) - Fiche de reference complete et fidele au code")
-    body(doc, "Chaque indicateur est documente avec sa formule exacte, ses tables/colonnes, ses exclusions et un exemple chiffre calcule comme le font les requetes SQL reelles du backend (routers/admin.py).")
+    body(doc, "Chaque indicateur est documente avec sa formule exacte, les tables et colonnes utilisees, ses exclusions et un exemple chiffre. Les formules correspondent aux requetes reelles du backend (routers/admin.py), pas a une version simplifiee : tout ce qui est affiche ici peut etre retrouve dans le code.")
 
     # 1. Principes
     chapitre(doc, 1, "Principes generaux")
