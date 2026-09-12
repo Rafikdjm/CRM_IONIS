@@ -45,8 +45,9 @@ _LATEST_CONSENT_CTE = """
 """.format(ctype=_CONSENTEMENT_ARCHIVE_TYPE)
 
 
-def _write_audit_log(cursor, action: str, details: str, rows_affected: int, acteur: str = None) -> None:
+def _write_audit_log(cursor, action: str, details: str, rows_affected: int, acteur: str = "systeme") -> None:
     """Écrit une entrée dans la table AUDIT_LOG (crée la table si absente)."""
+    acteur = acteur or "systeme"
     try:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS AUDIT_LOG (

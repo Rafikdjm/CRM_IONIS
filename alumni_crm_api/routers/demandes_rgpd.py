@@ -507,9 +507,10 @@ def exporter_mes_donnees(
     format=json (défaut) renvoie le payload brut ; xlsx/csv renvoient un
     fichier téléchargeable (Content-Disposition).
 
-    traitee_par reste NULL : cet export est auto-traité sans intervention
-    admin — seul un VRAI traitement admin (traiter / bulk) doit renseigner ce
-    champ. Le champ date_traitement conserve le moment de l'auto-export."""
+    traitee_par = 'systeme' : cet export est auto-traité par le système sans
+    intervention admin — seul un VRAI traitement admin (traiter / bulk) doit
+    renseigner le nom réel de l'administrateur. Le champ date_traitement
+    conserve le moment de l'auto-export."""
     id_etudiant = _require_alumni(identity)
     _verifier_format(format)
     cursor = db.cursor()
@@ -528,8 +529,9 @@ def exporter_mes_donnees(
             """
             INSERT INTO DEMANDE_RGPD (id_etudiant, type_demande, statut,
                                       date_traitement, traitee_par,
+                                      prise_en_charge_par, date_prise_en_charge,
                                       nom_complet, email)
-            VALUES (%s, 'export', 'traitee', NOW(), NULL, %s, %s)
+            VALUES (%s, 'export', 'traitee', NOW(), 'systeme', 'systeme', NOW(), %s, %s)
             RETURNING id_demande;
             """,
             (id_etudiant, nom_complet, etudiant["email"]),
