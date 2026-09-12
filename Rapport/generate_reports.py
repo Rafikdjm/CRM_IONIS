@@ -14,6 +14,8 @@ class ReportPDF(FPDF):
         self.add_font("SegoeUI", "", FONT_REGULAR)
         self.add_font("SegoeUI", "B", FONT_BOLD)
         self.set_auto_page_break(auto=True, margin=20)
+        self._pending_headings = []
+        self._pending_heading_h = 0.0
 
     def header(self):
         self.set_font("SegoeUI", "B", 9)
@@ -30,25 +32,42 @@ class ReportPDF(FPDF):
         self.set_text_color(150, 150, 150)
         self.cell(0, 10, f"Page {self.page_no()}/{{nb}}", align="C")
 
+    def _queue_heading(self, height, text, font, style, size, color, ln):
+        self._pending_headings.append({
+            "text": text, "font": font, "style": style,
+            "size": size, "color": color, "height": height, "ln": ln,
+        })
+        self._pending_heading_h += height + ln
+
+    def _flush_headings(self, min_follow=0.0):
+        if not self._pending_headings:
+            return
+        total = self._pending_heading_h
+        if self.get_y() + total + min_follow > self.page_break_trigger - 1:
+            self.add_page()
+        for h in self._pending_headings:
+            self.set_font(h["font"], h["style"], h["size"])
+            self.set_text_color(*h["color"])
+            self.cell(0, h["height"], h["text"], new_x="LMARGIN", new_y="NEXT")
+            self.ln(h["ln"])
+        self._pending_headings = []
+        self._pending_heading_h = 0.0
+
     def chapter_title(self, num, title):
-        self.set_font("SegoeUI", "B", 14)
-        self.set_text_color(30, 64, 175)
-        self.cell(0, 10, f"{num}. {title}", new_x="LMARGIN", new_y="NEXT")
-        self.ln(2)
+        self._queue_heading(10, f"{num}. {title}", "SegoeUI", "B", 14, (30, 64, 175), 2)
 
     def section_title(self, title):
-        self.set_font("SegoeUI", "B", 11)
-        self.set_text_color(55, 65, 81)
-        self.cell(0, 8, title, new_x="LMARGIN", new_y="NEXT")
-        self.ln(1)
+        self._queue_heading(8, title, "SegoeUI", "B", 11, (55, 65, 81), 1)
 
     def body_text(self, text):
+        self._flush_headings(min_follow=12)
         self.set_font("SegoeUI", "", 10)
         self.set_text_color(55, 65, 81)
         self.multi_cell(0, 5.5, text)
         self.ln(2)
 
     def bullet(self, text, indent=10):
+        self._flush_headings(min_follow=8)
         self.set_font("SegoeUI", "", 10)
         self.set_text_color(55, 65, 81)
         x0 = self.l_margin + indent
@@ -106,18 +125,22 @@ class ReportPDF(FPDF):
             cx = x0 + sum(widths[:i])
             self.rect(cx, y_start, w, row_h, style="FD")
             self.set_xy(cx + pad, y_start)
-            self.multi_cell(w - 2 * pad, line_h, txt, border=0, padding=0)
+            self.multi_cell(w - 2 * pad, line_h, txt, border=0, padding=0, align="L")
         self.set_xy(x0, y_start + row_h)
         return row_h
 
     def table_header(self, cols, widths):
         self._t_cols = list(cols)
         self._t_widths = self._normalize_widths(list(widths))
-        if self.get_y() + 12 > self.page_break_trigger:
-            self.add_page()
+        self._t_header_drawn = False
+
+    def _ensure_header(self):
+        if getattr(self, "_t_header_drawn", False):
+            return
         self._draw_table_row(self._t_cols, self._t_widths,
                              fill=self.TABLE_HEADER_FILL, bold=True, min_h=8.0,
                              text_color=self.TABLE_HEADER_TEXT)
+        self._t_header_drawn = True
 
     def table_row(self, cols, widths, fill=False):
         cols = list(cols)
@@ -133,24 +156,27 @@ class ReportPDF(FPDF):
         row_h = max(heights) if heights else 7.0
         row_h = max(row_h, 7.0)
 
-        if self.get_y() + row_h > self.page_break_trigger - 1:
+        reserve = self._pending_heading_h
+        if not getattr(self, "_t_header_drawn", False):
+            reserve += 8.0
+        if self.get_y() + row_h + reserve > self.page_break_trigger - 1:
             self.add_page()
-            if getattr(self, "_t_cols", None):
-                self.table_header(self._t_cols, self._t_widths)
 
+        self._flush_headings()
+        self._ensure_header()
         self._draw_table_row(cols, widths,
                              fill=self.TABLE_BODY_FILL_ALT if fill else self.TABLE_BODY_FILL,
                              text_color=self.TABLE_TEXT)
 
 
 def generate_cartographie():
-    pdf = ReportPDF("Cartographie des Donnees")
+    pdf = ReportPDF("Cartographie des Données")
     pdf.alias_nb_pages()
     pdf.add_page()
 
     pdf.set_font("SegoeUI", "B", 20)
     pdf.set_text_color(30, 64, 175)
-    pdf.cell(0, 12, "Cartographie des Donnees", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.cell(0, 12, "Cartographie des Données", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.set_font("SegoeUI", "", 10)
     pdf.set_text_color(107, 114, 128)
     pdf.cell(0, 7, "Projet Alumni CRM - Version complete et fidele au code source", new_x="LMARGIN", new_y="NEXT", align="C")
@@ -159,35 +185,35 @@ def generate_cartographie():
     # 1. Contexte
     pdf.chapter_title("1", "Contexte et Objectifs")
     pdf.body_text(
-        "Ce document part du cahier des charges du projet : conception et developpement d'un systeme "
-        "de suivi du parcours etudiant et de valorisation du reseau des anciens. Il precise, de facon "
-        "exhaustive, les donnees que le systeme collecte et conserve : celles recueillies a l'entree "
-        "(inscription) et celles ajoutees a la sortie (insertion professionnelle), le tout dans le "
-        "cadre de la conformite RGPD exigee pour le pilotage de l'insertion."
+        "Ce document dresse l'inventaire des données que l'Alumni CRM collecte et conserve. Il "
+        "répond au cahier des charges : un outil de suivi du parcours étudiant et de valorisation du "
+        "réseau des anciens. J'ai détaillé ce qui est recueilli à l'entrée (l'inscription), ce qui "
+        "s'ajoute après le diplôme (parcours, certifications, enquêtes), et enfin ce qui touche au "
+        "consentement RGPD, un point sensible dès qu'on manipule des données personnelles."
     )
 
     # 2. Donnees Entree
-    pdf.chapter_title("2", "Donnees collectees a l'entree (Phase d'Inscription)")
+    pdf.chapter_title("2", "Données collectées à l'entrée (Phase d'Inscription)")
     pdf.body_text(
-        "Ce sont les donnees qui servent a creer le profil initial de l'etudiant au moment de son "
-        "integration, en s'appuyant sur les entites ETUDIANT et PROMOTION du modele."
+        "Ce sont les données qui servent à créer le profil initial de l'étudiant lors de son "
+        "intégration, à partir des entités ETUDIANT et PROMOTION du modèle."
     )
 
-    headers = ["Categorie", "Champs (Code)", "Description (simplifiee)", "Exemple"]
+    headers = ["Catégorie", "Champs (Code)", "Description (simplifiée)", "Exemple"]
     widths = [31, 73, 58, 28]
     pdf.table_header(headers, widths)
     rows = [
-        ["Identite et Coordonnees", "nom, prenom, email, telephone", "Identification unique de l'alumni.", "Alice Martin"],
-        ["Identite et Coordonnees", "date_naissance", "Statistiques demographiques.", "1999-04-12"],
-        ["Identite et Coordonnees", "email_academique", "Contact institutionnel (optionnel).", "alice@ionis-stm.com"],
-        ["Identite et Coordonnees", "address, city, country", "Localisation geographique.", "Paris, France"],
-        ["Identite et Coordonnees", "linkedin", "URL du profil LinkedIn.", "linkedin.com/in/alice"],
-        ["Identite et Coordonnees", "availability_status", "Statut : en_poste, a_lecoute, en_recherche.", "en_recherche"],
-        ["Identite et Coordonnees", "skills", "Competences techniques (tags).", "Python, SQL, DevOps"],
-        ["Historique Academique", "parcours_anterieur", "Cursus suivi avant integration.", "BTS SIO"],
-        ["Historique Academique", "previous_school (inscription)", "Etablissement precedent.", "Lycee Voltaire"],
-        ["Rattachement Scolaire", "id_promotion -> nom_promotion, annee_diplome, filiere", "Lien PROMOTION (filtres promotion/filiere).", "Promo 2025, Data"],
-        ["Donnees complementaires", "date_inscription", "Date de creation du profil.", "2023-09-01"],
+        ["Identité et Coordonnées", "nom, prenom, email, telephone", "Identification de l'alumni.", "Alice Martin"],
+        ["Identité et Coordonnées", "date_naissance", "Statistiques démographiques.", "1999-04-12"],
+        ["Identité et Coordonnées", "email_academique", "Contact institutionnel (facultatif).", "alice@ionis-stm.com"],
+        ["Identité et Coordonnées", "address, city, country", "Localisation géographique.", "Paris, France"],
+        ["Identité et Coordonnées", "linkedin", "Lien vers le profil LinkedIn.", "linkedin.com/in/alice"],
+        ["Identité et Coordonnées", "availability_status", "Statut : en_poste, a_lecoute, en_recherche.", "en_recherche"],
+        ["Identité et Coordonnées", "skills", "Compétences techniques (tags).", "Python, SQL, DevOps"],
+        ["Historique Académique", "parcours_anterieur", "Cursus suivi avant l'intégration.", "BTS SIO"],
+        ["Historique Académique", "previous_school (inscription)", "Établissement précédent.", "Lycée Voltaire"],
+        ["Rattachement Scolaire", "id_promotion -> nom_promotion, annee_diplome, filiere", "Rattachement promotion (filtres promo/filière).", "Promo 2025, Data"],
+        ["Données complémentaires", "date_inscription", "Date de création du profil.", "2023-09-01"],
     ]
     for i, r in enumerate(rows):
         pdf.table_row(r, widths, fill=(i % 2 == 0))
@@ -196,31 +222,31 @@ def generate_cartographie():
     pdf.ln(4)
 
     # 3. Donnees Sortie
-    pdf.chapter_title("3", "Donnees collectees a la sortie (Evolution Post-Diplome)")
+    pdf.chapter_title("3", "Données collectées à la sortie (Évolution Post-Diplôme)")
     pdf.body_text(
-        "Apres le diplome, le systeme suit l'evolution de la carriere des alumni a partir des tables "
-        "EXPERIENCE_PRO, ENTREPRISE et CERTIFICATION. S'y ajoutent les donnees declaratives recueillies "
-        "chaque annee via QUESTIONNAIRE et REPONSE."
+        "Après le diplôme, le système suit l'évolution de la carrière des alumni à partir des tables "
+        "EXPERIENCE_PRO, ENTREPRISE et CERTIFICATION. S'y ajoutent les données déclaratives "
+        "recueillies chaque année via QUESTIONNAIRE et REPONSE."
     )
 
-    headers = ["Categorie", "Champs (Code)", "Description (simplifiee)", "Exemple"]
+    headers = ["Catégorie", "Champs (Code)", "Description (simplifiée)", "Exemple"]
     widths = [41, 44, 73, 32]
     pdf.table_header(headers, widths)
     rows2 = [
         ["Suivi des Postes", "company (nom_entreprise)", "Entreprise employeuse.", "Capgemini"],
-        ["Suivi des Postes", "position (intitule_poste)", "Intitule du poste.", "Developpeur Data"],
+        ["Suivi des Postes", "position (intitule_poste)", "Intitulé du poste.", "Développeur Data"],
         ["Suivi des Postes", "type_contrat", "CDI, CDD, Freelance, Alternance, Stage...", "CDI"],
-        ["Suivi des Postes", "start_date, end_date", "Periode du poste (mois annee).", "09/2024 - 06/2025"],
-        ["Suivi des Postes", "is_current (poste_actuel)", "Poste occupe actuellement.", "true"],
-        ["Suivi des Postes", "description", "Missions et responsabilites.", "Pipeline data, API"],
-        ["Informations Salariales", "salary_range (salaire)", "Ancien champ texte (retrocomp.).", "35-45k EUR"],
+        ["Suivi des Postes", "start_date, end_date", "Période du poste (mois/année).", "09/2024 - 06/2025"],
+        ["Suivi des Postes", "is_current (poste_actuel)", "Poste occupé actuellement.", "true"],
+        ["Suivi des Postes", "description", "Missions et responsabilités.", "Pipeline data, API"],
+        ["Informations Salariales", "salary_range (salaire)", "Ancien champ texte (rétrocompatibilité).", "35-45k EUR"],
         ["Informations Salariales", "salary_annuel (NUMERIC)", "Salaire brut annuel (chiffre).", "42000"],
-        ["Geographie", "pays, ville", "Localisation de l'entreprise.", "France, Paris"],
-        ["Secteur d'activite", "sector (secteur_activite)", "37 categories + Autre.", "Conseil"],
-        ["Certifications", "name (nom_certification)", "Certification post-diplome.", "AWS Certified"],
-        ["Certifications", "issuer (organisme)", "Organisme emetteur.", "Amazon AWS"],
+        ["Géographie", "pays, ville", "Localisation de l'entreprise.", "France, Paris"],
+        ["Secteur d'activité", "sector (secteur_activite)", "37 catégories + Autre.", "Conseil"],
+        ["Certifications", "name (nom_certification)", "Certification post-diplôme.", "AWS Certified"],
+        ["Certifications", "issuer (organisme)", "Organisme émetteur.", "Amazon AWS"],
         ["Certifications", "date_obtained", "Date d'obtention.", "2025-03-15"],
-        ["Reponse Questionnaire", "reponses (JSON)", "Reponses enquetes annuelles.", "{\"salaire\": \"42k\"}"],
+        ["Réponse Questionnaire", "reponses (JSON)", "Réponses enquêtes annuelles.", "{\"salaire\": \"42k\"}"],
     ]
     for i, r in enumerate(rows2):
         pdf.table_row(r, widths, fill=(i % 2 == 0))
@@ -229,78 +255,38 @@ def generate_cartographie():
     pdf.ln(4)
 
     # 4. Donnees RGPD
-    pdf.chapter_title("4", "Donnees de Consentement RGPD")
+    pdf.chapter_title("4", "Données de Consentement RGPD")
     pdf.body_text(
-        "La table CONSENTEMENT_RGPD garde une trace complete et inalterable des choix de "
-        "confidentialite de chaque alumni."
+        "La table CONSENTEMENT_RGPD conserve une trace complète des choix de confidentialité de "
+        "chaque alumni : le type d'autorisation accordée, son statut (actif ou refusé), la date et le "
+        "canal de recueil."
     )
 
-    headers3 = ["Champ", "Type / Valeurs", "Description (simplifiee)", "Exemple"]
+    headers3 = ["Champ", "Type / Valeurs", "Description (simplifiée)", "Exemple"]
     widths3 = [45, 51, 67, 27]
     pdf.table_header(headers3, widths3)
     rgpd_rows = [
-        ["id_etudiant", "Entier (FK)", "Reference vers l\u0027alumni.", "42"],
-        ["type_consentement", "4 types (voir 5.2)", "Nature de l\u0027autorisation.", "newsletter"],
+        ["id_etudiant", "Entier (FK)", "Référence vers l'alumni.", "42"],
+        ["type_consentement", "4 types (voir Charte RGPD)", "Nature de l'autorisation.", "newsletter"],
         ["date_consentement", "Date (AAAA-MM-JJ)", "Date du recueil.", "2025-09-14"],
-        ["statut", "actif | refuse", "Etat du consentement.", "actif"],
-        ["canal", "web | questionnaire", "Origine de l\u0027accord.", "web"],
+        ["statut", "actif | refuse", "État du consentement.", "actif"],
+        ["canal", "web | questionnaire", "Origine de l'accord.", "web"],
     ]
     for i, r in enumerate(rgpd_rows):
         pdf.table_row(r, widths3, fill=(i % 2 == 0))
     pdf.ln(4)
 
-    pdf.bullet("DEMANDE_RGPD : demandes d'export ou de suppression initiees par l'alumni ; cycle envoyee -> en_traitement -> traitee/rejetee avec verrou de prise en charge (prise_en_charge_par).")
-    pdf.bullet("AUDIT_LOG : journal horodate des operations sensibles (anonymisations, purges, nettoyages) avec acteur, action, details et nombre de lignes.")
-    pdf.bullet("ETUDIANT.date_anonymisation : horodatage d'anonymisation RGPD ; un compte anonymise refuse toute nouvelle ecriture et reste exclu des indicateurs jusqu'a la purge differee.")
+    pdf.bullet("DEMANDE_RGPD : les demandes d'export ou de suppression lancées par l'alumni, avec leur cycle envoyée -> en_traitement -> traitée/rejetée et un verrou anti-traitement parallèle (prise_en_charge_par).")
+    pdf.bullet("AUDIT_LOG : journal horodaté des opérations sensibles (anonymisations, purges, nettoyages), avec acteur, action, détail et nombre de lignes.")
+    pdf.bullet("ETUDIANT.date_anonymisation : horodatage d'anonymisation ; un compte anonymisé refuse toute nouvelle écriture et reste exclu des indicateurs jusqu'à la purge différée.")
 
-    pdf.ln(4)
-
-    # 5. Charte RGPD integree
-    pdf.chapter_title("5", "Charte de Conformite RGPD")
-
-    pdf.section_title("5.1 Contexte Juridique")
+    pdf.ln(2)
     pdf.body_text(
-        "Le point le plus sensible d'un annuaire d'anciens, juridiquement, c'est le traitement des "
-        "donnees personnelles. Le CRM repond avec une tracabilite complete des choix via la table "
-        "CONSENTEMENT_RGPD, en restant dans le cadre du Reglement (UE) 2016/679 (RGPD) et de la loi "
-        "Informatique et Libertes."
+        "Le mécanisme complet du consentement — recueil, modification, retrait, droits des personnes, "
+        "workflow d'effacement — est détaillé dans la Charte de Conformité RGPD, livrée séparément. "
+        "Pas la peine de le dupliquer ici : ce document reste une photographie des données gérées, "
+        "pas un guide juridique."
     )
-
-    pdf.section_title("5.2 Les 4 Types de Consentement")
-    pdf.body_text(
-        "Quatre consentements distincts sont proposes, chacun gere independamment par un toggle "
-        "dedie dans l'interface alumni (AlumniConsent.jsx)."
-    )
-    headers_rgpd = ["Type (Backend)", "Cle Frontend", "Description (simplifiee)", "Exemple"]
-    widths_rgpd = [27, 34, 74, 55]
-    pdf.table_header(headers_rgpd, widths_rgpd)
-    rgpd_types = [
-        ["prise_de_contact", "contact_allowed", "Ecole / partenaires peuvent contacter.", "Offres de postes, evenements"],
-        ["partage_donnees", "data_sharing", "Donnees statistiques anonymisees partagees.", "Secteur, poste"],
-        ["enquetes", "survey_participation", "Participation aux enquetes alumni.", "Evolution carriere, satisfaction"],
-        ["newsletter", "newsletter", "Reception de la newsletter.", "Actualites, offres d\u0027emploi"],
-    ]
-    for i, r in enumerate(rgpd_types):
-        pdf.table_row(r, widths_rgpd, fill=(i % 2 == 0))
-    pdf.ln(4)
-
-    pdf.section_title("5.3 Mecanisme de Gestion du Consentement")
-    pdf.bullet("Canal principal : formulaire d'inscription Web (AlumniRegistration.jsx).")
-    pdf.bullet("Canal secondaire prevu : questionnaire annuel (AlumniSurvey.jsx) ; a ce jour seul le canal 'web' est reellement emis par le frontend.")
-    pdf.bullet("Chaque consentement est enregistre avec : type_consentement, statut (actif/refuse), date_consentement, canal, id_etudiant.")
-    pdf.bullet("L'endpoint POST /consentements/ cree ou met a jour le consentement pour chaque type.")
-    pdf.bullet("L'alumni peut modifier ses preferences a tout moment via l'interface de consentement.")
-    pdf.bullet("Le retrait du consentement est modelise par un nouveau vote 'refuse' avec la date courante.")
-    pdf.bullet("Enregistrement de la date exacte du recueil et identification du canal de collecte pour tout audit de conformite.")
-    pdf.bullet("Information de l'alumni dans l'interface de consentement (AlumniConsent.jsx) : duree de conservation des donnees (suppression 6 mois apres anonymisation) et contact du DPO (dpo@ionis-stm.com).")
-
-    pdf.section_title("5.4 Droits RGPD Implementes")
-    pdf.bullet("Droit d'acces a vos donnees personnelles : page de profil en lecture seule, suivi des demandes via GET /rgpd/demandes/moi et export json/Excel/CSV auto-service via GET /rgpd/export.")
-    pdf.bullet("Droit de rectification et de mise a jour (AlumniProfile.jsx).")
-    pdf.bullet("Droit a l'effacement (droit a l'oubli) : workflow de demandes auto-service (POST /rgpd/demandes) traite par anonymisation ANONYMISE_<id>@anonymise.io puis purge differee ; anonymisation admin directe possible via POST /etudiants/{id}/anonymiser.")
-    pdf.bullet("Droit de retrait du consentement a tout moment (AlumniConsent.jsx avec toggles).")
-    pdf.bullet("Les donnees de consentement ne font l'objet d'aucun chiffrement specifique au niveau applicatif : leur protection repose sur les mecanismes standard de l'infrastructure PostgreSQL.")
-    pdf.bullet("La notification de violation de donnees (article 33 du RGPD) n'est pas couverte par une fonctionnalite dediee du systeme a ce jour.")
 
     pdf.output(os.path.join(OUTPUT_DIR, "Cartographie des Donnees - Alumni CRM.pdf"))
     print("Cartographie generee.")
@@ -313,7 +299,7 @@ def generate_rgpd():
 
     pdf.set_font("SegoeUI", "B", 20)
     pdf.set_text_color(30, 64, 175)
-    pdf.cell(0, 12, "Charte de Conformite RGPD", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.cell(0, 12, "Charte de Conformité RGPD", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.set_font("SegoeUI", "", 10)
     pdf.set_text_color(107, 114, 128)
     pdf.cell(0, 7, "Projet Alumni CRM - Version complete et fidele au code source", new_x="LMARGIN", new_y="NEXT", align="C")
@@ -322,29 +308,29 @@ def generate_rgpd():
     # 1. Contexte
     pdf.chapter_title("1", "Contexte Juridique")
     pdf.body_text(
-        "Un annuaire d'anciens manipule avant tout des donnees personnelles, c'est le point de "
-        "vigilance principal. La conformite repose ici sur une tracabilite complete des choix via la "
-        "table CONSENTEMENT_RGPD, dans le cadre du Reglement (UE) 2016/679 (RGPD) et de la loi "
-        "Informatique et Libertes. A ce jour, les donnees de consentement ne font pas l'objet d'un "
-        "chiffrement applicatif specifique (leur protection est confiee aux mecanismes de "
-        "l'infrastructure), et aucune fonctionnalite de notification de violation de donnees n'existe."
+        "Un annuaire d'anciens manipule avant tout des données personnelles : c'est le point de "
+        "vigilance numéro un. La conformité repose ici sur une traçabilité complète des choix via la "
+        "table CONSENTEMENT_RGPD, dans le cadre du Règlement (UE) 2016/679 (RGPD) et de la loi "
+        "Informatique et Libertés. Deux limites à connaître : les données de consentement ne sont pas "
+        "chiffrées au niveau applicatif (leur protection repose sur l'infrastructure PostgreSQL), et "
+        "aucune fonctionnalité de notification de violation de données n'existe à ce jour."
     )
 
     # 2. Types de consentement
-    pdf.chapter_title("2", "Les 4 Types de Consentement Implementes")
+    pdf.chapter_title("2", "Les 4 Types de Consentement Implémentés")
     pdf.body_text(
-        "Quatre consentements distincts sont proposes. Chacun est gere independamment par un toggle "
-        "dedie dans l'interface alumni (AlumniConsent.jsx)."
+        "Quatre consentements distincts sont proposés, chacun géré indépendamment par un toggle "
+        "dédié dans l'interface alumni (AlumniConsent.jsx)."
     )
 
-    headers = ["Type (Backend)", "Cle Frontend", "Description (simplifiee)", "Exemple"]
+    headers = ["Type (Backend)", "Clé Frontend", "Description (simplifiée)", "Exemple"]
     widths = [27, 34, 74, 55]
     pdf.table_header(headers, widths)
     rows = [
-        ["prise_de_contact", "contact_allowed", "Ecole / partenaires peuvent contacter.", "Offres de postes, evenements"],
-        ["partage_donnees", "data_sharing", "Donnees statistiques anonymisees partagees.", "Secteur, poste"],
-        ["enquetes", "survey_participation", "Participation aux enquetes alumni.", "Evolution carriere, satisfaction"],
-        ["newsletter", "newsletter", "Reception de la newsletter.", "Actualites, offres d\u0027emploi"],
+        ["prise_de_contact", "contact_allowed", "L'école ou ses partenaires peuvent contacter l'alumni.", "Offres de postes, événements"],
+        ["partage_donnees", "data_sharing", "Données statistiques anonymisées partagées.", "Secteur, poste"],
+        ["enquetes", "survey_participation", "Participation aux enquêtes alumni.", "Évolution de carrière, satisfaction"],
+        ["newsletter", "newsletter", "Réception de la newsletter.", "Actualités, offres d'emploi"],
     ]
     for i, r in enumerate(rows):
         pdf.table_row(r, widths, fill=(i % 2 == 0))
@@ -352,59 +338,58 @@ def generate_rgpd():
 
 
     # 3. Gestion du consentement
-    pdf.chapter_title("3", "Mecanisme de Gestion du Consentement")
+    pdf.chapter_title("3", "Mécanisme de Gestion du Consentement")
     pdf.section_title("3.1 Collecte du consentement")
-    pdf.bullet("Canal principal : formulaire d'inscription Web (AlumniRegistration.jsx).")
-    pdf.bullet("Canal secondaire prevu : questionnaire annuel (AlumniSurvey.jsx) ; a ce jour seul le canal 'web' est reellement emis par le frontend.")
-    pdf.bullet("Chaque consentement est enregistre avec : type_consentement, statut (actif/refuse), date_consentement, canal, id_etudiant.")
-    pdf.bullet("L'endpoint POST /consentements/ cree ou met a jour le consentement pour chaque type.")
-    pdf.bullet("L'interface de consentement informe l'alumni de la duree de conservation des donnees (suppression 6 mois apres anonymisation) et affiche le contact du DPO (dpo@ionis-stm.com).")
+    pdf.bullet("Canal principal : le formulaire d'inscription web (AlumniRegistration.jsx).")
+    pdf.bullet("Canal secondaire prévu : le questionnaire annuel (AlumniSurvey.jsx). À ce jour, seul le canal 'web' est réellement émis par le frontend.")
+    pdf.bullet("Chaque vote enregistre : type_consentement, statut (actif ou refuse), date_consentement, canal et id_etudiant.")
+    pdf.bullet("L'endpoint POST /consentements/ crée ou met à jour le consentement pour chaque type.")
+    pdf.bullet("L'interface de consentement rappelle la durée de conservation des données (suppression 6 mois après anonymisation) et affiche le contact du DPO (dpo@ionis-stm.com).")
 
     pdf.section_title("3.2 Modification et retrait")
-    pdf.bullet("L'alumni peut modifier ses preferences a tout moment via l'interface de consentement.")
-    pdf.bullet("Le retrait du consentement est modelise par un nouveau vote 'refuse' avec la date courante.")
-    pdf.bullet("L'interface affiche la date de derniere mise a jour du consentement.")
-    pdf.bullet("Une suppression physique d'un enregistrement reste possible via DELETE /consentements/{id_consentement} (proprietaire ou admin) ; le retrait usuel conserve l'historique complet des votes.")
+    pdf.bullet("L'alumni peut changer ses préférences à tout moment via l'interface de consentement.")
+    pdf.bullet("Le retrait est modélisé par un nouveau vote 'refuse', horodaté comme les autres.")
+    pdf.bullet("L'interface affiche la date de dernière mise à jour du consentement.")
+    pdf.bullet("Une suppression physique reste possible via DELETE /consentements/{id_consentement} (propriétaire ou admin) ; le retrait usuel, lui, conserve l'historique complet des votes.")
 
-    pdf.section_title("3.3 Traçabilite")
-    pdf.bullet("Enregistrement de la date exacte du recueil (date_consentement).")
-    pdf.bullet("Identification formelle du canal de collecte (formulaire inscription, questionnaire).")
-    pdf.bullet("Historique complet des votes de consentement dans la base de donnees.")
+    pdf.section_title("3.3 Traçabilité")
+    pdf.bullet("Date exacte du recueil enregistrée (date_consentement).")
+    pdf.bullet("Canal de collecte identifié de façon formelle (inscription ou questionnaire).")
+    pdf.bullet("Historique complet des votes conservé dans la base de données.")
 
     pdf.section_title("3.4 Consommation des consentements (relations fonctionnelles)")
     pdf.body_text(
-        "Chaque consentement correspond a un usage reel du systeme : un refus (statut 'refuse') "
-        "desactive l'usage concerne. Si l'alumni n'a pas encore vote pour un type, il reste eligible "
-        "('inconnu' tolere), ce qui est coherent avec la suppression d'un consentement par "
-        "DELETE /consentements/{id_consentement} (proprietaire ou admin). Le vote le plus recent est "
-        "toujours determine par la meme sous-requete correlee (ORDER BY date_consentement DESC, "
-        "id_consentement DESC LIMIT 1)."
+        "Chaque consentement est relié à un usage réel du système : un refus (statut 'refuse') "
+        "désactive l'usage concerné. Tant que l'alumni n'a pas voté pour un type, il reste éligible "
+        "(statut 'inconnu' toléré), ce qui est cohérent avec la suppression d'un consentement via "
+        "DELETE /consentements/{id_consentement}. Le vote le plus récent est toujours déterminé par la "
+        "même sous-requête corrélée (ORDER BY date_consentement DESC, id_consentement DESC LIMIT 1)."
     )
-    pdf.bullet("'newsletter' : recevoir les newsletters (POST /newsletter/envoyer, ciblage par promotion / secteur / consents actifs).")
-    pdf.bullet("'enquetes' : acceder au questionnaire actif (GET /questionnaires/actif) et recevoir les relances (POST /admin/questionnaires/notififier). Un refus bloque la restitution du questionnaire (HTTP 403) et masque le lien 'Enquete annuelle' dans la navigation alumni (AlumniLayout.jsx).")
-    pdf.bullet("'prise_de_contact' : recevoir newsletter et relances questionnaire ; un refus exclut l'alumni des deux envois (newsletter.py et questionnaires.py). C'est le seul consentement dont le refus declenche l'anonymisation du profil via cleanup.py (CONSENTEMENT_ARCHIVE_TYPE = 'prise_de_contact').")
-    pdf.bullet("'partage_donnees' : seul ce perimetre (alumni ayant accepte le partage) alimente les indicateurs partenaires GET /admin/indicateurs/partenaires (comptages et moyennes d'insertion anonymises, aucune donnee personnelle avec le partenaire).")
+    pdf.bullet("'newsletter' : autorise l'envoi des newsletters (POST /newsletter/envoyer, ciblage par promotion, secteur et consentements actifs).")
+    pdf.bullet("'enquetes' : donne accès au questionnaire actif (GET /questionnaires/actif) et aux relances (POST /admin/questionnaires/notififier). Un refus bloque la restitution du questionnaire (HTTP 403) et masque le lien 'Enquête annuelle' dans la navigation alumni (AlumniLayout.jsx).")
+    pdf.bullet("'prise_de_contact' : couvre newsletter et relances ; un refus exclut l'alumni des deux envois et c'est le seul consentement dont le refus déclenche l'anonymisation du profil (cleanup.py, CONSENTEMENT_ARCHIVE_TYPE = 'prise_de_contact').")
+    pdf.bullet("'partage_donnees' : seuls les alumni ayant accepté le partage alimentent les indicateurs partenaires GET /admin/indicateurs/partenaires (comptages et moyennes anonymisés, aucune donnée personnelle transmise).")
 
     # 4. Droits RGPD
-    pdf.chapter_title("4", "Droits RGPD Implementes dans l'Interface")
-    pdf.body_text("L'interface alumni affiche et implemente les droits suivants :")
-    pdf.bullet("Droit d'acces a vos donnees personnelles : page de profil en lecture seule, suivi des demandes via GET /rgpd/demandes/moi et export json/Excel/CSV auto-service via GET /rgpd/export.")
-    pdf.bullet("Droit de rectification et de mise a jour (AlumniProfile.jsx).")
-    pdf.bullet("Droit a l'effacement (droit a l'oubli) : mentionne dans l'interface, implemente via un workflow de demandes auto-service (POST /rgpd/demandes) traite par anonymisation puis purge differee.")
-    pdf.bullet("Droit de retrait du consentement a tout moment (AlumniConsent.jsx avec toggles).")
+    pdf.chapter_title("4", "Droits RGPD Implémentés dans l'Interface")
+    pdf.body_text("Dans l'interface alumni, ces droits sont à la fois affichés et réellement implémentés :")
+    pdf.bullet("Droit d'accès : page de profil en lecture seule, suivi des demandes via GET /rgpd/demandes/moi et export auto-service JSON/Excel/CSV via GET /rgpd/export.")
+    pdf.bullet("Droit de rectification et de mise à jour (AlumniProfile.jsx).")
+    pdf.bullet("Droit à l'effacement (droit à l'oubli) : workflow auto-service (POST /rgpd/demandes) traité par anonymisation puis purge différée.")
+    pdf.bullet("Droit de retirer son consentement à tout moment (AlumniConsent.jsx avec toggles).")
 
     # 5. Valeurs du statut
-    pdf.chapter_title("5", "Modele de Donnees CONSENTEMENT_RGPD")
+    pdf.chapter_title("5", "Modèle de Données CONSENTEMENT_RGPD")
 
-    headers2 = ["Champ", "Type", "Contraintes (simplifiees)", "Exemple"]
+    headers2 = ["Champ", "Type", "Contraintes (simplifiées)", "Exemple"]
     widths2 = [44, 33, 87, 26]
     pdf.table_header(headers2, widths2)
     rows2 = [
         ["id_etudiant", "Entier (FK)", "REFERENCES ETUDIANT, NOT NULL.", "42"],
-        ["type_consentement", "Enum / Chaine", "4 valeurs possibles.", "newsletter"],
+        ["type_consentement", "Enum / Chaîne", "4 valeurs possibles.", "newsletter"],
         ["date_consentement", "Date", "NOT NULL, date du jour.", "2025-09-14"],
-        ["statut", "Chaine", "actif (accorde) / refuse (retire).", "actif"],
-        ["canal", "Chaine", "web | questionnaire.", "web"],
+        ["statut", "Chaîne", "actif (accordé) / refuse (retiré).", "actif"],
+        ["canal", "Chaîne", "web | questionnaire.", "web"],
     ]
     for i, r in enumerate(rows2):
         pdf.table_row(r, widths2, fill=(i % 2 == 0))
@@ -412,104 +397,104 @@ def generate_rgpd():
     pdf.ln(4)
 
     # 6. Workflow des demandes RGPD
-    pdf.chapter_title("6", "Workflow des Demandes RGPD (Effacement et Portabilite)")
+    pdf.chapter_title("6", "Workflow des Demandes RGPD (Effacement et Portabilité)")
     pdf.body_text(
-        "Au-dela des consentements, le CRM met en place un vrai circuit de traitement des droits "
-        "d'acces, d'effacement et de portabilite, appuye sur la table DEMANDE_RGPD :"
+        "Au-delà des consentements, le CRM met en place un vrai circuit de traitement des droits "
+        "d'accès, d'effacement et de portabilité, appuyé sur la table DEMANDE_RGPD :"
     )
-    pdf.bullet("Depot auto-service : POST /rgpd/demandes (types 'export' ou 'suppression') ; suivi et annulation par l'alumni via GET /rgpd/demandes/moi et DELETE /rgpd/demandes/{id}.")
-    pdf.bullet("Cycle de statuts : envoyee -> en_traitement -> traitee/rejetee (contrainte SQL, migration 009), avec verrou anti-traitement parallele (prise_en_charge_par, date_prise_en_charge).")
-    pdf.bullet("Traitement d'une demande de suppression = anonymisation irreversible (email remplace par ANONYMISE_<id>@anonymise.io, donnees personnelles effacees), puis purge physique differee apres PURGE_DELAY_MONTHS mois (defaut 6) via purge.py (--dry-run disponible) ou POST /admin/demandes-rgpd/purge-anonymises.")
-    pdf.bullet("Portabilite : export json/Excel/CSV auto-service via GET /rgpd/export ; exports admin unitaires et en masse.")
-    pdf.bullet("Operations tracees dans AUDIT_LOG (acteur, action, details).")
+    pdf.bullet("Dépôt auto-service : POST /rgpd/demandes (types 'export' ou 'suppression') ; l'alumni suit et annule ses demandes via GET /rgpd/demandes/moi et DELETE /rgpd/demandes/{id}.")
+    pdf.bullet("Cycle de statuts : envoyee -> en_traitement -> traitee/rejetee (contrainte SQL, migration 009), avec un verrou anti-traitement parallèle (prise_en_charge_par, date_prise_en_charge).")
+    pdf.bullet("Une demande de suppression est traitée par anonymisation irréversible (email remplacé par ANONYMISE_<id>@anonymise.io, données personnelles effacées), puis par purge physique différée après PURGE_DELAY_MONTHS mois (défaut 6) via purge.py (--dry-run disponible) ou POST /admin/demandes-rgpd/purge-anonymises.")
+    pdf.bullet("Portabilité : export auto-service JSON/Excel/CSV via GET /rgpd/export ; exports admin unitaires et en masse.")
+    pdf.bullet("Chaque opération est tracée dans AUDIT_LOG (acteur, action, détails).")
 
     pdf.output(os.path.join(OUTPUT_DIR, "Charte de Conformite RGPD - Alumni CRM.pdf"))
     print("Charte RGPD generee.")
 
 
 def generate_strategie():
-    pdf = ReportPDF("Strategie de Mise a Jour")
+    pdf = ReportPDF("Stratégie de Mise à Jour")
     pdf.alias_nb_pages()
     pdf.add_page()
 
     pdf.set_font("SegoeUI", "B", 20)
     pdf.set_text_color(30, 64, 175)
-    pdf.cell(0, 12, "Strategie de Mise a Jour des Donnees", new_x="LMARGIN", new_y="NEXT", align="C")
+    pdf.cell(0, 12, "Stratégie de Mise à Jour des Données", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.set_font("SegoeUI", "", 10)
     pdf.set_text_color(107, 114, 128)
     pdf.cell(0, 7, "Projet Alumni CRM - Version complete et fidele au code source", new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.ln(8)
 
     # 1. Defi
-    pdf.chapter_title("1", "Le Defi de l'Obsolescence des Donnees")
+    pdf.chapter_title("1", "Le Défi de l'Obsolescence des Données")
     pdf.body_text(
-        "Le probleme de fond d'un annuaire d'anciens, c'est que les informations periment vite. "
-        "Sans rien faire, les donnees d'insertion (postes, entreprises, salaires) deviennent "
-        "rapidement fausses. La gouvernance du CRM part donc d'une idee simple : inciter "
-        "regulierement les diplomes a mettre a jour leur profil."
+        "Le problème de fond d'un annuaire d'anciens, c'est que les informations périment vite. "
+        "Sans rien faire, les données d'insertion (postes, entreprises, salaires) deviennent "
+        "rapidement fausses. La gouvernance du CRM part donc d'une idée simple : inciter "
+        "régulièrement les diplômés à mettre à jour leur profil."
     )
 
     # 2. Mise a jour manuelle
-    pdf.chapter_title("2", "Mise a Jour Manuelle par l'Alumni")
+    pdf.chapter_title("2", "Mise à Jour Manuelle par l'Alumni")
 
     pdf.section_title("2.1 Gestion du profil (AlumniProfile.jsx)")
-    pdf.bullet("L'alumni peut modifier : prenom, nom, email, telephone, adresse, ville, pays, LinkedIn, date de naissance, email academique, parcours anterieur.")
-    pdf.bullet("Le statut de disponibilite (en_poste / a_lecoute / en_recherche) est obligatoire et conditionne le comportement du systeme.")
-    pdf.bullet("Les tags de competences (skills) sont geres via un systeme d'ajout/suppression dynamique.")
+    pdf.bullet("L'alumni peut modifier presque tout son profil : prenom, nom, email, telephone, adresse, ville, pays, LinkedIn, date de naissance, email académique et parcours antérieur.")
+    pdf.bullet("Le statut de disponibilité (en_poste / a_lecoute / en_recherche) est obligatoire et conditionne le comportement du système.")
+    pdf.bullet("Les compétences (skills) sont gérées via un système dynamique d'ajout/suppression de tags.")
 
     pdf.section_title("2.2 Gestion du parcours (AlumniCareer.jsx)")
-    pdf.bullet("Ajout/suppression d'experiences professionnelles (entreprise, poste, secteur, contrat, dates, salaire, localisation) et modification d'une experience existante via PUT /experiences/{id_experience} : mise a jour en une seule transaction atomique (plus besoin de supprimer puis recreer).")
-    pdf.bullet("Ajout/suppression de certifications (nom, organisme, date d'obtention).")
-    pdf.bullet("Detection automatique du 'poste actuel' : si aucun poste n'est coche comme actuel, le systeme affiche l'experience la plus recente.")
-    pdf.bullet("Alerte visuelle si le statut est 'en_poste' mais aucun poste n'est coche comme actuel.")
+    pdf.bullet("Ajout et suppression d'expériences professionnelles (entreprise, poste, secteur, contrat, dates, salaire, localisation). Modifier une expérience existante passe par PUT /experiences/{id_experience}, en une seule transaction atomique : plus besoin de supprimer puis recréer.")
+    pdf.bullet("Ajout et suppression de certifications (nom, organisme, date d'obtention).")
+    pdf.bullet("Poste actuel détecté automatiquement : si aucun poste n'est coché 'actuel', le système affiche l'expérience la plus récente.")
+    pdf.bullet("Un message d'alerte s'affiche dans l'interface Parcours quand l'alumni est en 'en_poste' sans avoir coché de poste actuel.")
 
     # 3. Questionnaire annuel
-    pdf.chapter_title("3", "Questionnaire Annuel Automatise")
+    pdf.chapter_title("3", "Questionnaire Annuel Automatisé")
 
-    pdf.section_title("3.1 Cote administration (AdminQuestionnaires.jsx)")
-    pdf.bullet("Creation, modification, suppression de questionnaires via une interface dediee.")
-    pdf.bullet("6 types de questions : texte libre, choix multiple (radio), choix unique (radio, une seule reponse), liste deroulante (select, une seule reponse), oui/non (boolean), note 1-5 (rating).")
-    pdf.bullet("Systeme de Tags KPI : chaque question peut etre etiquetee (ex: 'adequation_formation') pour alimenter des indicateurs de pilotage.")
-    pdf.bullet("Questions conditionnees : masquage automatique d'une question si l'alumni est en recherche active (conditionnee_statut_emploi).")
-    pdf.bullet("Cycle de vie : activation / desactivation / reactivation d'un questionnaire.")
-    pdf.bullet("Consultation des reponses avec affichage nom, prenom, email, date et details.")
+    pdf.section_title("3.1 Côté administration (AdminQuestionnaires.jsx)")
+    pdf.bullet("Crée, modifie et supprime des questionnaires via une interface dédiée.")
+    pdf.bullet("6 types de questions : texte libre, choix multiple (radio), choix unique (radio, une seule réponse), liste déroulante (select, une seule réponse), oui/non (boolean) et note 1-5 (rating).")
+    pdf.bullet("Tags KPI : une question peut être étiquetée (ex. 'adequation_formation') pour alimenter automatiquement les indicateurs de pilotage.")
+    pdf.bullet("Questions conditionnées : une question peut être masquée automatiquement si l'alumni est en recherche active (conditionnee_statut_emploi).")
+    pdf.bullet("Cycle de vie : activation, désactivation puis réactivation d'un questionnaire.")
+    pdf.bullet("Consultation des réponses avec nom, prénom, email, date et détails.")
 
-    pdf.section_title("3.2 Cote alumni (AlumniSurvey.jsx)")
-    pdf.bullet("L'alumni accede au questionnaire actif depuis le menu lateral ; un refus du consentement 'enquetes' bloque la restitution (HTTP 403) et masque le menu lateral, RGPD.")
-    pdf.bullet("Les reponses precedentes sont pre-remplies pour faciliter la mise a jour ; le pre-remplissage s'appuie sur le dernier questionnaire renseigne, sans historique complet des reponses dans l'interface.")
-    pdf.bullet("Les questions non applicables (conditionnees au statut) sont automatiquement masquees et enregistrees comme 'Non applicable'.")
-    pdf.bullet("Possibilite de modifier ses reponses a tout moment.")
-    pdf.bullet("Validation : toutes les questions visibles doivent etre repondues avant soumission.")
+    pdf.section_title("3.2 Côté alumni (AlumniSurvey.jsx)")
+    pdf.bullet("L'alumni accède au questionnaire actif depuis le menu latéral ; en cas de refus du consentement 'enquetes', la restitution est bloquée (HTTP 403) et le menu latéral masqué, pour respecter le RGPD.")
+    pdf.bullet("Les réponses précédentes sont pré-remplies pour faciliter la mise à jour ; le pré-remplissage s'appuie sur le dernier questionnaire renseigné, sans historique complet dans l'interface.")
+    pdf.bullet("Les questions non applicables (conditionnées au statut) sont masquées et enregistrées comme 'Non applicable'.")
+    pdf.bullet("L'alumni peut modifier ses réponses à tout moment.")
+    pdf.bullet("Validation : toutes les questions visibles doivent être répondues avant soumission.")
 
     # 4. Guide processus
     pdf.chapter_title("4", "Guide des Processus pour le Service des Relations Entreprises")
 
     pdf.section_title("4.1 Pilotage des campagnes")
-    pdf.bullet("Le service cree et administre les questionnaires via l'interface AdminQuestionnaires.")
-    pdf.bullet("Les questions avec le tag 'adequation_formation' alimentent automatiquement l'indicateur d'adequation formation/emploi du tableau de bord.")
-    pdf.bullet("Activation/desactivation des questionnaires selon le calendrier de collecte ; l'activation reste manuelle, sans declenchement automatique planifie a ce jour.")
-    pdf.bullet("Relances automatiques : l'endpoint POST /admin/questionnaires/notififier envoie des relances email aux alumni n'ayant pas repondu au questionnaire actif (filtre par promotion ; RGPD : exclusion des alumni ayant refuse le consentement 'enquetes' OU 'prise_de_contact', sur le vote le plus recent), sans interface admin dediee pour cet envoi a ce jour.")
+    pdf.bullet("Le service crée et administre les questionnaires via l'interface AdminQuestionnaires.")
+    pdf.bullet("Toute question taguée 'adequation_formation' alimente automatiquement l'indicateur d'adéquation formation/emploi du tableau de bord.")
+    pdf.bullet("Activation et désactivation des questionnaires selon le calendrier de collecte. L'activation reste manuelle : aucun déclenchement planifié automatiquement à ce jour.")
+    pdf.bullet("Relances : l'endpoint POST /admin/questionnaires/notififier envoie des rappels par email aux alumni n'ayant pas répondu au questionnaire actif (filtre par promotion ; RGPD : exclusion des alumni ayant refusé 'enquetes' ou 'prise_de_contact', sur le vote le plus récent). Pas d'interface admin dédiée pour déclencher ces envois pour l'instant.")
 
-    pdf.section_title("4.2 Valorisation du reseau")
-    pdf.bullet("Utilisation du tableau de bord admin pour filtrer les alumni par entreprise, secteur, promotion.")
-    pdf.bullet("Identification des opportunites de stages ou de partenariats via l'annuaire enrichi.")
-    pdf.bullet("Enrichissement progressif du reseau par les mises a jour alumni et les reponses aux questionnaires.")
+    pdf.section_title("4.2 Valorisation du réseau")
+    pdf.bullet("Le tableau de bord admin permet de filtrer les alumni par entreprise, secteur et promotion.")
+    pdf.bullet("L'annuaire enrichi aide à repérer les opportunités de stages ou de partenariats.")
+    pdf.bullet("Le réseau s'enrichit au fil des mises à jour des alumni et des réponses aux questionnaires.")
 
-    pdf.section_title("4.3 Newsletter Alumni - Processus Detaille")
+    pdf.section_title("4.3 Newsletter Alumni - Processus Détailé")
     pdf.body_text(
-        "La newsletter est un des leviers les plus directs pour animer le reseau et faire remonter "
-        "des donnees a jour. Autant la traiter comme un vrai processus, avec un rythme et un contenu "
-        "definis, plutot que comme un envoi de temps en temps."
+        "La newsletter est l'un des leviers les plus directs pour animer le réseau et faire remonter "
+        "des données à jour. Autant la traiter comme un vrai processus — un rythme, un contenu — que "
+        "comme un envoi de temps en temps."
     )
-    pdf.bullet("Ciblage : seuls les alumni ayant active le consentement 'newsletter' (type_consentement = 'newsletter', statut = 'actif') sont contactes.")
-    pdf.bullet("Frequence : mensuelle ou bimestrielle, avec un calendrier editorial defini par le service des Relations Entreprises.")
-    pdf.bullet("Contenu type : actualites de l'ecosysteme alumni, offres d'emploi partenaires, evenements (reunions, conferences), appel a mise a jour du profil.")
-    pdf.bullet("Call-to-Action (CTA) obligatoire : chaque newsletter doit contenir un lien direct vers la page de mise a jour du profil alumni (AlumniProfile.jsx).")
-    pdf.bullet("Personnalisation : le ciblage peut etre affine par promotion, secteur d'activite, geographie ou disponibilite (en_poste / en_recherche).")
-    pdf.bullet("Suivi des metriques : taux d'ouverture, taux de clic sur le CTA, taux de mise a jour du profil suite a l'envoi.")
-    pdf.bullet("Integration RGPD : chaque enquete est precedee d'un rappel du droit de desabonnement. Le mecanisme de desinscription automatique (lien mettant le consentement a 'refuse') n'est pas encore implemente — liens placeholder dans le gabarit HTML (manque encore ouvert).")
-    pdf.bullet("Implementation technique : l'endpoint backend POST /newsletter/envoyer a ete implemente (filtres de ciblage promotion/secteur, ciblage sur consentement newsletter actif ET 'prise_de_contact' non refuse, mode console en dev / Resend en prod). Le composant d'envoi cote frontend n'est pas encore developpe (manque encore ouvert).")
-    pdf.bullet("Calendrier automatique : prevision d'un mecanisme de planification (cron job) pour l'envoi recurrent, avec notification admin avant envoi pour validation du contenu.")
+    pdf.bullet("Ciblage : seuls les alumni ayant activé le consentement 'newsletter' (type_consentement = 'newsletter', statut = 'actif') sont contactés.")
+    pdf.bullet("Fréquence : mensuelle ou bimestrielle, avec un calendrier éditorial défini par le service des Relations Entreprises.")
+    pdf.bullet("Contenu type : actualités de l'écosystème, offres d'emploi partenaires, événements (réunions, conférences) et appel à mise à jour du profil.")
+    pdf.bullet("Call-to-Action obligatoire : chaque newsletter pointe directement vers la page de mise à jour du profil alumni (AlumniProfile.jsx).")
+    pdf.bullet("Personnalisation : ciblage affinable par promotion, secteur d'activité, géographie ou disponibilité (en_poste / en_recherche).")
+    pdf.bullet("Suivi : taux d'ouverture, taux de clic sur le CTA et part de profils mis à jour après l'envoi.")
+    pdf.bullet("RGPD : chaque campagne rappelle le droit de se désabonner. Le lien de désinscription automatique n'est pas encore branché sur le consentement (liens placeholder dans le gabarit HTML — reste à faire).")
+    pdf.bullet("Côté technique : l'endpoint POST /newsletter/envoyer est en place (filtres promotion/secteur, consentement newsletter actif, 'prise_de_contact' non refusé ; mode console en dev, Resend en prod). Le composant d'envoi côté frontend n'est pas encore développé.")
+    pdf.bullet("À terme : un cron pourrait planifier les envois récurrents, avec une notification à l'admin pour valider le contenu avant envoi.")
 
     pdf.output(os.path.join(OUTPUT_DIR, "Strategie de Mise a Jour des Donnees - Alumni CRM.pdf"))
     print("Strategie generee.")
@@ -529,28 +514,35 @@ def generate_indicateurs():
     pdf.ln(8)
 
     # 1. Objectif
-    pdf.chapter_title("1", "Objectif de la Modelisation")
+    pdf.chapter_title("1", "Objectif de la Modélisation")
     pdf.body_text(
-        "Le cahier des charges impose de produire des rapports d'insertion professionnelle pour les "
-        "organismes de certification et les autorites de tutelle. Le but de cette modelisation est de "
-        "passer des donnees brutes du CRM a des indicateurs de pilotage utilisables par l'ecole."
+        "Ce document reprend les indicateurs d'insertion que l'Alumni CRM sait calculer, et montre "
+        "comment on passe des données brutes du réseau à des chiffres exploitables. Le cahier des "
+        "charges impose en effet de pouvoir produire des rapports d'insertion professionnelle à "
+        "destination des organismes de certification et des autorités de tutelle. J'ai donc essayé de "
+        "couvrir trois choses : quels indicateurs on affiche, comment ils sont calculés dans le code, "
+        "et sous quelle forme on peut les retrouver dans un rapport."
     )
 
     # 2. Indicateurs
-    pdf.chapter_title("2", "Indicateurs Cles de Pilotage")
-
-    headers = ["Indicateur", "Definition (simplifiee)", "Metier / Utilisation", "Exemple"]
+    pdf.chapter_title("2", "Indicateurs Clés de Pilotage")
+    pdf.body_text(
+        "Voici les indicateurs qui remontent dans le tableau de bord admin. Pour chacun d'eux, on "
+        "trouve une définition simple, l'usage métier, et un mini-exemple pour illustrer la formule. "
+        "Les chiffres sont fictifs, mais ils appliquent exactement les requêtes du backend."
+    )
+    headers = ["Indicateur", "Définition (simplifiée)", "Métier / Utilisation", "Exemple"]
     widths = [40, 68, 41, 41]
     pdf.table_header(headers, widths)
     rows = [
-        ["Taux d'emploi a 6 mois", "Diplomes en activite 6 mois apres la sortie (CDI, CDD...).", "Rapports ministeriels et audits.", "Promo 2025 : 9/12 en poste = 75 %"],
-        ["Taux d'emploi global (brut)", "(Alumni en poste / total alumni) x 100.", "Efficacite globale de la formation.", "30 alumni en poste / 40 = 75 %"],
-        ["Adequation formation/emploi", "Correspondance filiere suivie / secteur du poste (question KPI).", "Pertinence de l'offre de formation.", "3 reponses Oui / 4 = 75 %"],
-        ["Salaire moyen par filiere", "Salaire brut annuel moyen (AVG/MIN/MAX sur salary_annuel).", "Valorisation des debouches.", "38000+42000+50000 / 3 = 43 333 EUR"],
-        ["Alumni actifs", "Alumni avec au moins une experience enregistree.", "Engagement des anciens eleves.", "45 alumni actifs sur 60"],
-        ["Taux de completion", "Alumni avec profil + experience completes.", "Qualite des donnees collectees.", "32 profils complets / 60 = 53 %"],
+        ["Taux d'emploi à 6 mois", "Diplômés en activité 6 mois après la sortie (CDI, CDD...).", "Rapports ministériels et audits.", "Promo 2025 : 9/12 en poste = 75 %"],
+        ["Taux d'emploi global (brut)", "(Alumni en poste / total alumni) x 100.", "Efficacité globale de la formation.", "30 alumni en poste / 40 = 75 %"],
+        ["Adéquation formation/emploi", "Correspondance filière suivie / secteur du poste (question KPI).", "Pertinence de l'offre de formation.", "3 réponses Oui / 4 = 75 %"],
+        ["Salaire moyen par filière", "Salaire brut annuel moyen (AVG/MIN/MAX sur salary_annuel).", "Valorisation des débouchés.", "38000 + 42000 + 50000 / 3 = 43 333 EUR"],
+        ["Alumni actifs", "Alumni avec au moins une expérience enregistrée.", "Engagement des anciens élèves.", "45 alumni actifs sur 60"],
+        ["Taux de complétion", "Alumni avec profil + expérience complètes.", "Qualité des données collectées.", "32 profils complets / 60 = 53 %"],
         ["Alumni par promotion", "Effectif et taux d'emploi par promotion (ETUDIANT + PROMOTION).", "Comparatif des cohortes.", "2024 : 10 / 80 % ; 2025 : 12 / 75 %"],
-        ["Repartition par secteur", "Nombre d'alumni par secteur d'activite.", "Debouches et secteurs recruteurs.", "Info 3, Finance 2, Sante 1"],
+        ["Répartition par secteur", "Nombre d'alumni par secteur d'activité.", "Débouchés et secteurs recruteurs.", "Info 3, Finance 2, Santé 1"],
     ]
     for i, r in enumerate(rows):
         pdf.table_row(r, widths, fill=(i % 2 == 0))
@@ -558,20 +550,20 @@ def generate_indicateurs():
     pdf.ln(4)
 
     # 3. Implementation technique
-    pdf.chapter_title("3", "Implementation Technique des Indicateurs")
+    pdf.chapter_title("3", "Implémentation Technique des Indicateurs")
     pdf.section_title("3.1 Endpoints API")
 
-    headers2 = ["Endpoint", "Description (simplifiee)", "Donnees retournees (extrait)"]
+    headers2 = ["Endpoint", "Description (simplifiée)", "Données retournées (extrait)"]
     widths2 = [50, 56, 84]
     pdf.table_header(headers2, widths2)
     rows2 = [
         ["GET /admin/indicateurs", "Indicateurs principaux du tableau de bord.", "total_alumni, taux_emploi_6mois, taux_couverture, alumni_actifs, taux_reponse, salaire_moyen/min/max."],
-        ["GET /admin/indicateurs/\nsecteurs", "Repartition par secteur d'activite.", "{secteur, count}, total_alumni."],
-        ["GET /admin/indicateurs/\ntypes-contrat", "Repartition par type de contrat (des experiences en cours).", "{type_contrat, count} ; vides = 'Non renseigne'."],
-        ["GET /admin/indicateurs/\nkpi-tag?tag=X", "Valeur d'un indicateur KPI (question taggee).", "valeur, unite (% ou moyenne), total_repondants, question_texte, distribution."],
-        ["GET /admin/indicateurs/\nkpi-tags", "Tous les tags KPI des questionnaires actifs.", "[{tag, libelle, pourcentage, nb_repondants, valeur, unite, distribution}]."],
-        ["GET /admin/indicateurs/\nkpi-tags-actifs", "Liste des tags DISTINCT utilises.", "{tags: [...]}"],
-        ["GET /admin/indicateurs/\npartenaires", "Indicateurs anonymises pour les partenaires (partage_donnees actif).", "nb_consentants, taux_emploi_pourcentage, en_emploi, salaire_moyen, par_promotion, top_secteurs."],
+        ["GET /admin/indicateurs/\nsecteurs", "Répartition par secteur d'activité.", "{secteur, count}, total_alumni."],
+        ["GET /admin/indicateurs/\ntypes-contrat", "Répartition par type de contrat (expériences en cours).", "{type_contrat, count} ; vides = 'Non renseigné'."],
+        ["GET /admin/indicateurs/\nkpi-tag?tag=X", "Valeur d'un indicateur KPI (question taguée).", "valeur, unité (% ou moyenne), total_repondants, question_texte, distribution."],
+        ["GET /admin/indicateurs/\nkpi-tags", "Tous les tags KPI des questionnaires actifs.", "[{tag, libelle, pourcentage, nb_repondants, valeur, unité, distribution}]."],
+        ["GET /admin/indicateurs/\nkpi-tags-actifs", "Liste des tags DISTINCT utilisés.", "{tags: [...]}"],
+        ["GET /admin/indicateurs/\npartenaires", "Indicateurs anonymisés pour les partenaires (partage_donnees actif).", "nb_consentants, taux_emploi_pourcentage, en_emploi, salaire_moyen, par_promotion, top_secteurs."],
     ]
     for i, r in enumerate(rows2):
         pdf.table_row(r, widths2, fill=(i % 2 == 0))
@@ -579,85 +571,91 @@ def generate_indicateurs():
     pdf.ln(4)
 
     pdf.section_title("3.2 Calcul des indicateurs")
-    pdf.bullet("Taux d'emploi a 6 mois : calcule par le backend ; une experience compte si sa date_debut tombe dans les 6 mois suivant le 1er decembre de l'annee de diplome (hypothese de diplomation en juin). Les cohortes dont la fenetre de 6 mois n'est pas ecoulee sont exclues (taux null, statut 'en_attente').")
-    pdf.bullet("Taux d'emploi global : (alumni avec experience / total alumni) x 100, calcule dans le frontend a partir des indicateurs par promotion.")
-    pdf.bullet("Adequation formation/emploi : le frontend interroge l'endpoint /admin/indicateurs/kpi-tag?tag=adequation_formation, qui agrege les reponses a la question taggee.")
-    pdf.bullet("Tags KPI : chaque question de questionnaire peut porter un tag (ex: 'adequation_formation') ; les indicateurs correspondants sont calcules et exposes automatiquement via /kpi-tags, l'ajout d'un tag sur une question faisant apparaitre l'indicateur dans le tableau de bord sans modification du code backend.")
-    pdf.bullet("Repartition par secteur : aggregation SQL du champ secteur_activite avec comptage.")
-    pdf.bullet("Salaire moyen : desormais calcule cote backend (AVG/MIN/MAX) sur les experiences en cours, en privilegiant salary_annuel (numerique) avec repli sur le champ salaire historique ; salaires a zero exclus.")
-    pdf.bullet("Coherence declarative : l'indicateur coherence_availability_poste_actuel mesure l'ecart entre le statut declare (availability_status) et la presence d'un poste en cours reel dans EXPERIENCE_PRO (source de verite).")
+    pdf.bullet("Taux d'emploi à 6 mois : calculé côté backend. Une expérience compte si sa date_debut tombe dans les 6 mois qui suivent le 1er décembre de l'année de diplôme (on suppose une diplomation en juin). Les promotions dont la fenêtre de 6 mois n'est pas encore écoulée sont laissées de côté : taux à null, statut 'en_attente'.")
+    pdf.bullet("Taux d'emploi global : rapport (alumni en poste / total alumni) x 100, recalculé côté frontend à partir des indicateurs par promotion.")
+    pdf.bullet("Adéquation formation/emploi : le frontend appelle /admin/indicateurs/kpi-tag?tag=adequation_formation, qui agrège les réponses à la question portant ce tag.")
+    pdf.bullet("Tags KPI : une question peut recevoir un tag (ex. 'adequation_formation'). Tant qu'une question est taguée, l'indicateur associé apparaît dans le dashboard sans toucher au code backend — c'est ce qui rend le mécanisme simple à faire évoluer.")
+    pdf.bullet("Répartition par secteur : une simple agrégation SQL du champ secteur_activite, avec comptage.")
+    pdf.bullet("Salaire moyen : calculé côté backend (AVG/MIN/MAX) sur les expériences en cours, en privilégiant salary_annuel (champ numérique) et en se rabattant sur le champ salaire historique si besoin ; les salaires à zéro sont exclus.")
+    pdf.bullet("Cohérence déclaratif / réel : l'indicateur coherence_availability_poste_actuel mesure l'écart entre le statut déclaré (availability_status) et la présence d'un poste en cours bien réel dans EXPERIENCE_PRO, qui reste la source de vérité.")
 
     pdf.section_title("3.3 Visualisation (AdminDashboard.jsx)")
-    pdf.bullet("KPI cards principales : Total Alumni actifs, Taux d'emploi 6 mois, Taux d'emploi global.")
-    pdf.bullet("KPI secondaires : Taux de completion, Adequation formation/emploi, Salaire moyen avec jauge dynamique (fourchettes min/max calculees sur les donnees reelles).")
-    pdf.bullet("Graphique donut : Repartition par secteur (maximum 5 categories visibles + segment 'Autres').")
-    pdf.bullet("Graphique barres horizontales : Alumni par promotion avec pourcentage d'emploi et timeline de maturite des cohortes (statut_maturite).")
-    pdf.bullet("Graphique barres : repartition des types de contrat des experiences en cours.")
+    pdf.bullet("KPI cards principales : Total Alumni actifs, Taux d'emploi à 6 mois, Taux d'emploi global.")
+    pdf.bullet("KPI secondaires : Taux de complétion, Adéquation formation/emploi, Salaire moyen avec une jauge dynamique (bornes min/max recalculées sur les données réelles).")
+    pdf.bullet("Donut : répartition par secteur, avec un maximum de 5 catégories visibles et un regroupement 'Autres'.")
+    pdf.bullet("Barres horizontales : alumni par promotion, avec le % d'emploi et une timeline de maturité des cohortes (statut_maturite).")
+    pdf.bullet("Barres verticales : répartition des types de contrat des expériences en cours.")
 
     # 4. Alertes
     pdf.chapter_title("4", "Alertes et Signaux Faibles")
-    pdf.bullet("Si le statut est 'en_poste' mais aucun poste n'est coche comme 'actuel', une alerte ambrée est affichee dans l'interface Parcours.")
-    pdf.bullet("Si le KPI 'adequation_formation' n'a aucune reponse, le dashboard affiche un etat vide avec des instructions pour taguer une question.")
-    pdf.bullet("Le taux de completion permet de detecter les alumni n'ayant pas complete leur profil.")
+    pdf.bullet("Si un alumni est en 'en_poste' sans qu'aucun poste soit coché 'actuel', une alerte ambrée s'affiche dans l'interface Parcours.")
+    pdf.bullet("Si le tag 'adequation_formation' n'a aucune réponse, le dashboard affiche un état vide avec un rappel pour taguer une question.")
+    pdf.bullet("Le taux de complétion sert aussi de signal : un taux bas trahit surtout des profils laissés incomplets.")
 
     # 5. Modele de Rapport Ministeriel
-    pdf.chapter_title("5", "Modele de Rapport d'Insertion pour les Autorites de Tutelle")
+    pdf.chapter_title("5", "Modèle de Rapport d'Insertion pour les Autorités de Tutelle")
     pdf.body_text(
-        "Les rapports d'insertion professionnelle doivent pouvoir etre transmis aux ministères et aux "
-        "organismes de certification (CTI, HCERES). Voici le gabarit dans lequel les indicateurs du "
-        "CRM viennent se loger."
+        "Le dashboard ne suffit pas : il faut aussi pouvoir sortir un document propre, à transmettre "
+        "tel quel au ministère ou aux organismes de certification (CTI, HCERES). Voici le gabarit que "
+        "j'ai retenu. Les indicateurs listés ci-dessous sont les mêmes que ceux vus en section 2, "
+        "simplement mis sous une forme directement exploitable pour un rapport."
     )
 
-    pdf.section_title("5.1 Informations Generales du Rapport")
+    pdf.section_title("5.1 Informations Générales du Rapport")
     headers_info = ["Champ", "Valeur / Source"]
     widths_info = [50, 140]
     pdf.table_header(headers_info, widths_info)
     info_rows = [
-        ["Institution", "Nom de l'etablissement (ex: Ionis Education Group)"],
-        ["Periode couverte", "Annee universitaire en cours (ex: 2025-2026)"],
-        ["Promotion concernee", "Filtree par annee_diplome (ex: Promo 2025)"],
-        ["Date de generation", "Date courante au moment de l'export"],
-        ["Source des donnees", "CRM Alumni - tables ETUDIANT, EXPERIENCE_PRO, REPONSE"],
+        ["Institution", "Nom de l'établissement (ex: Ionis Education Group)"],
+        ["Période couverte", "Année universitaire en cours (ex: 2025-2026)"],
+        ["Promotion concernée", "Filtrée par annee_diplome (ex: Promo 2025)"],
+        ["Date de génération", "Date courante au moment de l'export"],
+        ["Source des données", "CRM Alumni - tables ETUDIANT, EXPERIENCE_PRO, REPONSE"],
     ]
     for i, r in enumerate(info_rows):
         pdf.table_row(r, widths_info, fill=(i % 2 == 0))
     pdf.ln(4)
 
-    pdf.section_title("5.2 Indicateurs Cles du Rapport")
-    headers_kpi = ["Indicateur", "Valeur attendue", "Calcul (simplifie)", "Exemple"]
+    pdf.section_title("5.2 Indicateurs Clés du Rapport")
+    headers_kpi = ["Indicateur", "Valeur attendue", "Calcul (simplifié)", "Exemple"]
     widths_kpi = [40, 48, 62, 40]
     pdf.table_header(headers_kpi, widths_kpi)
     kpi_rows = [
-        ["Effectif de la promotion", "Nombre total d'inscrits", "COUNT(etudiants WHERE id_promotion = X)", "Promo 2025 : 128"],
-        ["Taux d'emploi a 6 mois", "Pourcentage (%)", "Experience debutant <= 6 mois apres diplomation / total", "120 alumni : 90 en poste = 75 %"],
-        ["Taux d'emploi a 12 mois", "Pourcentage (%) - non calcule a ce jour", "Identique avec une fenetre de 12 mois", "En cours de definition"],
-        ["Taux d'insertion totale", "Pourcentage (%)", "Au moins 1 experience / total", "128 alumni : 101 en poste = 79 %"],
-        ["Adequation formation-emploi", "Pourcentage (%)", "Reponses KPI / total repondants", "3 reponses Oui / 4 = 75 %"],
-        ["Salaire moyen par filiere", "Euros (moyen, min, max)", "AVG/MIN/MAX salary_annuel (>0)", "38000+42000+50000/3 = 43333"],
-        ["Repartition par secteur", "Tableau (secteur, %)", "COUNT(experiences WHERE secteur = X)", "Info 3 (33 %), Finance 2"],
-        ["Repartition geographique", "Tableau (pays, ville, %)", "COUNT(alumni WHERE pays = X)", "France 8 (62 %), Maroc 3"],
+        ["Effectif de la promotion", "Nombre total d'inscrits", "Comptage des étudiants de la promo", "Promo 2025 : 128"],
+        ["Taux d'emploi à 6 mois", "Pourcentage (%)", "Expériences démarrant <= 6 mois après la diplomation / effectif", "90 en poste sur 128 = 70 %"],
+        ["Taux d'emploi à 12 mois", "Pourcentage (%) - pas encore calculé", "Même principe avec une fenêtre de 12 mois", "À définir"],
+        ["Taux d'insertion totale", "Pourcentage (%)", "Alumni en poste à la date du rapport / effectif", "101 en poste sur 128 = 79 %"],
+        ["Adéquation formation-emploi", "Pourcentage (%)", "Réponses 'Oui' au tag KPI / réponses exploitables", "33 'Oui' sur 42 = 79 %"],
+        ["Salaire moyen par filière", "Euros (moyen, min, max)", "AVG / MIN / MAX des salaires annuels (> 0)", "moy. 41 200, min 35 000, max 49 000"],
+        ["Répartition par secteur", "Tableau (secteur, %)", "Comptage des postes actuels par secteur", "Informatique 41 %, Finance 23 %"],
+        ["Répartition géographique", "Tableau (pays / ville, %)", "Comptage des alumni par pays", "France 62 %, Maroc 23 %"],
     ]
     for i, r in enumerate(kpi_rows):
         pdf.table_row(r, widths_kpi, fill=(i % 2 == 0))
     pdf.ln(4)
 
     pdf.section_title("5.3 Diffusion du rapport")
-    pdf.bullet("Frequence : annuelle, coincidant avec la campagne de collecte du questionnaire.")
-    pdf.bullet("Destinataires : Ministere de l'Enseignement Superieur, organes de certification (CTI, HCERES), direction de l'etablissement.")
-    pdf.bullet("Diffusion : via le tableau de bord admin (AdminDashboard.jsx) avec bouton d'export.")
-    pdf.bullet("Archivage : chaque edition est horodatee et conservee pour audit de conformite.")
+    pdf.bullet("Fréquence : une publication annuelle, calée sur la campagne de collecte du questionnaire.")
+    pdf.bullet("Destinataires : ministère de l'Enseignement supérieur, organismes de certification (CTI, HCERES) et direction de l'établissement.")
+    pdf.bullet("Génération : depuis le dashboard admin (AdminDashboard.jsx), via un bouton d'export.")
+    pdf.bullet("Archivage : chaque édition est horodatée et conservée, pour pouvoir répondre à un éventuel audit de conformité.")
 
-    pdf.section_title("5.4 Exemple de Tableau de Synthese par Promotion")
-    headers_syn = ["Promotion", "Nb Alumni", "Emploi 6 mois", "Emploi 12 mois", "Adequation"]
+    pdf.section_title("5.4 Exemple de Tableau de Synthèse par Promotion")
+    headers_syn = ["Promotion", "Nb Alumni", "Emploi 6 mois", "Emploi 12 mois", "Adéquation"]
     widths_syn = [33, 30, 47, 47, 33]
     pdf.table_header(headers_syn, widths_syn)
     synth_rows = [
-        ["Promo 2023", "120", "78%", "85%", "72%"],
-        ["Promo 2024", "135", "81%", "88%", "76%"],
-        ["Promo 2025", "128", "75% (en cours)", "N/A", "70%"],
+        ["Promo 2023", "120", "74%", "82%", "70%"],
+        ["Promo 2024", "135", "78%", "85%", "73%"],
+        ["Promo 2025", "128", "70%", "à définir", "70%"],
     ]
     for i, r in enumerate(synth_rows):
         pdf.table_row(r, widths_syn, fill=(i % 2 == 0))
+    pdf.ln(2)
+    pdf.body_text(
+        "Tableau fictif, juste pour illustrer le format : à l'export, ces valeurs sont calculées "
+        "automatiquement par le CRM à partir des données réelles."
+    )
 
     pdf.output(os.path.join(OUTPUT_DIR, "Analyse des Indicateurs d'Insertion - Alumni CRM.pdf"))
     print("Indicateurs genere.")
