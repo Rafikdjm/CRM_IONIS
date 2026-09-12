@@ -77,3 +77,11 @@ if not settings.admin_access_code:
         "ADMIN_ACCESS_CODE n'est pas défini. Ce code protège la connexion "
         "administrateur : il est obligatoire."
     )
+
+if settings.env == "production" and settings.otp_mode == "console":
+    raise RuntimeError(
+        "OTP_MODE=console est interdit en production : les codes OTP seraient "
+        "affichés en clair dans les logs serveur (fuite de secret de connexion). "
+        "Configurez OTP_MODE=resend (envoi réel par email) pour la production, "
+        "ou ENV=development pour un développement local."
+    )

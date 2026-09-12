@@ -1,9 +1,12 @@
 import json
 import logging
+import math
+import threading
+from datetime import datetime, timezone
 from typing import List, Optional
 
 import pg8000.dbapi
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel
 
 import schemas
@@ -18,6 +21,58 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/etudiants", tags=["Étudiants"])
 
 ACADEMIC_EMAIL_DOMAIN = settings.academic_email_domain
+
+# ── Rate-limiting anti-spam sur l'auto-inscription ──────────────────
+# POST /etudiants/ est volontairement PUBLIC (inscription libre des alumni).
+# On limite donc le nombre de créations par IP pour empêcher le spam, le
+# squatting d'emails académiques auto-générés et l'énumération d'emails.
+# (Même posture que otp.py : désactivé en ENV=development.)
+_CREATION_WINDOW_SECONDS = 3600  # fenêtre glissante de 1 heure
+_CREATION_MAX_PER_IP = 10        # au plus 10 créations / heure / IP
+_creation_attempts: dict[str, list[datetime]] = {}
+_creation_lock = threading.Lock()
+
+
+def _check_creation_rate_limit(request: Request) -> None:
+    if settings.env == "development":
+        return
+    ip = request.client.host if request.client else "unknown"
+    now = datetime.now(timezone.utc)
+    with _creation_lock:
+        stamps = [
+            t for t in _creation_attempts.get(ip, [])
+            if (now - t).total_seconds() < _CREATION_WINDOW_SECONDS
+        ]
+        if len(stamps) >= _CREATION_MAX_PER_IP:
+            retry_after = max(1, math.ceil(
+                _CREATION_WINDOW_SECONDS - (now - min(stamps)).total_seconds()
+            ))
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=(
+                    "Trop d'inscriptions depuis cette adresse IP. "
+                    "Réessayez plus tard."
+                ),
+                headers={"Retry-After": str(retry_after)},
+            )
+        stamps.append(now)
+        _creation_attempts[ip] = stamps
+
+
+def _merge_parcours(base: str, etablissement: str | None) -> str:
+    """Fusionne « parcours antérieur » et « établissement précédent ».
+
+    Le schéma physique ETUDIANT ne stocke qu'un texte libre (parcours_anterieur).
+    La valeur « établissement précédent » du formulaire d'inscription est donc
+    concaténée au parcours pour ne pas être silencieusement perdue.
+    """
+    base = (base or "").strip()
+    etab = (etablissement or "").strip()
+    if not etab:
+        return base
+    if not base:
+        return etab
+    return f"{base} — {etab}"
 
 # Colonnes du profil étendu (à maintenir en cohérence avec la migration 002)
 _EXTENDED_COLUMNS = (
@@ -150,9 +205,12 @@ def _resolve_email_academique(
 
 
 @router.post("/", response_model=schemas.Etudiant, status_code=status.HTTP_201_CREATED)
-def create_etudiant(etudiant: schemas.EtudiantCreate, db=Depends(get_db)):
+def create_etudiant(etudiant: schemas.EtudiantCreate, request: Request, db=Depends(get_db)):
     cursor = db.cursor()
     try:
+        # Anti-spam : cette route est publique, on limite les créations par IP.
+        _check_creation_rate_limit(request)
+
         # Le statut de disponibilité est validé dès qu'une valeur est fournie
         # (même règle que PUT/PATCH). Non fourni -> valeur par défaut ''.
         if etudiant.availability_status:
@@ -174,6 +232,9 @@ def create_etudiant(etudiant: schemas.EtudiantCreate, db=Depends(get_db)):
         email_academique = _resolve_email_academique(
             cursor, etudiant.prenom, etudiant.nom, etudiant.email_academique
         )
+        parcours_anterieur = _merge_parcours(
+            etudiant.parcours_anterieur, etudiant.etablissement_precedent
+        )
         skills_json = json.dumps(etudiant.skills) if etudiant.skills else '[]'
         query = """
             INSERT INTO ETUDIANT (nom, prenom, email, email_academique, telephone,
@@ -184,7 +245,7 @@ def create_etudiant(etudiant: schemas.EtudiantCreate, db=Depends(get_db)):
         """
         cursor.execute(query, (
             etudiant.nom, etudiant.prenom, etudiant.email, email_academique,
-            etudiant.telephone, etudiant.date_naissance, etudiant.parcours_anterieur,
+            etudiant.telephone, etudiant.date_naissance, parcours_anterieur,
             etudiant.date_inscription, etudiant.id_promotion,
             etudiant.address or "", etudiant.city or "", etudiant.country or "",
             etudiant.linkedin or "", etudiant.availability_status or "", skills_json,
@@ -198,6 +259,7 @@ def create_etudiant(etudiant: schemas.EtudiantCreate, db=Depends(get_db)):
         persisted.update({
             "email_academique": email_academique,
             "id_etudiant": id_generated,
+            "parcours_anterieur": parcours_anterieur,
             "address": etudiant.address or "",
             "city": etudiant.city or "",
             "country": etudiant.country or "",
@@ -380,6 +442,9 @@ def update_etudiant(id_etudiant: int, etudiant: schemas.EtudiantCreate, db=Depen
             cursor, etudiant.prenom, etudiant.nom, etudiant.email_academique,
             exclude_id=id_etudiant,
         )
+        parcours_anterieur = _merge_parcours(
+            etudiant.parcours_anterieur, etudiant.etablissement_precedent
+        )
         # Serializer les skills en JSONB
         skills_json = json.dumps(etudiant.skills) if etudiant.skills else '[]'
         query = """
@@ -393,7 +458,7 @@ def update_etudiant(id_etudiant: int, etudiant: schemas.EtudiantCreate, db=Depen
         """
         cursor.execute(query, (
             etudiant.nom, etudiant.prenom, etudiant.email, email_academique,
-            etudiant.telephone, etudiant.date_naissance, etudiant.parcours_anterieur,
+            etudiant.telephone, etudiant.date_naissance, parcours_anterieur,
             etudiant.date_inscription, etudiant.id_promotion,
             etudiant.address, etudiant.city, etudiant.country, etudiant.linkedin,
             etudiant.availability_status, skills_json,
@@ -403,7 +468,12 @@ def update_etudiant(id_etudiant: int, etudiant: schemas.EtudiantCreate, db=Depen
             db.rollback()
             raise HTTPException(status_code=404, detail="Étudiant introuvable.")
         db.commit()
-        return {**etudiant.model_dump(), "email_academique": email_academique, "id_etudiant": id_etudiant}
+        return {
+            **etudiant.model_dump(),
+            "parcours_anterieur": parcours_anterieur,
+            "email_academique": email_academique,
+            "id_etudiant": id_etudiant,
+        }
     except HTTPException:
         raise
     except pg8000.dbapi.IntegrityError as exc:
@@ -462,6 +532,24 @@ def partial_update_etudiant(id_etudiant: int, updates: schemas.EtudiantUpdate, d
                 payload["email_academique"],
                 exclude_id=id_etudiant,
             )
+
+        # etablissement_precedent n'a pas de colonne dédiée : il est fusionné
+        # dans parcours_anterieur. Si l'appelant fournit les deux, c'est le
+        # texte parcours_anterieur qui prime (le client l'a déjà intégré).
+        if "etablissement_precedent" in payload:
+            if "parcours_anterieur" not in payload:
+                cursor.execute(
+                    "SELECT parcours_anterieur FROM ETUDIANT WHERE id_etudiant = %s;",
+                    (id_etudiant,),
+                )
+                row = cursor.fetchone()
+                actuel = row[0] if row else ""
+                payload["parcours_anterieur"] = _merge_parcours(
+                    actuel,
+                    payload.pop("etablissement_precedent"),
+                )
+            else:
+                payload.pop("etablissement_precedent")
 
         # Mapper les champs du payload aux noms de colonnes SQL
         set_clauses = []

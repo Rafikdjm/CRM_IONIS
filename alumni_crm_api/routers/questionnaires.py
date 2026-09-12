@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import List
+from typing import List, Optional
 
 import pg8000.dbapi
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -324,7 +324,7 @@ def reactiver_questionnaire(id_questionnaire: int, db=Depends(get_db)):
 
 
 @router.get("/actif", response_model=schemas.QuestionnaireDetail)
-def get_questionnaire_actif(id_etudiant: int = None, db=Depends(get_db)):
+def get_questionnaire_actif(id_etudiant: Optional[int] = None, db=Depends(get_db)):
     cursor = db.cursor()
     try:
         # RGPD : un alumni ayant REFUSE la participation aux enquetes
@@ -554,7 +554,7 @@ class NotificationQuestionnaireRequest(_BaseModel):
     id_promotion: _Optional[int] = None
 
 
-@admin_router.post("/notififier")
+@admin_router.post("/notifier")
 def notifier_questionnaire(body: NotificationQuestionnaireRequest, db=Depends(get_db)):
     """
     Envoie une notification email aux alumni n'ayant pas encore répondu

@@ -71,6 +71,10 @@ class EtudiantBase(BaseModel):
     telephone: str
     date_naissance: date
     parcours_anterieur: str
+    # Établissement d'origine (formulaire d'inscription). Pas de colonne dédiée :
+    # fusionné dans parcours_anterieur côté route (voir _merge_parcours
+    # dans routers/etudiants.py) pour ne pas perdre la donnée.
+    etablissement_precedent: Optional[str] = ""
     date_inscription: date
     id_promotion: int
     address: Optional[str] = ""
@@ -102,6 +106,7 @@ class EtudiantUpdate(BaseModel):
     telephone: Optional[str] = None
     date_naissance: Optional[date] = None
     parcours_anterieur: Optional[str] = None
+    etablissement_precedent: Optional[str] = None
     date_inscription: Optional[date] = None
     id_promotion: Optional[int] = None
     address: Optional[str] = None

@@ -14,16 +14,19 @@ from routers.etudiants import (
     _email_academique_exists,
     _validate_availability_status,
 )
-from security import require_admin_api_key
+from security import require_admin_api_key, require_admin_api_key_download
 from utils import normalize_academic_slug
 from config import settings
 
 logger = logging.getLogger(__name__)
 
+# Protection posée route par route : /import/excel n'accepte JAMAIS de token
+# en query string, tandis que /template et /export/alumni (téléchargements
+# natifs via <a href> sur mobile) tolèrent `?token=` via
+# require_admin_api_key_download.
 router = APIRouter(
     prefix="/import",
     tags=["Import / Export"],
-    dependencies=[Depends(require_admin_api_key)],
 )
 
 COLUMN_MAP = {
@@ -201,7 +204,7 @@ def _resolve_email_academique_import(
     return candidate or None
 
 
-@router.post("/excel")
+@router.post("/excel", dependencies=[Depends(require_admin_api_key)])
 async def import_excel(file: UploadFile = File(...), db=Depends(get_db)):
     if not file.filename or not file.filename.endswith((".xlsx", ".xls", ".csv")):
         raise HTTPException(status_code=400, detail="Format de fichier non supporté. Utilisez .xlsx ou .csv.")
@@ -373,7 +376,7 @@ async def import_excel(file: UploadFile = File(...), db=Depends(get_db)):
     }
 
 
-@router.get("/template")
+@router.get("/template", dependencies=[Depends(require_admin_api_key_download)])
 async def download_template():
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -406,7 +409,7 @@ async def download_template():
     )
 
 
-@router.get("/export/alumni")
+@router.get("/export/alumni", dependencies=[Depends(require_admin_api_key_download)])
 async def export_alumni(db=Depends(get_db)):
     cursor = db.cursor()
     try:

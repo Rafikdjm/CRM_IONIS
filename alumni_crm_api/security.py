@@ -44,38 +44,59 @@ def _decode_jwt(authorization: str | None = None, token: str | None = None) -> d
         )
 
 
+def _is_admin(x_api_key: str | None, authorization: str | None, token: str | None = None) -> bool:
+    """Vrai si l'appelant est authentifié comme administrateur (clé API ou
+    JWT avec role=admin). Sans lever d'exception : l'appelant décide du 401."""
+    if x_api_key and x_api_key == settings.admin_api_key:
+        return True
+    try:
+        payload = _decode_jwt(authorization, token)
+    except HTTPException:
+        return False
+    return bool(payload and payload.get("role") == "admin")
+
+
 def require_admin_api_key(
+    x_api_key: str | None = Header(None, alias="X-API-Key"),
+    authorization: str | None = Header(None, alias="Authorization"),
+) -> None:
+    """Accès admin : clé API partagée OU token JWT (header Authorization).
+
+    N'accepte PAS de token en query string `?token=` : un token dans une URL
+    peut fuiter via les logs de proxy, l'historique ou l'en-tête Referer. Les
+    seules routes qui tolèrent `?token=` sont les téléchargements natifs du
+    navigateur (exports mobiles via `<a href>`, impossible d'envoyer un header)
+    — elles utilisent explicitement require_admin_api_key_download.
+    """
+    if not _is_admin(x_api_key, authorization):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Accès administrateur requis (clé API ou session admin).",
+        )
+
+
+def require_admin_api_key_download(
     x_api_key: str | None = Header(None, alias="X-API-Key"),
     authorization: str | None = Header(None, alias="Authorization"),
     token: str | None = Query(None),
 ) -> None:
-    """Accès admin : clé API partagée OU token JWT (header Bearer ou ?token=)."""
-    if x_api_key and x_api_key == settings.admin_api_key:
-        return
-    try:
-        payload = _decode_jwt(authorization, token)
-    except HTTPException:
-        payload = None
-    if payload and payload.get("role") == "admin":
-        return
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Accès administrateur requis (clé API ou session admin).",
-    )
+    """Variante de require_admin_api_key réservée aux téléchargements natifs.
 
-
-def current_identity(
-    x_api_key: str | None = Header(None, alias="X-API-Key"),
-    authorization: str | None = Header(None, alias="Authorization"),
-    token: str | None = Query(None),
-) -> dict:
-    """Identité de l'appelant.
-
-    Retourne {"kind": "admin"} (clé API ou token admin) ou
-    {"kind": "alumni", "id_etudiant": int}. Lève 401 si aucun mécanisme valide.
-    L'authentification peut venir de l'en-tête Authorization ou du query `token`
-    (downloads natifs mobiles).
+    Autorise le token JWT en query string (`?token=`) car un lien `<a href>`
+    ne peut pas transporter l'en-tête Authorization (cas des exports sur
+    mobile). À n'utiliser QUE sur les routes de téléchargement.
     """
+    if not _is_admin(x_api_key, authorization, token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Accès administrateur requis (clé API ou session admin).",
+        )
+
+
+def _decode_identity(
+    x_api_key: str | None, authorization: str | None, token: str | None = None
+) -> dict:
+    """Identité de l'appelant (sans lever de 403 si non authentifié)."""
     if x_api_key and x_api_key == settings.admin_api_key:
         return {"kind": "admin"}
     payload = _decode_jwt(authorization, token)
@@ -87,6 +108,32 @@ def current_identity(
         status_code=status.HTTP_403_FORBIDDEN,
         detail="Authentification alumni requise.",
     )
+
+
+def current_identity(
+    x_api_key: str | None = Header(None, alias="X-API-Key"),
+    authorization: str | None = Header(None, alias="Authorization"),
+) -> dict:
+    """Identité de l'appelant.
+
+    Retourne {"kind": "admin"} (clé API ou token admin) ou
+    {"kind": "alumni", "id_etudiant": int}. Lève 401/403 si aucun mécanisme
+    valide. N'accepte PAS de token en query string (voir
+    current_identity_download pour les seuls téléchargements natifs mobiles).
+    """
+    return _decode_identity(x_api_key, authorization)
+
+
+def current_identity_download(
+    x_api_key: str | None = Header(None, alias="X-API-Key"),
+    authorization: str | None = Header(None, alias="Authorization"),
+    token: str | None = Query(None),
+) -> dict:
+    """Variante de current_identity réservée aux téléchargements natifs du
+    navigateur : autorise le token JWT en query string (`?token=`), car un
+    lien `<a href>` ne peut pas transporter l'en-tête Authorization.
+    """
+    return _decode_identity(x_api_key, authorization, token)
 
 
 def check_owner_or_admin(identity: dict, id_etudiant: int) -> None:

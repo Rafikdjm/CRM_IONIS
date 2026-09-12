@@ -42,17 +42,22 @@ from routers.cleanup import _write_audit_log
 from schemas import DemandeRgpdCreate, DemandeRgpdPriseEnCharge, DemandeRgpdTraiter
 from security import (
     current_identity,
+    current_identity_download,
     require_admin_api_key,
+    require_admin_api_key_download,
 )
 from utils import refuser_compte_anonymise, rows_to_dicts
 
 logger = logging.getLogger(__name__)
 
 alumni_router = APIRouter(prefix="/rgpd", tags=["RGPD"])
+# La protection admin est posée route par route (et non au niveau du router) :
+# les deux GET /bulk/export et /{id}/export doivent rester téléchargeables en
+# natif (`?token=`, require_admin_api_key_download) là où les autres ne doivent
+# JAMAIS accepter un token en query string (require_admin_api_key).
 admin_router = APIRouter(
     prefix="/admin/demandes-rgpd",
     tags=["Interface Administration"],
-    dependencies=[Depends(require_admin_api_key)],
 )
 
 _VALID_TYPES = ("export", "suppression")
@@ -499,10 +504,13 @@ def annuler_demande(
 def exporter_mes_donnees(
     format: str = Query("json", description="Format de sortie (json/xlsx/csv)"),
     db=Depends(get_db),
-    identity: dict = Depends(current_identity),
+    identity: dict = Depends(current_identity_download),
 ):
     """Export auto-service immédiat (droit d'accès). Crée une demande 'export'
     automatiquement marquée 'traitee' pour la traçabilité.
+
+    Variante "download" : tolère `?token=` pour le téléchargement natif du
+    navigateur (mobile).
 
     format=json (défaut) renvoie le payload brut ; xlsx/csv renvoient un
     fichier téléchargeable (Content-Disposition).
@@ -655,7 +663,7 @@ class PurgeConfirm(BaseModel):
     confirm: bool = False
 
 
-@admin_router.get("/purge-anonymises")
+@admin_router.get("/purge-anonymises", dependencies=[Depends(require_admin_api_key)])
 def preview_purge_anonymises(db=Depends(get_db)):
     """Aperçu des comptes anonymisés éligibles à la purge définitive.
     Lecture seule : aucune suppression n'est effectuée."""
@@ -675,7 +683,7 @@ def preview_purge_anonymises(db=Depends(get_db)):
         cursor.close()
 
 
-@admin_router.post("/purge-anonymises")
+@admin_router.post("/purge-anonymises", dependencies=[Depends(require_admin_api_key)])
 def lancer_purge_anonymises(body: PurgeConfirm, db=Depends(get_db)):
     """Déclenche la purge définitive des comptes anonymisés éligibles.
 
@@ -702,7 +710,7 @@ def lancer_purge_anonymises(body: PurgeConfirm, db=Depends(get_db)):
         cursor.close()
 
 
-@admin_router.post("/bulk/traiter")
+@admin_router.post("/bulk/traiter", dependencies=[Depends(require_admin_api_key)])
 def bulk_traiter(body: BulkTraiter, db=Depends(get_db)):
     """Marque plusieurs demandes comme 'traitee' ou 'rejetee'.
 
@@ -736,7 +744,7 @@ def bulk_traiter(body: BulkTraiter, db=Depends(get_db)):
         cursor.close()
 
 
-@admin_router.post("/bulk/delete")
+@admin_router.post("/bulk/delete", dependencies=[Depends(require_admin_api_key)])
 def bulk_delete(body: BulkIds, db=Depends(get_db)):
     """Suppression définitive de demandes RGPD (tous statuts confondus).
 
@@ -817,7 +825,7 @@ def _bulk_export_impl(ids, format, db):
         cursor.close()
 
 
-@admin_router.post("/bulk/export")
+@admin_router.post("/bulk/export", dependencies=[Depends(require_admin_api_key)])
 def bulk_export(
     body: BulkIds,
     format: str = Query("json", description="Format de sortie (json/xlsx/csv)"),
@@ -832,7 +840,7 @@ def bulk_export(
     return _bulk_export_impl(body.ids, format, db)
 
 
-@admin_router.get("/bulk/export")
+@admin_router.get("/bulk/export", dependencies=[Depends(require_admin_api_key_download)])
 def bulk_export_get(
     ids: str = Query(..., description="Liste d'id_demande séparés par des virgules"),
     format: str = Query("json", description="Format de sortie (json/xlsx/csv)"),
@@ -853,7 +861,7 @@ def bulk_export_get(
     return _bulk_export_impl(ids_parses, format, db)
 
 
-@admin_router.post("/purge-cloturees")
+@admin_router.post("/purge-cloturees", dependencies=[Depends(require_admin_api_key)])
 def purge_cloturees(db=Depends(get_db)):
     """Supprime toutes les demandes dont le statut est 'traitee' ou 'rejetee'.
     Les demandes actives ('envoyee' / 'en_traitement') ne sont pas touchées."""
@@ -885,7 +893,7 @@ def purge_cloturees(db=Depends(get_db)):
 # Côté admin — lecture et traitement individuel
 # ---------------------------------------------------------------------------
 
-@admin_router.get("")
+@admin_router.get("", dependencies=[Depends(require_admin_api_key)])
 def lister_demandes(
     statut: str = Query(None, description="Filtrer par statut (envoyee/en_traitement/traitee/rejetee)"),
     type_demande: str = Query(None, description="Filtrer par type (export/suppression)"),
@@ -960,9 +968,12 @@ def export_admin(
     id_demande: int,
     format: str = Query("json", description="Format de sortie (json/xlsx/csv)"),
     db=Depends(get_db),
-    _auth=Depends(require_admin_api_key),
+    _auth=Depends(require_admin_api_key_download),
 ):
-    """Génère l'export des données d'un alumni (json/xlsx/csv, droit d'accès)."""
+    """Génère l'export des données d'un alumni (json/xlsx/csv, droit d'accès).
+
+    Variante "download" : téléchargement natif du navigateur (`?token=` via
+    `<a href>`) — seul cas où un JWT en query string est toléré."""
     _verifier_format(format)
     cursor = db.cursor()
     try:
@@ -997,7 +1008,7 @@ def export_admin(
         cursor.close()
 
 
-@admin_router.post("/{id_demande}/prendre-en-charge")
+@admin_router.post("/{id_demande}/prendre-en-charge", dependencies=[Depends(require_admin_api_key)])
 def prendre_en_charge(
     id_demande: int,
     body: DemandeRgpdPriseEnCharge,
@@ -1067,7 +1078,7 @@ def prendre_en_charge(
         cursor.close()
 
 
-@admin_router.post("/{id_demande}/traiter")
+@admin_router.post("/{id_demande}/traiter", dependencies=[Depends(require_admin_api_key)])
 def traiter_demande(
     id_demande: int,
     body: DemandeRgpdTraiter,
