@@ -566,6 +566,21 @@ export default function AlumniCareer() {
           </div>
         )}
 
+        {(availabilityStatus === 'a_lecoute' || availabilityStatus === 'en_recherche') && careers.some((c) => c.is_current) && (
+          <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950">
+            <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+            <div>
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">Poste coché comme « actuel » alors que votre statut est « à l&apos;écoute » ou « en recherche »</p>
+              <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                Votre statut de disponibilité indique que vous n&apos;êtes pas en poste. Mettez à jour votre
+                statut ou décochez la case « Poste actuel » pour rester cohérent.
+              </p>
+            </div>
+          </div>
+        )}
+
         {careers.length === 0 ? (
           <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 py-10 text-center dark:border-slate-600 dark:bg-slate-800/50">
             <svg className="mx-auto h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth="1" stroke="currentColor">

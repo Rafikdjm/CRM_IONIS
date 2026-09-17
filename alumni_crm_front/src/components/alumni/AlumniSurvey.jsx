@@ -17,7 +17,10 @@ const getAlumniStatus = (profile) => {
   return (profile.availability_status || '').trim().toLowerCase();
 };
 
-const isEnRechercheActive = (profile) => getAlumniStatus(profile) === 'en_recherche';
+const statutOuvertALemploi = (profile) => {
+  const statut = getAlumniStatus(profile);
+  return statut === 'a_lecoute' || statut === 'en_recherche';
+};
 
 export default function AlumniSurvey() {
   const [loading, setLoading] = useState(true);
@@ -73,7 +76,7 @@ export default function AlumniSurvey() {
 
   const isHiddenByStatus = (q) => {
     if (!q.conditionnee_statut_emploi) return false;
-    return isEnRechercheActive(profile);
+    return statutOuvertALemploi(profile);
   };
 
   const visibleQuestions = (questionnaire?.questions || []).filter((q) => !isHiddenByStatus(q));

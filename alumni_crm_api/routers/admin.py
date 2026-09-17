@@ -15,12 +15,15 @@ logger = logging.getLogger(__name__)
 # salariales : elles sont protegees par une cle API (header X-API-Key).
 router = APIRouter(prefix="/admin", dependencies=[Depends(require_admin_api_key)])
 
-# Statuts "en emploi" de availability_status (a maintenir en coherence avec
+# Statuts de availability_status (a maintenir en coherence avec
 # _VALID_AVAILABILITY_STATUS dans routers/etudiants.py). Ils n'entrent pas
 # dans le calcul des taux (EXPERIENCE_PRO fait foi : poste_actuel ou
 # experience en cours, voir _condition_emploi_en_cours), mais servent
 # a mesurer la coherence entre le statut declaratif et la source structuree.
-_AVAILABILITY_EMPLOYED = {"en_poste", "a_lecoute"}
+# "a_lecoute" (a l'ecoute d'opportunites) signifie NE PAS etre en poste :
+# il est donc groupe avec "en_recherche", a l'inverse de "en_poste".
+_AVAILABILITY_EMPLOYED = {"en_poste"}
+_AVAILABILITY_OPEN = {"a_lecoute", "en_recherche"}
 
 # Libelles affichables des tags KPI connus du questionnaire. Tout tag non liste
 # ici est formate generiquement (underscores -> espaces, premiere lettre en
@@ -282,8 +285,9 @@ def calculer_indicateurs(db=Depends(get_db)):
         # La definition d'emploi est celle de l'etape 1 (poste_actuel OU
         # experience en cours aujourd'hui). On compte les etudiants dont le
         # statut DECLARATIF contredit la source structuree :
-        #   - statut "en emploi" (en_poste / a_lecoute) mais aucun poste en cours ;
-        #   - statut "en_recherche" mais un poste en cours.
+        #   - statut "en_poste" mais aucun poste en cours ;
+        #   - statut "a_lecoute" / "en_recherche" ("pas encore en poste")
+        #     mais un poste en cours.
         coherence_emploi = _condition_emploi_en_cours("expc")
         coherence_query = f"""
             SELECT e.id_etudiant, e.availability_status,
@@ -303,7 +307,7 @@ def calculer_indicateurs(db=Depends(get_db)):
                 etudiants_analysables += 1
                 if not a_poste:
                     etudiants_incoherents += 1
-            elif statut == "en_recherche":
+            elif statut in _AVAILABILITY_OPEN:
                 etudiants_analysables += 1
                 if a_poste:
                     etudiants_incoherents += 1

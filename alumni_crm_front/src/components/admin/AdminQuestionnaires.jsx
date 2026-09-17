@@ -390,7 +390,7 @@ export default function AdminQuestionnaires() {
                       className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600"
                     />
                     <span className="text-xs text-gray-600 dark:text-slate-400">
-                      Masquer si l&apos;alumni est en recherche active
+                      Masquer si l&apos;alumni est à l&apos;écoute ou en recherche active
                     </span>
                   </label>
                 </div>
