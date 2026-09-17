@@ -62,8 +62,6 @@ admin_router = APIRouter(
 
 _VALID_TYPES = ("export", "suppression")
 _VALID_STATUTS = ("envoyee", "en_traitement", "traitee", "rejetee")
-# Statuts « actifs » : la demande n'a pas encore de décision finale.
-_ACTIF_STATUTS = ("envoyee", "en_traitement")
 
 
 class BulkIds(BaseModel):
@@ -473,10 +471,10 @@ def annuler_demande(
                 status_code=403,
                 detail="Vous ne pouvez annuler que vos propres demandes.",
             )
-        if row[1] not in _ACTIF_STATUTS:
+        if row[1] != "envoyee":
             raise HTTPException(
                 status_code=400,
-                detail="Seules les demandes envoyées ou en cours de traitement peuvent être annulées.",
+                detail="Seule une demande envoyée non prise en charge peut être annulée.",
             )
 
         cursor.execute("DELETE FROM DEMANDE_RGPD WHERE id_demande = %s;", (id_demande,))
@@ -661,6 +659,7 @@ class PurgeConfirm(BaseModel):
     """Payload obligatoire : la purge n'est jamais déclenchée par un simple
     clic ou un GET — le flag explicite `confirm: true` est requis."""
     confirm: bool = False
+    acteur: str = ""
 
 
 @admin_router.get("/purge-anonymises", dependencies=[Depends(require_admin_api_key)])
@@ -671,10 +670,18 @@ def preview_purge_anonymises(db=Depends(get_db)):
     try:
         from config import settings
         candidats = comptes_purgeables(cursor)
+        cursor.execute(
+            "SELECT id_log, details, rows_affected, acteur, executed_at "
+            "FROM AUDIT_LOG WHERE action = 'PURGE_COMPTES_ANONYMISES' "
+            "ORDER BY executed_at DESC LIMIT %s;",
+            (10,),
+        )
+        historique = rows_to_dicts(cursor, cursor.fetchall())
         return {
             "delay_months": settings.purge_delay_months,
             "candidats": len(candidats),
             "comptes": candidats,
+            "historique": historique,
         }
     except Exception:
         logger.exception("Erreur lors de la prévisualisation de la purge RGPD")
@@ -697,7 +704,8 @@ def lancer_purge_anonymises(body: PurgeConfirm, db=Depends(get_db)):
         )
     cursor = db.cursor()
     try:
-        resultat = purge_comptes_anonymises(cursor, acteur="admin", commit=True)
+        acteur = (body.acteur or "").strip() or "admin"
+        resultat = purge_comptes_anonymises(cursor, acteur=acteur, commit=True)
         return {
             "message": f"Purge terminée : {resultat['purges']} compte(s) anonymisé(s) supprimé(s) définitivement.",
             **resultat,

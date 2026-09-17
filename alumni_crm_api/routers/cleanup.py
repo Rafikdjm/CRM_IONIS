@@ -457,3 +457,33 @@ def historique_audit(
         raise HTTPException(status_code=500, detail="Impossible de lire l'historique d'audit.")
     finally:
         cursor.close()
+
+
+# ---------------------------------------------------------------------------
+# 7. HISTORIQUE DES PURGES DE COMPTES ANONYMISÉS
+# ---------------------------------------------------------------------------
+
+@router.get("/purges")
+def historique_purges(
+    limit: int = 50,
+    db=Depends(get_db),
+):
+    """Historique des purges définitives de comptes anonymisés (RGPD).
+
+    Filtre AUDIT_LOG sur l'action PURGE_COMPTES_ANONYMISES, écrite par
+    purge.py à chaque exécution (détails : nb de comptes, ids, délai).
+    """
+    cursor = db.cursor()
+    try:
+        cursor.execute(
+            "SELECT id_log, action, details, rows_affected, acteur, executed_at "
+            "FROM AUDIT_LOG WHERE action = 'PURGE_COMPTES_ANONYMISES' "
+            "ORDER BY executed_at DESC LIMIT %s;",
+            (limit,),
+        )
+        return {"historique": rows_to_dicts(cursor, cursor.fetchall())}
+    except Exception:
+        logger.exception("Erreur lors de la lecture de l'historique des purges")
+        raise HTTPException(status_code=500, detail="Impossible de lire l'historique des purges.")
+    finally:
+        cursor.close()

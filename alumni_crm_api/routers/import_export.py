@@ -386,12 +386,12 @@ async def download_template():
     headers = list(COLUMN_MAP.keys())
     ws.append(headers)
     ws.append([
-        "Jean", "Dupont", "jean.dupont@email.com", "0612345678", "Promo 2024", 2024,
-        "Acme Corp", "Développeur", "Technologie", "France", "Paris",
-        "https://linkedin.com/in/jeandupont",
-        "15 Rue de Paris", "Paris", "France", "en_poste", "Python, React",
-        "1995-06-15", "2020-09-01", "jean.dupont@univ.fr", "Licence Informatique",
-        "CDI", "2024-10-01", "", "Oui",
+        "Camille", "Lefebvre", "camille.lefebvre@email.com", "0678912345", "Promo 2024", 2024,
+        "Capgemini", "Data Analyst", "Conseil / IT", "France", "Lyon",
+        "https://linkedin.com/in/camillelefebvre",
+        "8 Rue de la République", "Lyon", "France", "en_poste", "SQL, Power BI",
+        "1996-03-22", "2020-09-01", "camille.lefebvre@ionis-stm.com", "Master Informatique",
+        "CDI", "2024-09-15", "", "Oui",
     ])
 
     for col in ws.columns:

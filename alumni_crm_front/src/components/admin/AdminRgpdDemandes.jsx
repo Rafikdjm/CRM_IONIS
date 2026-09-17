@@ -376,7 +376,7 @@ export default function AdminRgpdDemandes() {
     setPurgeLoading(true);
     setError(null);
     try {
-      const result = await adminRgpdAPI.purgeAnonymises();
+      const result = await adminRgpdAPI.purgeAnonymises(adminName.trim() || 'admin');
       setPurgeResult(result);
       setPurgeConfirm(false);
       setPurgePreview(null);
@@ -819,6 +819,35 @@ export default function AdminRgpdDemandes() {
               <p className="mt-3 rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm text-gray-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
                 Aucun compte éligible pour le moment.
               </p>
+            )}
+
+            {purgePreview.historique?.length > 0 && (
+              <div className="mt-4">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-slate-100">
+                  Historique des purges
+                </h3>
+                <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto rounded-lg border border-gray-200 p-3 text-sm dark:border-slate-700">
+                  {purgePreview.historique.map((h) => (
+                    <li
+                      key={h.id_log}
+                      className="flex items-center justify-between gap-2 border-b border-gray-100 pb-1 text-gray-700 last:border-0 dark:border-slate-700 dark:text-slate-200"
+                    >
+                      <span className="text-xs">
+                        <span className="font-medium">
+                          {h.rows_affected ?? 0} compte(s) supprimé(s)
+                        </span>
+                        <span className="text-gray-500 dark:text-slate-400">
+                          {' — '}
+                          {h.executed_at
+                            ? new Date(h.executed_at).toLocaleDateString('fr-FR')
+                            : '—'}{' '}
+                          {h.acteur ? ` · ${h.acteur}` : ''}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
 
             <div className="mt-5 flex flex-col gap-2">

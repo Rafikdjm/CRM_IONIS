@@ -78,12 +78,15 @@ def purge_comptes_anonymises(cursor, delay_months=None, acteur="system", commit=
     else:
         nb_supprimes = 0
 
-    details = (
-        f"Purge définitive de {nb_supprimes} compte(s) anonymisé(s) "
-        f"(délai {delay_months} mois, date_exécution={datetime.now().isoformat(timespec='seconds')}, "
-        f"ids={ids})"
-    )
-    _write_audit_log(cursor, "PURGE_COMPTES_ANONYMISES", details, nb_supprimes, acteur=acteur)
+    # Ne trace un audit que si une suppression a réellement eu lieu : une
+    # purge "à vide" (0 compte) ne fait que polluer l'historique admin.
+    if nb_supprimes > 0:
+        details = (
+            f"Purge définitive de {nb_supprimes} compte(s) anonymisé(s) "
+            f"(délai {delay_months} mois, date_exécution={datetime.now().isoformat(timespec='seconds')}, "
+            f"ids={ids})"
+        )
+        _write_audit_log(cursor, "PURGE_COMPTES_ANONYMISES", details, nb_supprimes, acteur=acteur)
 
     try:
         if commit:

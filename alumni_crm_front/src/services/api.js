@@ -610,8 +610,8 @@ export const adminRgpdAPI = {
   },
 
   /** Lance la purge définitive des comptes anonymisés éligibles (confirm: true requis). */
-  purgeAnonymises: async () => {
-    const res = await api.post('/admin/demandes-rgpd/purge-anonymises', { confirm: true });
+  purgeAnonymises: async (acteur) => {
+    const res = await api.post('/admin/demandes-rgpd/purge-anonymises', { confirm: true, acteur: acteur || '' });
     return res.data;
   },
 };

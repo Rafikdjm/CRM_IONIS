@@ -394,7 +394,7 @@ export default function AlumniConsent() {
                       )}
                     </td>
                     <td className="px-4 py-2">
-                      {d.statut === 'envoyee' || d.statut === 'en_traitement' ? (
+                      {d.statut === 'envoyee' ? (
                         <button
                           onClick={() => handleCancelDemande(d.id_demande)}
                           className="text-sm text-red-600 hover:text-red-800 dark:text-red-400"

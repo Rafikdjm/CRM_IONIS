@@ -226,7 +226,10 @@ def request_otp(body: OTPRequest, request: Request, db=Depends(get_db)):
 
         if not found:
             logger.info("OTP demandé pour email inconnu: %s — AUCUN CODE GÉNÉRÉ", email)
-            return {"message": "Si ce compte existe, un code a été envoyé."}
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Aucun compte n'est associé à cet email.",
+            )
 
         code = _generate_code()
         code_hashed = _hash_code(code)
@@ -252,6 +255,9 @@ def request_otp(body: OTPRequest, request: Request, db=Depends(get_db)):
         _send_otp_email(email, code)
 
         return {"message": "Si ce compte existe, un code a été envoyé."}
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception:
         db.rollback()
         logger.exception("Erreur lors de la demande OTP pour %s", email)

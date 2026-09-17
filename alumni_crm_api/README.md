@@ -73,6 +73,49 @@ unique : `Rapport/AUDIT_COHERENCE.md` — synthèse + détail table-par-champ, P
 - **Contraintes en base** : la migration `016_contraintes_check.sql` aligne les `CHECK` (statut consentement `Literal`/`CHECK`, salaires, dates d'expérience, type de question, année de promotion).
 - **Détails métier fiabilisés** : `ordre` `0` respecté, `actif` du questionnaire relu en base sur `PUT`, `nb_etudiants` réel sur `PUT /promotions/{id}`.
 
+## Purge des comptes anonymisés (RGPD)
+
+La suppression d'un compte suit un processus en deux temps :
+1. **Anonymisation** immédiate de toutes les données personnelles (email →
+   `ANONYMISE_<id>@anonymise.io`, nom/prénom → `ANONYMISE`).
+2. **Purge définitive** différée, exécutée par `purge.py` après un délai de
+   grâce (défaut `PURGE_DELAY_MONTHS=6`).
+
+L'anonymisation suffit déjà à la conformité RGPD ; le délai préserve
+l'historique (les demandes `DEMANDE_RGPD` sont conservées) pendant que le
+script ne touche jamais les comptes actifs ou récemment anonymisés.
+
+### Utilisation
+
+```bash
+# 1. Prévisualisation (aucune suppression) : lister les comptes éligibles
+python purge.py --dry-run
+
+# 2. Purge réelle des comptes anonymisés depuis plus de 6 mois
+python purge.py
+
+# 3. Tester avec un délai réduit (0 mois = purger tout anonymisé)
+setx PURGE_DELAY_MONTHS 0          # Windows (persistant)
+$env:PURGE_DELAY_MONTHS = "0"      # PowerShell (session)
+python purge.py --dry-run          # vérifier avant de supprimer
+```
+
+### Exemple de sortie
+
+```
+2 compte(s) éligible(s) à la purge (délai 6 mois) :
+  - id=476  anonymisé le 2026-09-17 13:45:08
+  - id=503  anonymisé le 2026-09-17 13:56:06
+Purge terminée : 2 compte(s) supprimé(s).
+```
+
+### Planification (automatisation)
+
+Lancer `python purge.py` périodiquement, par exemple toutes les semaines :
+- **Linux** (cron) : `0 3 * * 1 cd /chemin/alumni_crm_api && python purge.py`
+- **Windows** : Planificateur de tâches → tâche quotidienne
+  « `python C:\...\alumni_crm_api\purge.py` ».
+
 ## Tests
 
 **Backend** : la suite de tests pytest, un temps présente dans le dépôt, n'est
